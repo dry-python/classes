@@ -5,7 +5,8 @@ Custom mypy plugin to enable typeclass concept to work.
 
 Features:
 
-- We return a valid ``typeclass`` generic instance from `@typeclass` contructor
+- We return a valid ``typeclass`` generic instance
+  from ``@typeclass`` contructor
 - We force ``.instance()`` calls to extend the union of allowed types
 - We ensure that when calling the typeclass'es function
   we know what values can be used as inputs
@@ -15,12 +16,13 @@ https://mypy.readthedocs.io/en/latest/extending_mypy.html
 
 We use ``pytest-mypy-plugins`` to test that it works correctly, see:
 https://github.com/TypedDjango/pytest-mypy-plugins
+
 """
 
 from typing import Type
 
 from mypy.plugin import Plugin
-from mypy.types import AnyType, UnionType, TypeOfAny, CallableType
+from mypy.types import AnyType, CallableType, TypeOfAny, TypeVarType, UnionType
 
 
 def _adjust_arguments(ctx):
@@ -79,28 +81,28 @@ class _AdjustInstanceSignature(object):
             # It means that function was defined without annotation
             # or with explicit `Any`, we prevent our Union from polution.
             # Because `Union[Any, int]` is just `Any`.
-            lambda type_: not isinstance(type_, AnyType),
+            # We also clear accidential type vars.
+            self._filter_out_unified_types,
             [instance_type, ctx.type.args[0]],
         ))
 
-        if len(unified) == 1:
-            # We don't want to mix `Union[A]` into the types,
-            # which sometimes works just like an alias for `Optional[A]`:
-            ctx.type.args[0] = instance_type
-        else:
-            ctx.type.args[0] = UnionType(unified)
+        if not isinstance(instance_type, TypeVarType):
+            ctx.type.args[0] = UnionType.make_union(unified)
+
+    def _filter_out_unified_types(self, type_) -> bool:
+        return not isinstance(type_, (AnyType, TypeVarType))
 
 
 class _TypedDecoratorPlugin(Plugin):
     def get_method_signature_hook(self, fullname: str):
         """Here we fix the calling method types to accept only valid types."""
-        if fullname == 'classes.typeclass._TypeClassMethod.__call__':
+        if fullname == 'classes.typeclass.TypeClass.__call__':
             return _adjust_call_signature
         return None
 
     def get_method_hook(self, fullname: str):
         """Here we adjust the typeclass with new allowed types."""
-        if fullname == 'classes.typeclass._TypeClassMethod.instance':
+        if fullname == 'classes.typeclass.TypeClass.instance':
             return _AdjustInstanceSignature().instance
         return None
 

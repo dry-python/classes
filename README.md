@@ -13,9 +13,37 @@
 
 -----
 
-Use smart, ad-hoc, typed polymorphism for your data types.
+Smart, pythonic, ad-hoc, typed polymorphism for Python.
 
 
 ## Features
 
-- WIP
+- Provides a bunch of primitives to write declarative business logic
+- Enforces better architecture
+- Fully typed with annotations and checked with `mypy`, [PEP561 compatible](https://www.python.org/dev/peps/pep-0561/)
+- Allows to write a lot of simple code without inheritance or interfaces
+- Pythonic and pleasant to write and to read (!)
+- Easy to start: has lots of docs, tests, and tutorials
+
+
+## Installation
+
+```bash
+pip install classes
+```
+
+You might also want to [configure](https://classes.readthedocs.io/en/latest/pages/container.html#type-safety)
+`mypy` correctly and install our plugin
+to fix [this existing issue](https://github.com/python/mypy/issues/3157):
+
+```ini
+# In setup.cfg or mypy.ini:
+[mypy]
+plugins =
+  classes.contrib.mypy.typeclass_plugin
+```
+
+We also recommend to use the same `mypy` settings [we use](https://github.com/wemake-services/wemake-python-styleguide/blob/master/styles/mypy.toml).
+
+Make sure you know how to get started, [check out our docs](https://classes.readthedocs.io/en/latest/)!
+

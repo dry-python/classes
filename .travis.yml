@@ -14,7 +14,7 @@ install: poetry install
 
 script:
   - poetry run flake8 .
-  - poetry run mypy safe_assert
+  - poetry run mypy classes tests/**/*.py
   - poetry run pytest
   - poetry check
   - poetry run pip check
