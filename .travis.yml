@@ -3,7 +3,7 @@ dist: xenial
 
 python:
   - 3.6
-  - 3.7
+  - 3.7.3
 
 before_install:
   - pip freeze | xargs pip uninstall -y
@@ -16,6 +16,7 @@ script:
   - poetry run flake8 .
   - poetry run mypy classes tests/**/*.py
   - poetry run pytest
+  - poetry run doc8 -q docs
   - poetry check
   - poetry run pip check
   - poetry run safety check --bare --full-report
