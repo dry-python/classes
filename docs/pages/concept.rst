@@ -58,8 +58,53 @@ To use typeclasses you should understand these steps:
        F2                         --> F2
        F2                         --> F3["Calling"]
 
-# TODO: cover each steps
-# TODO: json example for simple types
+Let's walk through this process step by step.
+The first on is "Typeclass definition", where we create a new typeclass:
+
+.. code:: python
+
+  >>> from classes import typeclass
+  >>> @typeclass
+  ... def json(instance) -> str:
+  ...     """That's definition!"""
+  ...
+
+When typeclass is defined it only has a name and a signature
+that all instances will share.
+Let's define some instances:
+
+.. code:: python
+
+  >>> @json.instance(str)
+  ... def _json_str(instance: str) -> str:
+  ...     return '"{0}"'.format(instance)
+  ...
+  >>> @json.instance(int)
+  ... @json.instance(float)
+  ... def _json_int_float(instance) -> str:
+  ...     return str(instance)
+  ...
+
+That's how we define instances for our typeclass.
+These instances will be executed when the corresponding type will be supplied.
+
+And the last step is to call our typeclass
+with different value of different types:
+
+.. code:: python
+
+  >>> json('text')
+  '"text"'
+  >>> json(1)
+  '1'
+  >>> json(1.5)
+  '1.5'
+
+That's it. There's nothing extra about typeclasses. They can be:
+
+- defined
+- extended by new instances
+- and called
 
 
 singledispatch
@@ -68,3 +113,6 @@ singledispatch
 One may ask, what is the difference
 with `singledispatch <https://docs.python.org/3/library/functools.html#functools.singledispatch>`_
 function from the standard library?
+
+The thing about ``singledispatch`` is that it allows almost the same features.
+But, it lacks type-safety. For example, 
