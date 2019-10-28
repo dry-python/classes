@@ -92,8 +92,7 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         We don't guarantee the order of types inside groups.
         Use correct types, do not rely on our order.
 
-        Callbacks
-        ~~~~~~~~~
+        .. rubric:: Callbacks
 
         Since, we define ``__call__`` method for this class,
         it can be used and typechecked everywhere,
@@ -238,8 +237,7 @@ def typeclass(
     then it will be called,
     otherwise the default implementation will be called instead.
 
-    Generics
-    ~~~~~~~~
+    .. rubric:: Generics
 
     We also support generic, but the support is limited.
     We cannot rely on type parameters of the generic type,
@@ -276,6 +274,8 @@ def typeclass(
     In the future, when Python will have new type mechanisms,
     we would like to improve our support for specific generic instances
     like ``MyGeneric[int]`` only. But, that's the best we can do for now.
+
+    .. rubric:: Protocols
 
     We also support protocols. It has the same limitation as ``Generic`` types.
     It is also dispatched after all regular ``instance``s are checked.
