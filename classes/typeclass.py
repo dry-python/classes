@@ -4,13 +4,13 @@ from typing import Callable, Dict, Generic, NoReturn, Type, TypeVar, overload
 
 from typing_extensions import Literal
 
-_TypeClassType = TypeVar('_TypeClassType', contravariant=True)
+_TypeClassType = TypeVar('_TypeClassType')
 _ReturnType = TypeVar('_ReturnType')
 _CallbackType = TypeVar('_CallbackType')
 _InstanceType = TypeVar('_InstanceType')
 
 
-class TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
+class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
     """
     That's how we represent typeclasses.
 
@@ -20,7 +20,7 @@ class TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
     .. code:: python
 
         >>> from typing import Callable
-        >>> from classes import TypeClass, typeclass
+        >>> from classes import typeclass
         >>> @typeclass
         ... def used(instance, other: int) -> int:
         ...     '''Example typeclass to be used later.'''
@@ -30,7 +30,7 @@ class TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         ...     return instance + other
         ...
         >>> def accepts_typeclass(
-        ...     callback: TypeClass[int, int, Callable[[int, int], int]],
+        ...     callback: Callable[[int, int], int],
         ... ) -> int:
         ...     return callback(1, 3)
         ...
@@ -92,6 +92,13 @@ class TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         We don't guarantee the order of types inside groups.
         Use correct types, do not rely on our order.
 
+        Callbacks
+        ~~~~~~~~~
+
+        Since, we define ``__call__`` method for this class,
+        it can be used and typechecked everywhere,
+        where a regular ``Callable`` is expected.
+
         """
         instance_type = type(instance)
         implementation = self._instances.get(instance_type, None)
@@ -109,7 +116,7 @@ class TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         )
 
     @overload
-    def instance(  # noqa: D102
+    def instance(
         self,
         type_argument: Type[_InstanceType],
         *,
@@ -121,7 +128,7 @@ class TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         ...
 
     @overload
-    def instance(  # noqa: D102
+    def instance(
         self,
         type_argument,
         *,
@@ -159,7 +166,7 @@ def typeclass(
     signature: _CallbackType,
     # By default `_TypeClassType` and `_ReturnType` are `nothing`,
     # but we enhance them via mypy plugin later:
-) -> TypeClass[_TypeClassType, _ReturnType, _CallbackType]:
+) -> _TypeClass[_TypeClassType, _ReturnType, _CallbackType]:
     """
     Function to define typeclasses.
 
@@ -318,4 +325,4 @@ def typeclass(
     Remember, that generic protocols have the same limitation as generic types.
 
     """
-    return TypeClass(signature)
+    return _TypeClass(signature)

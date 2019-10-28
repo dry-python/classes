@@ -1,0 +1,46 @@
+- case: typeclass_callback_correct
+  disable_cache: true
+  main: |
+    from typing import Callable
+    from classes import typeclass
+
+    @typeclass
+    def example(instance, attr: bool) -> bool:
+        ...
+
+    @example.instance(int)
+    @example.instance(float)
+    def _example_int_float(intance, attr: bool) -> bool:
+        ...
+
+
+    def accepts_typeclass(callback: Callable[[int, bool], bool]) -> bool:
+        return callback(1, True)
+
+    reveal_type(accepts_typeclass(example))  # N: Revealed type is 'builtins.bool'
+
+
+- case: typeclass_callback_wrong
+  disable_cache: true
+  main: |
+    from typing import Callable
+    from classes import typeclass
+
+    @typeclass
+    def example(instance, attr: bool) -> bool:
+        ...
+
+    @example.instance(int)
+    @example.instance(float)
+    def _example_int_float(intance, attr: bool) -> bool:
+        ...
+
+
+    def accepts_typeclass(callback: Callable[[str, bool], bool]) -> bool:
+        return callback('a', True)
+
+    reveal_type(accepts_typeclass(example))
+  out: |
+    main:17: error: Argument 1 to "accepts_typeclass" has incompatible type "_TypeClass[Union[int, float], bool, Callable[[int, bool], bool]]"; expected "Callable[[str, bool], bool]"
+    main:17: note: "_TypeClass[Union[int, float], bool, Callable[[int, bool], bool]].__call__" has type "Callable[[Arg(Union[int, float], 'instance'), VarArg(Any), KwArg(Any)], bool]"
+    main:17: note: Revealed type is 'builtins.bool'

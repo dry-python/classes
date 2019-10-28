@@ -96,13 +96,13 @@ class _AdjustInstanceSignature(object):
 class _TypedDecoratorPlugin(Plugin):
     def get_method_signature_hook(self, fullname: str):
         """Here we fix the calling method types to accept only valid types."""
-        if fullname == 'classes.typeclass.TypeClass.__call__':
+        if fullname == 'classes.typeclass._TypeClass.__call__':
             return _adjust_call_signature
         return None
 
     def get_method_hook(self, fullname: str):
         """Here we adjust the typeclass with new allowed types."""
-        if fullname == 'classes.typeclass.TypeClass.instance':
+        if fullname == 'classes.typeclass._TypeClass.instance':
             return _AdjustInstanceSignature().instance
         return None
 

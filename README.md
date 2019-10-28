@@ -32,7 +32,7 @@ Smart, pythonic, ad-hoc, typed polymorphism for Python.
 pip install classes
 ```
 
-You might also want to [configure](https://classes.readthedocs.io/en/latest/pages/container.html#type-safety)
+You also need to [configure](https://classes.readthedocs.io/en/latest/pages/container.html#type-safety)
 `mypy` correctly and install our plugin
 to fix [this existing issue](https://github.com/python/mypy/issues/3157):
 
@@ -42,6 +42,8 @@ to fix [this existing issue](https://github.com/python/mypy/issues/3157):
 plugins =
   classes.contrib.mypy.typeclass_plugin
 ```
+
+**Without this step**, your project will report type-violations here and there.
 
 We also recommend to use the same `mypy` settings [we use](https://github.com/wemake-services/wemake-python-styleguide/blob/master/styles/mypy.toml).
 

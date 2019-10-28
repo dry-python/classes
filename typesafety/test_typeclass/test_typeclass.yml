@@ -7,7 +7,7 @@
     def example(instance, arg: str, other: int, *, attr: bool) -> bool:
         ...
 
-    reveal_type(example)  # N: Revealed type is 'classes.typeclass.TypeClass[Any, builtins.bool, def (instance: Any, arg: builtins.str, other: builtins.int, *, attr: builtins.bool) -> builtins.bool]'
+    reveal_type(example)  # N: Revealed type is 'classes.typeclass._TypeClass[Any, builtins.bool, def (instance: Any, arg: builtins.str, other: builtins.int, *, attr: builtins.bool) -> builtins.bool]'
 
 
 - case: typeclass_instance
@@ -23,7 +23,7 @@
     def _example_str(instance: str, arg: str) -> bool:
         ...
 
-    reveal_type(example)  # N: Revealed type is 'classes.typeclass.TypeClass[builtins.str*, builtins.bool, def (builtins.str*, arg: builtins.str) -> builtins.bool]'
+    reveal_type(example)  # N: Revealed type is 'classes.typeclass._TypeClass[builtins.str*, builtins.bool, def (builtins.str*, arg: builtins.str) -> builtins.bool]'
 
 
 - case: typeclass_instance_union
@@ -44,7 +44,7 @@
     def _example_str(instance: str, arg: str) -> bool:
         ...
 
-    reveal_type(example)  # N: Revealed type is 'classes.typeclass.TypeClass[Union[builtins.str*, builtins.int*, builtins.float*], builtins.bool, def (builtins.str*, arg: builtins.str) -> builtins.bool]'
+    reveal_type(example)  # N: Revealed type is 'classes.typeclass._TypeClass[Union[builtins.str*, builtins.int*, builtins.float*], builtins.bool, def (builtins.str*, arg: builtins.str) -> builtins.bool]'
 
 
 - case: typeclass_incorrect_instance_callback1
@@ -63,7 +63,7 @@
     reveal_type(example)
   out: |
     main:7: error: Argument 1 has incompatible type "Callable[[str, str], bool]"; expected "Callable[[int, str], bool]"
-    main:11: note: Revealed type is 'classes.typeclass.TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool]'
+    main:11: note: Revealed type is 'classes.typeclass._TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool]'
 
 
 - case: typeclass_incorrect_instance_callback2
@@ -82,7 +82,7 @@
     reveal_type(example)
   out: |
     main:7: error: Argument 1 has incompatible type "Callable[[int], bool]"; expected "Callable[[int, str], bool]"
-    main:11: note: Revealed type is 'classes.typeclass.TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool]'
+    main:11: note: Revealed type is 'classes.typeclass._TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool]'
 
 
 - case: typeclass_incorrect_instance_callback3
@@ -101,4 +101,4 @@
     reveal_type(example)
   out: |
     main:7: error: Argument 1 has incompatible type "Callable[[Any, int], bool]"; expected "Callable[[int, str], bool]"
-    main:11: note: Revealed type is 'classes.typeclass.TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool]'
+    main:11: note: Revealed type is 'classes.typeclass._TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool]'

@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from classes import TypeClass, typeclass
+from classes import typeclass
 
 
 @typeclass
@@ -17,7 +17,7 @@ def _example_str(instance: str) -> int:
 
 def _callback(
     instance: str,
-    callback: TypeClass[str, int, Callable[[str], int]],
+    callback: Callable[[str], int],
 ) -> int:
     return callback(instance)
 
