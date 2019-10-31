@@ -129,11 +129,11 @@ function signatures and return types in all cases:
   ... def example(instance) -> str:
   ...     return 'default'
   ...
-  >>> @example.register
+  >>> @example.register(int)
   ... def _example_int(instance: int, other: int) -> int:
   ...     return instance + other
   ...
-  >>> @example.register
+  >>> @example.register(str)
   ... def _example_str(instance: str) -> bool:
   ...     return bool(instance)
   ...
