@@ -107,12 +107,47 @@ That's it. There's nothing extra about typeclasses. They can be:
 - and called
 
 
+Related concepts
+----------------
+
 singledispatch
---------------
+~~~~~~~~~~~~~~
 
 One may ask, what is the difference
 with `singledispatch <https://docs.python.org/3/library/functools.html#functools.singledispatch>`_
 function from the standard library?
 
 The thing about ``singledispatch`` is that it allows almost the same features.
-But, it lacks type-safety. For example, 
+But, it lacks type-safety.
+For example, it does not check for the same
+function signatures and return types in all cases:
+
+.. code:: python
+
+  >>> from functools import singledispatch
+  >>> @singledispatch
+  ... def example(instance) -> str:
+  ...     return 'default'
+  ...
+  >>> @example.register
+  ... def _example_int(instance: int, other: int) -> int:
+  ...     return instance + other
+  ...
+  >>> @example.register
+  ... def _example_str(instance: str) -> bool:
+  ...     return bool(instance)
+  ...
+  >>> bool(example(1, 0)) == example('a')
+  True
+
+As you can see: you are able to create
+instances with different return types and number of parameters.
+
+Good luck working with that!
+
+
+Further reading
+---------------
+
+- `Wikipedia <https://en.wikipedia.org/wiki/Type_class>`_
+- `Typeclasses in Haskell <http://learnyouahaskell.com/types-and-typeclasses>`_

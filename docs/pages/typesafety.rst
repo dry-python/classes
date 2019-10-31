@@ -48,3 +48,62 @@ Here are features that we support:
    to be the first (or instance) parameter in a call.
 2. We also check that other parameters do exist in the original signature
 3. We check the return type: it matches that defined one in the signature
+
+
+Limitations
+-----------
+
+We are limited in generics support.
+We support them, but without type parameters.
+
+- We support: ``list``, ``List``, ``Dict``,
+  ``Mapping``, ``Iterable``, ``MyCustomGeneric``
+- We don't support ``List[int]``, ``Dict[str, str]``, ``Iterable[Any]``, etc
+
+Why? Because we cannot tell the difference
+between ``List[int]`` and ``List[str]`` in runtime.
+
+Python just does not have this information. It requires types to be infered.
+And that's currently not possible.
+
+So, this would not work:
+
+.. code:: python
+
+  >>> from typing import List
+  >>> from classes import typeclass
+  >>> @typeclass
+  ... def generic_typeclass(instance) -> str:
+  ...     """We use this example to demonstrate the typing limitation."""
+  ...
+  >>> @generic_typeclass.instance(List[int])
+  ... def _generic_typeclass_list_int(instance: List[int]):
+  ...   ...
+  ...
+  Traceback (most recent call last):
+  ...
+  TypeError: Subscripted generics cannot be used with class and instance checks
+
+
+But, this will (note that we use ``list`` inside ``.instance()`` call):
+
+.. code:: python
+
+  >>> from typing import List
+  >>> from classes import typeclass
+  >>> @typeclass
+  ... def generic_typeclass(instance) -> str:
+  ...     """We use this example to demonstrate the typing limitation."""
+  ...
+  >>> @generic_typeclass.instance(list)
+  ... def _generic_typeclass_list_int(instance: List):
+  ...   return ''.join(str(list_item) for list_item in instance)
+  ...
+  >>> generic_typeclass([1, 2, 3])
+  '123'
+  >>> generic_typeclass(['a', 1, True])
+  'a1True'
+
+Use primitive generics as they always have ``Any`` inside.
+Annotations should also be bound to any parameters.
+Do not supply any other values there, we cannot even check for it.

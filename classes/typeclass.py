@@ -6,7 +6,7 @@ from typing_extensions import Literal
 
 _TypeClassType = TypeVar('_TypeClassType')
 _ReturnType = TypeVar('_ReturnType')
-_CallbackType = TypeVar('_CallbackType')
+_CallbackType = TypeVar('_CallbackType', bound=Callable)
 _InstanceType = TypeVar('_InstanceType')
 
 
@@ -154,6 +154,8 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         would not match ``Type[_InstanceType]`` type due to ``mypy`` rules.
 
         """
+        isinstance(object(), type_argument)  # That's how we check for generics
+
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
             container[type_argument] = implementation
