@@ -151,3 +151,4 @@ Further reading
 
 - `Wikipedia <https://en.wikipedia.org/wiki/Type_class>`_
 - `Typeclasses in Haskell <http://learnyouahaskell.com/types-and-typeclasses>`_
+- `Typeclasses in Swift <https://bow-swift.io/docs/fp-concepts/type-classes/>`_
