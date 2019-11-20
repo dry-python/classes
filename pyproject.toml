@@ -57,7 +57,7 @@ nitpick = "^0.21.2"
 
 safety = "^1.8"
 
-pytest = "^5.1"
+pytest = "^5.3"
 pytest-cov = "^2.7"
 pytest-randomly = "^3.1"
 pytest-mypy-plugins = "^1.0"
