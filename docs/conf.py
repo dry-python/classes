@@ -123,9 +123,7 @@ html_theme = 'sphinx_typlog_theme'
 # documentation.
 html_theme_options = {
     'logo_name': 'classes',
-    'description': (
-        'Make your functions return something meaningful, typed, and safe!'
-    ),
+    'description': 'Smart, pythonic, ad-hoc, typed polymorphism for Python',
     'github_user': 'dry-python',
     'github_repo': 'classes',
 }
