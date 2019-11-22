@@ -17,6 +17,7 @@ Contents
   pages/concept.rst
   pages/typeclass.rst
   pages/typesafety.rst
+  pages/dry-python.rst
 
 .. toctree::
   :maxdepth: 1
