@@ -52,7 +52,7 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         Without it - it is just a nonsence.
 
         The logic is quite unsual.
-        We use "mypy-plugin-time" variables to contruct a typeclass.
+        We use "mypy-plugin-time" variables to construct a typeclass.
 
         What variables we use and why?
 
