@@ -6,7 +6,7 @@ Custom mypy plugin to enable typeclass concept to work.
 Features:
 
 - We return a valid ``typeclass`` generic instance
-  from ``@typeclass`` contructor
+  from ``@typeclass`` constructor
 - We force ``.instance()`` calls to extend the union of allowed types
 - We ensure that when calling the typeclass'es function
   we know what values can be used as inputs
