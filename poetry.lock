@@ -654,7 +654,7 @@ description = "Flake8 plugin to enforce the same lint configuration (flake8, iso
 name = "nitpick"
 optional = false
 python-versions = ">=3.5,<4.0"
-version = "0.21.3"
+version = "0.22.1"
 
 [package.dependencies]
 attrs = "*"
