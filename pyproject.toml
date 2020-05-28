@@ -59,7 +59,7 @@ safety = "^1.8"
 
 pytest = "^5.3"
 pytest-cov = "^2.7"
-pytest-randomly = "^3.2"
+pytest-randomly = "^3.4"
 pytest-mypy-plugins = "^1.2"
 
 sphinx = "^2.3"
