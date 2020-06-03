@@ -280,7 +280,7 @@ def typeclass(
     .. rubric:: Protocols
 
     We also support protocols. It has the same limitation as ``Generic`` types.
-    It is also dispatched after all regular ``instance``s are checked.
+    It is also dispatched after all regular instances are checked.
 
     To work with protocols, one needs to pass ``is_protocol`` flag to instance:
 
