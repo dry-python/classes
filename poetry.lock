@@ -161,7 +161,7 @@ description = "A parser for Python dependency files"
 name = "dparse"
 optional = false
 python-versions = "*"
-version = "0.4.1"
+version = "0.5.1"
 
 [package.dependencies]
 packaging = "*"
@@ -926,7 +926,7 @@ version = "1.9.0"
 
 [package.dependencies]
 Click = ">=6.0"
-dparse = ">=0.4.1"
+dparse = ">=0.5.1"
 packaging = "*"
 requests = "*"
 setuptools = "*"
