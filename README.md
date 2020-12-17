@@ -5,7 +5,7 @@
 -----
 
 [![Build Status](https://travis-ci.org/dry-python/classes.svg?branch=master)](https://travis-ci.org/dry-python/classes)
-[![Coverage Status](https://coveralls.io/repos/github/dry-python/classes/badge.svg?branch=master)](https://coveralls.io/github/dry-python/classes?branch=master)
+[![codecov](https://codecov.io/gh/dry-python/classes/branch/master/graph/badge.svg)](https://codecov.io/gh/dry-python/classes)
 [![Documentation Status](https://readthedocs.org/projects/classes/badge/?version=latest)](https://classes.readthedocs.io/en/latest/?badge=latest)
 [![Python Version](https://img.shields.io/pypi/pyversions/classes.svg)](https://pypi.org/project/classes/)
 [![wemake-python-styleguide](https://img.shields.io/badge/style-wemake-000000.svg)](https://github.com/wemake-services/wemake-python-styleguide)
