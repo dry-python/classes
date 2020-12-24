@@ -317,7 +317,7 @@ test = ["pytest (>=4.0.2,<6)"]
 
 [[package]]
 name = "flake8-plugin-utils"
-version = "1.0.0"
+version = "1.3.1"
 description = "The package provides base classes and utils for flake8 plugin writing"
 category = "dev"
 optional = false
@@ -360,14 +360,14 @@ flake8 = "*"
 
 [[package]]
 name = "flake8-pytest-style"
-version = "0.1.3"
+version = "1.3.0"
 description = "A flake8 plugin checking common style issues or inconsistencies with pytest-based tests."
 category = "dev"
 optional = false
 python-versions = ">=3.6,<4.0"
 
 [package.dependencies]
-flake8-plugin-utils = ">=1.0,<2.0"
+flake8-plugin-utils = ">=1.3.1,<2.0.0"
 
 [[package]]
 name = "flake8-quotes"
@@ -1173,7 +1173,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "8adf38a0462f31c204506c097f0beaeeb9b1b448694c360c57dfb09f15905925"
+content-hash = "d0f218addfb7da6818d01cdfd6ed4a85809fba094096015c8d31de92feac3379"
 
 [metadata.files]
 alabaster = [
@@ -1312,14 +1312,17 @@ flake8-docstrings = [
     {file = "flake8-docstrings-1.5.0.tar.gz", hash = "sha256:3d5a31c7ec6b7367ea6506a87ec293b94a0a46c0bce2bb4975b7f1d09b6f3717"},
     {file = "flake8_docstrings-1.5.0-py2.py3-none-any.whl", hash = "sha256:a256ba91bc52307bef1de59e2a009c3cf61c3d0952dbe035d6ff7208940c2edc"},
 ]
-flake8-eradicate = []
+flake8-eradicate = [
+    {file = "flake8-eradicate-0.3.0.tar.gz", hash = "sha256:d0b3d283d85079917acbfe39b9d637385cd82cba3ae3d76c1278c07ddcf0d9b9"},
+    {file = "flake8_eradicate-0.3.0-py3-none-any.whl", hash = "sha256:e8b32b32300bfb407fe7ef74667c8d2d3a6a81bdf6f09c14a7bcc82b7b870f8b"},
+]
 flake8-isort = [
     {file = "flake8-isort-3.0.1.tar.gz", hash = "sha256:5d976da513cc390232ad5a9bb54aee8a092466a15f442d91dfc525834bee727a"},
     {file = "flake8_isort-3.0.1-py2.py3-none-any.whl", hash = "sha256:df1dd6dd73f6a8b128c9c783356627231783cccc82c13c6dc343d1a5a491699b"},
 ]
 flake8-plugin-utils = [
-    {file = "flake8-plugin-utils-1.0.0.tar.gz", hash = "sha256:1ac5eb19773d5c7fdde60b0d901ae86be9c751bf697c61fdb6609b86872f3c6e"},
-    {file = "flake8_plugin_utils-1.0.0-py3-none-any.whl", hash = "sha256:24b4a3b216ad588951d3d7adef4645dcb3b32a33b878e03baa790b5a66bf3a73"},
+    {file = "flake8-plugin-utils-1.3.1.tar.gz", hash = "sha256:6e996bc24ebe327558f24efd106f1be5f0c033c8cbb6eed815631f73d487f1c9"},
+    {file = "flake8_plugin_utils-1.3.1-py3-none-any.whl", hash = "sha256:efdbf9d15b18f72b7c348dd360f30e7cf3e73aa67ff832d5343eb5aa1115f250"},
 ]
 flake8-polyfill = [
     {file = "flake8-polyfill-1.0.2.tar.gz", hash = "sha256:e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda"},
@@ -1334,8 +1337,8 @@ flake8-pytest = [
     {file = "flake8_pytest-1.3-py2.py3-none-any.whl", hash = "sha256:61686128a79e1513db575b2bcac351081d5a293811ddce2d5dfc25e8c762d33e"},
 ]
 flake8-pytest-style = [
-    {file = "flake8-pytest-style-0.1.3.tar.gz", hash = "sha256:820503cb50b7f6aa13a9889f4c47ba35bbd666877a72ed138ae5682a9bccaf9d"},
-    {file = "flake8_pytest_style-0.1.3-py3-none-any.whl", hash = "sha256:1c2303998c509cd65c3fb047cd536787ddf953e8113bc7f086c0cd7468db4b1f"},
+    {file = "flake8-pytest-style-1.3.0.tar.gz", hash = "sha256:d141476de2d1a31e491c2090ba7d1e32980b11a2c12e8aa3b3cc844571b19bfa"},
+    {file = "flake8_pytest_style-1.3.0-py3-none-any.whl", hash = "sha256:5a0bfb30696eb97473bb2078834794e9491848f975f680bdcb0554e5b4efbbfc"},
 ]
 flake8-quotes = [
     {file = "flake8-quotes-2.1.1.tar.gz", hash = "sha256:11a15d30c92ca5f04c2791bd7019cf62b6f9d3053eb050d02a135557eb118bfc"},
