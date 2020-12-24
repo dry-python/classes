@@ -468,6 +468,14 @@ docs = ["sphinx", "rst.linker"]
 testing = ["packaging", "importlib-resources"]
 
 [[package]]
+name = "iniconfig"
+version = "1.1.1"
+description = "iniconfig: brain-dead simple config-ini parsing"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "isort"
 version = "4.3.21"
 description = "A Python utility / library to sort Python imports."
@@ -677,7 +685,7 @@ dev = ["pre-commit", "tox"]
 
 [[package]]
 name = "py"
-version = "1.8.0"
+version = "1.10.0"
 description = "library with cross-python path, ini-parsing, io, code, log facilities"
 category = "dev"
 optional = false
@@ -736,25 +744,24 @@ python-versions = "*"
 
 [[package]]
 name = "pytest"
-version = "5.4.3"
+version = "6.2.1"
 description = "pytest: simple powerful testing with Python"
 category = "dev"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 
 [package.dependencies]
 atomicwrites = {version = ">=1.0", markers = "sys_platform == \"win32\""}
-attrs = ">=17.4.0"
+attrs = ">=19.2.0"
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
 importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
-more-itertools = ">=4.0.0"
+iniconfig = "*"
 packaging = "*"
-pluggy = ">=0.12,<1.0"
-py = ">=1.5.0"
-wcwidth = "*"
+pluggy = ">=0.12,<1.0.0a1"
+py = ">=1.8.2"
+toml = "*"
 
 [package.extras]
-checkqa-mypy = ["mypy (==v0.761)"]
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
@@ -1137,14 +1144,6 @@ secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "pyOpenSSL (>=0
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
-name = "wcwidth"
-version = "0.1.7"
-description = "Measures number of Terminal column cells of wide-character codes"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "wemake-python-styleguide"
 version = "0.14.1"
 description = "The strictest and most opinionated python linter ever"
@@ -1192,7 +1191,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "58198549065c20ac404fd1883aeb916e8eca5d8e7a3ba96a78992790b2f1b343"
+content-hash = "dc6973987583a2b0124ce6ae9a084cec141fc2b82d271cb36875f3933a9ec25f"
 
 [metadata.files]
 alabaster = [
@@ -1393,6 +1392,10 @@ importlib-metadata = [
     {file = "importlib_metadata-0.23-py2.py3-none-any.whl", hash = "sha256:d5f18a79777f3aa179c145737780282e27b508fc8fd688cb17c7a813e8bd39af"},
     {file = "importlib_metadata-0.23.tar.gz", hash = "sha256:aa18d7378b00b40847790e7c27e11673d7fed219354109d0e7b9e5b25dc3ad26"},
 ]
+iniconfig = [
+    {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
+    {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
+]
 isort = [
     {file = "isort-4.3.21-py2.py3-none-any.whl", hash = "sha256:6e811fcb295968434526407adb8796944f1988c5b65e8139058f2014cbe100fd"},
     {file = "isort-4.3.21.tar.gz", hash = "sha256:54da7e92468955c4fceacd0c86bd0ec997b0e1ee80d97f67c35a78b719dccab1"},
@@ -1503,8 +1506,8 @@ pluggy = [
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
 ]
 py = [
-    {file = "py-1.8.0-py2.py3-none-any.whl", hash = "sha256:64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa"},
-    {file = "py-1.8.0.tar.gz", hash = "sha256:dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53"},
+    {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
+    {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
 ]
 pycodestyle = [
     {file = "pycodestyle-2.5.0-py2.py3-none-any.whl", hash = "sha256:95a2219d12372f05704562a14ec30bc76b05a5b297b21a5dfe3f6fac3491ae56"},
@@ -1530,8 +1533,8 @@ pystache = [
     {file = "pystache-0.5.4.tar.gz", hash = "sha256:f7bbc265fb957b4d6c7c042b336563179444ab313fb93a719759111eabd3b85a"},
 ]
 pytest = [
-    {file = "pytest-5.4.3-py3-none-any.whl", hash = "sha256:5c0db86b698e8f170ba4582a492248919255fcd4c79b1ee64ace34301fb589a1"},
-    {file = "pytest-5.4.3.tar.gz", hash = "sha256:7979331bfcba207414f5e1263b5a0f8f521d0f457318836a7355531ed1a4c7d8"},
+    {file = "pytest-6.2.1-py3-none-any.whl", hash = "sha256:1969f797a1a0dbd8ccf0fecc80262312729afea9c17f1d70ebf85c5e76c6f7c8"},
+    {file = "pytest-6.2.1.tar.gz", hash = "sha256:66e419b1899bc27346cb2c993e12c5e5e8daba9073c1fbce33b9807abc95c306"},
 ]
 pytest-cov = [
     {file = "pytest-cov-2.10.1.tar.gz", hash = "sha256:47bd0ce14056fdd79f93e1713f88fad7bdcc583dcd7783da86ef2f085a0bb88e"},
@@ -1709,10 +1712,6 @@ typing-extensions = [
 urllib3 = [
     {file = "urllib3-1.25.9-py2.py3-none-any.whl", hash = "sha256:88206b0eb87e6d677d424843ac5209e3fb9d0190d0ee169599165ec25e9d9115"},
     {file = "urllib3-1.25.9.tar.gz", hash = "sha256:3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527"},
-]
-wcwidth = [
-    {file = "wcwidth-0.1.7-py2.py3-none-any.whl", hash = "sha256:f4ebe71925af7b40a864553f761ed559b43544f8f71746c2d756c7fe788ade7c"},
-    {file = "wcwidth-0.1.7.tar.gz", hash = "sha256:3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e"},
 ]
 wemake-python-styleguide = [
     {file = "wemake-python-styleguide-0.14.1.tar.gz", hash = "sha256:e13dc580fa56b7b548de8da170bccb8ddff2d4ab026ca987db8a9893bf8a7b5b"},
