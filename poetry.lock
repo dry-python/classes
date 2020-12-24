@@ -1011,7 +1011,7 @@ test = ["pytest", "flake8", "mypy"]
 
 [[package]]
 name = "sphinxcontrib-mermaid"
-version = "0.4.0"
+version = "0.5.0"
 description = "Mermaid diagrams in yours Sphinx powered docs"
 category = "dev"
 optional = false
@@ -1173,7 +1173,7 @@ testing = ["pathlib2", "contextlib2", "unittest2"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "d0f218addfb7da6818d01cdfd6ed4a85809fba094096015c8d31de92feac3379"
+content-hash = "d8ba4dfa4354d2a70599c5d136b663a7bbb5c99bc9684fa5e643f4ee7e27cf16"
 
 [metadata.files]
 alabaster = [
@@ -1625,8 +1625,7 @@ sphinxcontrib-jsmath = [
     {file = "sphinxcontrib_jsmath-1.0.1-py2.py3-none-any.whl", hash = "sha256:2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178"},
 ]
 sphinxcontrib-mermaid = [
-    {file = "sphinxcontrib-mermaid-0.4.0.tar.gz", hash = "sha256:0ee45ba45b9575505eacdd6212e4e545213f4f93dfa32c7eeca32720dbc3b468"},
-    {file = "sphinxcontrib_mermaid-0.4.0-py2.py3-none-any.whl", hash = "sha256:01b3301af659555313e25ebe3cfd6ba209318044b7443148a20d5580f47baa1d"},
+    {file = "sphinxcontrib_mermaid-0.5.0-py2.py3-none-any.whl", hash = "sha256:80a4754d71c3f66a5b4ccb320868eb12f5eb0f2d25102e77886ce7ce327ec827"},
 ]
 sphinxcontrib-qthelp = [
     {file = "sphinxcontrib-qthelp-1.0.2.tar.gz", hash = "sha256:79465ce11ae5694ff165becda529a600c754f4bc459778778c7017374d4d406f"},
