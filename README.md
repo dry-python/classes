@@ -90,7 +90,7 @@ How would new API look like with this concept?
 >>> from classes import typeclass
 >>> @typeclass
 ... def to_json(instance) -> str:
-...     """This is a typeclass definition to covert things to json."""
+...     """This is a typeclass definition to convert things to json."""
 ...
 >>> @to_json.instance(int)
 ... @to_json.instance(float)
