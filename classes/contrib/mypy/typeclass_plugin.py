@@ -30,14 +30,18 @@ def _adjust_arguments(ctx):
     if not isinstance(typeclass_def, CallableType):
         return ctx.default_return_type
 
-    ctx.default_return_type.args = [
+    args = [
         typeclass_def.arg_types[0],
         typeclass_def.ret_type,
     ]
 
     # We use `Any` here to filter it later in `_add_new_type` method:
     typeclass_def.arg_types[0] = AnyType(TypeOfAny.unannotated)
-    ctx.default_return_type.args.append(typeclass_def)
+
+    ctx.default_return_type.args = (
+        *args,
+        typeclass_def,
+    )
     return ctx.default_return_type
 
 
@@ -87,7 +91,10 @@ class _AdjustInstanceSignature(object):
         ))
 
         if not isinstance(instance_type, TypeVarType):
-            ctx.type.args[0] = UnionType.make_union(unified)
+            ctx.type.args = (
+                UnionType.make_union(unified),
+                *ctx.type.args[1:],
+            )
 
     def _filter_out_unified_types(self, type_) -> bool:
         return not isinstance(type_, (AnyType, TypeVarType))
