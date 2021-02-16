@@ -288,7 +288,7 @@ def typeclass(
 
     .. code:: python
 
-        >>> example('abc') == 'abc'
+        >>> assert example('abc') == 'abc'
 
     We also support user-defined protocols:
 

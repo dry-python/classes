@@ -1,5 +1,5 @@
 - case: typeclass_definition
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -11,7 +11,7 @@
 
 
 - case: typeclass_instance
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -27,7 +27,7 @@
 
 
 - case: typeclass_instance_union
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -48,7 +48,7 @@
 
 
 - case: typeclass_incorrect_instance_callback1
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -67,7 +67,7 @@
 
 
 - case: typeclass_incorrect_instance_callback2
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -86,7 +86,7 @@
 
 
 - case: typeclass_incorrect_instance_callback3
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
