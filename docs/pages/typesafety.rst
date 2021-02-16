@@ -18,6 +18,7 @@ First of all, we always check that the signature is the same for all cases.
 .. code:: python
 
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def example(instance, arg: int, *, keyword: str) -> bool:
   ...     ...
@@ -71,6 +72,7 @@ So, this would not work:
 
   >>> from typing import List
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def generic_typeclass(instance) -> str:
   ...     """We use this example to demonstrate the typing limitation."""
@@ -90,6 +92,7 @@ But, this will (note that we use ``list`` inside ``.instance()`` call):
 
   >>> from typing import List
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def generic_typeclass(instance) -> str:
   ...     """We use this example to demonstrate the typing limitation."""
