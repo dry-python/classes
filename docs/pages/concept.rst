@@ -67,7 +67,6 @@ The first on is "Typeclass definition", where we create a new typeclass:
   >>> @typeclass
   ... def json(instance) -> str:
   ...     """That's definition!"""
-  ...
 
 When typeclass is defined it only has a name and a signature
 that all instances will share.
@@ -78,12 +77,11 @@ Let's define some instances:
   >>> @json.instance(str)
   ... def _json_str(instance: str) -> str:
   ...     return '"{0}"'.format(instance)
-  ...
+
   >>> @json.instance(int)
   ... @json.instance(float)
   ... def _json_int_float(instance) -> str:
   ...     return str(instance)
-  ...
 
 That's how we define instances for our typeclass.
 These instances will be executed when the corresponding type will be supplied.
@@ -93,12 +91,9 @@ with different value of different types:
 
 .. code:: python
 
-  >>> json('text')
-  '"text"'
-  >>> json(1)
-  '1'
-  >>> json(1.5)
-  '1.5'
+  >>> assert json('text') == 'text'
+  >>> assert json(1) == '1'
+  >>> assert json(1.5) == '1.5'
 
 That's it. There's nothing extra about typeclasses. They can be:
 
@@ -128,17 +123,16 @@ function signatures and return types in all cases:
   >>> @singledispatch
   ... def example(instance) -> str:
   ...     return 'default'
-  ...
+
   >>> @example.register(int)
   ... def _example_int(instance: int, other: int) -> int:
   ...     return instance + other
-  ...
+
   >>> @example.register(str)
   ... def _example_str(instance: str) -> bool:
   ...     return bool(instance)
-  ...
-  >>> bool(example(1, 0)) == example('a')
-  True
+
+  >>> assert bool(example(1, 0)) == example('a')
 
 As you can see: you are able to create
 instances with different return types and number of parameters.

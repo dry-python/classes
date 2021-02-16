@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from typing import Callable, Dict, Generic, NoReturn, Type, TypeVar, overload
 
 from typing_extensions import Literal
@@ -24,21 +22,21 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         >>> @typeclass
         ... def used(instance, other: int) -> int:
         ...     '''Example typeclass to be used later.'''
-        ...
+
         >>> @used.instance(int)
         ... def _used_int(instance: int, other: int) -> int:
         ...     return instance + other
-        ...
+
         >>> def accepts_typeclass(
         ...     callback: Callable[[int, int], int],
         ... ) -> int:
         ...     return callback(1, 3)
-        ...
-        >>> accepts_typeclass(used)
-        4
+
+        >>> assert accepts_typeclass(used) == 4
 
     Take a note, that we structural subtyping here.
-    And all typeclasses that match this signature will typecheck.
+    And all typeclasses that match ``Callable[[int, int], int]`` signature
+    will typecheck.
 
     """
 
@@ -123,8 +121,8 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
     ) -> Callable[
         [Callable[[_InstanceType], _ReturnType]],
         NoReturn,  # We need this type to disallow direct instance calls
-    ]:  # pragma: no cover
-        ...
+    ]:
+        """Case for regular typeclasses."""
 
     @overload
     def instance(
@@ -135,8 +133,8 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
     ) -> Callable[
         [Callable[[_InstanceType], _ReturnType]],
         NoReturn,  # We need this type to disallow direct instance calls
-    ]:  # pragma: no cover
-        ...
+    ]:
+        """Case for protocol based typeclasses."""
 
     def instance(
         self,
@@ -154,8 +152,6 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
         would not match ``Type[_InstanceType]`` type due to ``mypy`` rules.
 
         """
-        isinstance(object(), type_argument)  # That's how we check for generics
-
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
             container[type_argument] = implementation
@@ -182,7 +178,7 @@ def typeclass(
         >>> @typeclass
         ... def example(instance) -> str:
         ...     '''Example typeclass.'''
-        ...
+
         >>> example(1)
         Traceback (most recent call last):
         ...
@@ -202,9 +198,8 @@ def typeclass(
         >>> @example.instance(int)
         ... def _example_int(instance: int) -> str:
         ...     return 'int case'
-        ...
-        >>> example(1)
-        'int case'
+
+        >>> assert example(1) == 'int case'
 
     Now we have a specific instance for ``int``
     which does something different from the default implementation.
@@ -227,9 +222,8 @@ def typeclass(
         >>> @example.instance(str)
         ... def _example_str(instance: str) -> str:
         ...     return instance
-        ...
-        >>> example('a')
-        'a'
+
+        >>> assert example('a') == 'a'
 
     Now it works with ``str`` as well. But differently.
     This allows developer to base the implementation on type information.
@@ -252,7 +246,6 @@ def typeclass(
         >>> class MyGeneric(Generic[T]):
         ...     def __init__(self, arg: T) -> None:
         ...          self.arg = arg
-        ...
 
     Now, let's define the typeclass instance for this type:
 
@@ -261,17 +254,15 @@ def typeclass(
         >>> @example.instance(MyGeneric)
         ... def _my_generic_example(instance: MyGeneric) -> str:
         ...     return 'generi' + str(instance.arg)
-        ...
-        >>> example(MyGeneric('c'))
-        'generic'
+
+        >>> assert example(MyGeneric('c')) == 'generic'
 
     This case will work for all type parameters of ``MyGeneric``,
     or in other words it can be assumed as ``MyGeneric[Any]``:
 
     .. code:: python
 
-        >>> example(MyGeneric(1))
-        'generi1'
+        >>> assert example(MyGeneric(1)) == 'generi1'
 
     In the future, when Python will have new type mechanisms,
     we would like to improve our support for specific generic instances
@@ -290,16 +281,14 @@ def typeclass(
         >>> @example.instance(Sequence, is_protocol=True)
         ... def _sequence_example(instance: Sequence) -> str:
         ...     return ','.join(str(item) for item in instance)
-        ...
-        >>> example([1, 2, 3])
-        '1,2,3'
+
+        >>> assert example([1, 2, 3]) == '1,2,3'
 
     But, ``str`` will still have higher priority over ``Sequence``:
 
     .. code:: python
 
-        >>> example('abc')
-        'abc'
+        >>> example('abc') == 'abc'
 
     We also support user-defined protocols:
 
@@ -308,11 +297,10 @@ def typeclass(
         >>> from typing_extensions import Protocol
         >>> class CustomProtocol(Protocol):
         ...     field: str
-        ...
+
         >>> @example.instance(CustomProtocol, is_protocol=True)
         ... def _custom_protocol_example(instance: CustomProtocol) -> str:
         ...     return instance.field
-        ...
 
     Now, let's build a class that match this protocol and test it:
 
@@ -320,9 +308,8 @@ def typeclass(
 
         >>> class WithField(object):
         ...    field: str = 'with field'
-        ...
-        >>> example(WithField())
-        'with field'
+
+        >>> assert example(WithField()) == 'with field'
 
     Remember, that generic protocols have the same limitation as generic types.
 

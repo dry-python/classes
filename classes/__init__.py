@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Here we define the public API of our module.
 

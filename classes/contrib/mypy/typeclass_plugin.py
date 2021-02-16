@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Custom mypy plugin to enable typeclass concept to work.
 
@@ -27,7 +25,7 @@ from mypy.types import AnyType, CallableType, TypeOfAny, TypeVarType, UnionType
 
 def _adjust_arguments(ctx):
     typeclass_def = ctx.default_return_type.args[2]
-    if not isinstance(typeclass_def, CallableType):
+    if not isinstance(typeclass_def, CallableType):  # TODO: FunctionLike?
         return ctx.default_return_type
 
     args = [
