@@ -33,8 +33,7 @@ pip install classes
 ```
 
 You also need to [configure](https://classes.readthedocs.io/en/latest/pages/container.html#type-safety)
-`mypy` correctly and install our plugin
-to fix [this existing issue](https://github.com/python/mypy/issues/3157):
+`mypy` correctly and install our plugin:
 
 ```ini
 # In setup.cfg or mypy.ini:
