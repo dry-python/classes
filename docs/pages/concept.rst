@@ -91,8 +91,7 @@ with different value of different types:
 
 .. code:: python
 
-  >>> json('text')
-  'text'
+  >>> assert json('text') == '"text"'
   >>> assert json(1) == '1'
   >>> assert json(1.5) == '1.5'
 
