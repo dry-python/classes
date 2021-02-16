@@ -18,14 +18,14 @@ First of all, we always check that the signature is the same for all cases.
 .. code:: python
 
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def example(instance, arg: int, *, keyword: str) -> bool:
   ...     ...
-  ...
+
   >>> @example.instance(str)
   ... def _example_str(instance: str, arg: int, *, keyword: str) -> bool:
   ...     return instance * arg + keyword
-  ...
 
 Let's look at this example closely:
 
@@ -72,10 +72,11 @@ So, this would not work:
 
   >>> from typing import List
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def generic_typeclass(instance) -> str:
   ...     """We use this example to demonstrate the typing limitation."""
-  ...
+
   >>> @generic_typeclass.instance(List[int])
   ... def _generic_typeclass_list_int(instance: List[int]):
   ...   ...
@@ -91,18 +92,17 @@ But, this will (note that we use ``list`` inside ``.instance()`` call):
 
   >>> from typing import List
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def generic_typeclass(instance) -> str:
   ...     """We use this example to demonstrate the typing limitation."""
-  ...
+
   >>> @generic_typeclass.instance(list)
   ... def _generic_typeclass_list_int(instance: List):
   ...   return ''.join(str(list_item) for list_item in instance)
-  ...
-  >>> generic_typeclass([1, 2, 3])
-  '123'
-  >>> generic_typeclass(['a', 1, True])
-  'a1True'
+
+  >>> assert generic_typeclass([1, 2, 3]) == '123'
+  >>> assert generic_typeclass(['a', 1, True]) == 'a1True'
 
 Use primitive generics as they always have ``Any`` inside.
 Annotations should also be bound to any parameters.

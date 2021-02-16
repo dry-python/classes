@@ -1,5 +1,5 @@
 - case: typeclass_instances_union
-  disable_cache: true
+  disable_cache: false
   main: |
     from typing import Union
     from classes import typeclass
@@ -17,7 +17,7 @@
 
 
 - case: typeclass_instance_any
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -33,7 +33,7 @@
 
 
 - case: typeclass_instance_missing_first_arg
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -53,7 +53,7 @@
 
 
 - case: typeclass_wrong_param
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 
@@ -64,7 +64,7 @@
 
 
 - case: typeclass_instance_wrong_param
-  disable_cache: true
+  disable_cache: false
   main: |
     from classes import typeclass
 

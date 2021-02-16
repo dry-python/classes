@@ -40,7 +40,7 @@ to fix [this existing issue](https://github.com/python/mypy/issues/3157):
 # In setup.cfg or mypy.ini:
 [mypy]
 plugins =
-  classes.contrib.mypy.typeclass_plugin
+  classes.contrib.mypy.classes_plugin
 ```
 
 **Without this step**, your project will report type-violations here and there.
