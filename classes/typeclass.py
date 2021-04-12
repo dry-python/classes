@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Generic, NoReturn, Type, TypeVar, overload
 
-from typing_extensions import Literal
+from typing_extensions import Literal, final
 
 _TypeClassType = TypeVar('_TypeClassType')
 _ReturnType = TypeVar('_ReturnType')
@@ -8,6 +8,7 @@ _CallbackType = TypeVar('_CallbackType', bound=Callable)
 _InstanceType = TypeVar('_InstanceType')
 
 
+@final
 class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
     """
     That's how we represent typeclasses.
@@ -39,6 +40,8 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
     will typecheck.
 
     """
+
+    type: _InstanceType
 
     def __init__(self, signature: _CallbackType) -> None:
         """
