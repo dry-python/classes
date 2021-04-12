@@ -41,8 +41,6 @@ class _TypeClass(Generic[_TypeClassType, _ReturnType, _CallbackType]):
 
     """
 
-    type: _InstanceType
-
     def __init__(self, signature: _CallbackType) -> None:
         """
         Protected constuctor of the typeclass.
