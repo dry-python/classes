@@ -175,7 +175,7 @@ class _AdjustInstanceSignature(object):
     def _adjust_typeclass_callable(
         self,
         ctx: MethodContext,
-    ) -> Union[Instance, AnyType]:
+    ) -> MypyType:
         assert isinstance(ctx.type, Instance)
         assert isinstance(ctx.default_return_type, CallableType)
 
@@ -184,8 +184,6 @@ class _AdjustInstanceSignature(object):
 
         assert isinstance(real_signature, CallableType)
         assert isinstance(to_adjust, CallableType)
-        if not isinstance(to_adjust.arg_types[0], Instance):
-            return AnyType(TypeOfAny.from_error)
 
         instance_type = to_adjust.arg_types[0]
         instance_kind = to_adjust.arg_kinds[0]

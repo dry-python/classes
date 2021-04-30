@@ -1,0 +1,32 @@
+- case: typeclass_protocol_usage
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    @protocols.instance(Sized, is_protocol=True)
+    def _sized_protocols(instance: Sized, other: str) -> str:
+        ...
+
+    protocols('abc', 'xyz')
+    protocols([1, 2, 3], 'xyz')
+    protocols(None, 'xyz')  # E: Argument 1 to "protocols" has incompatible type "None"; expected "Sized"
+
+
+- case: typeclass_protocol_wrong_usage
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    @protocols.instance(Sized)  # E: Only concrete class can be given where "Type[Sized]" is expected
+    def _sized_protocols(instance: Sized, other: str) -> str:
+        ...
