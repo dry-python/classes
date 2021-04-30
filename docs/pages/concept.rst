@@ -64,6 +64,7 @@ The first on is "Typeclass definition", where we create a new typeclass:
 .. code:: python
 
   >>> from classes import typeclass
+
   >>> @typeclass
   ... def json(instance) -> str:
   ...     """That's definition!"""
@@ -101,6 +102,104 @@ That's it. There's nothing extra about typeclasses. They can be:
 - extended by new instances
 - and called
 
+supports method
+~~~~~~~~~~~~~~~
+
+You can check if a typeclass is supported via ``.supports()`` method.
+Example:
+
+.. code:: python
+
+  >>> assert json.supports(int) is True
+  >>> assert json.supports(dict) is False
+
+Class-based definition
+~~~~~~~~~~~~~~~~~~~~~~
+
+You can also define typeclasses not as functions, but as classes.
+It won't affect anything, except some advanced ``mypy`` usage.
+For example, functions in ``mypy`` cannot be used as type arguments.
+
+Instead of regular functions, you can define classes with ``__call__`` method.
+The syntax looks like this:
+
+.. code:: python
+
+  >>> from classes import typeclass
+
+  >>> class CanBeTrimmed(object):
+  ...     def __call__(self, instance, length: int) -> str:
+  ...         ...
+
+  >>> can_be_trimmed = typeclass(CanBeTrimmed)
+
+.. note::
+  Note that you have to use ``typeclass`` as a function call here,
+  class decorator won't work. Because ``mypy`` does not type-check them yet.
+
+The instance definition syntax is the same:
+
+.. code:: python
+
+   >>> @can_be_trimmed.instance(str)
+   ... def _can_be_trimmed_str(instance: str, length: int) -> str:
+   ...     return instance[:length]
+
+   >>> assert can_be_trimmed('abcde', 3) == 'abc'
+
+Defining typeclasses as Python classes
+will be the only option if you need to use ``Supports`` type.
+
+
+Supports
+--------
+
+We also have a special type to help you specifying
+that you want to work with only types that are a part of a specific typeclass.
+
+For example, you might want to work with only types
+that are able to be converted to JSON:
+
+.. code:: python
+
+    >>> from classes import Supports, typeclass
+
+    >>> class ToJson(object):
+    ...     def __call__(self, instance) -> str:
+    ...         ...
+
+    >>> to_json = typeclass(ToJson)
+
+    >>> @to_json.instance(int)
+    ... def _to_json_int(instance: int) -> str:
+    ...     return str(instance)
+
+    >>> @to_json.instance(str)
+    ... def _to_json_str(instance: str) -> str:
+    ...     return '"{0}"'.format(instance)
+
+    >>> def convert_to_json(
+    ...     instance: Supports[ToJson],
+    ... ) -> str:
+    ...     return to_json(instance)
+
+    >>> assert convert_to_json(1) == '1'
+    >>> assert convert_to_json('a') == '"a"'
+
+And this will fail (both in runtime and during type checking):
+
+    >>> # This will produce a mypy issue:
+    >>> # error: Argument 1 to "convert_to_json" has incompatible type "None";
+    >>> # expected "Supports[ToJson]"
+
+    >>> convert_to_json(None)
+    Traceback (most recent call last):
+      ...
+    NotImplementedError: Missing matched typeclass instance for type: NoneType
+
+.. warning::
+  ``Supports`` only works with typeclasses defined as Python classes.
+
 
 Related concepts
 ----------------
@@ -120,6 +219,7 @@ function signatures and return types in all cases:
 .. code:: python
 
   >>> from functools import singledispatch
+
   >>> @singledispatch
   ... def example(instance) -> str:
   ...     return 'default'
