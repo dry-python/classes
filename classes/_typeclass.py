@@ -242,6 +242,7 @@ class _TypeClass(
 
         >>> from typing import Callable
         >>> from classes import typeclass
+
         >>> @typeclass
         ... def used(instance, other: int) -> int:
         ...     '''Example typeclass to be used later.'''
