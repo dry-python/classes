@@ -288,7 +288,7 @@ class _TypeClass(
           the same return type for all cases.
           Only modified once during ``@typeclass`` creation
 
-        - ``_CallbackType`` is used to ensude that all parameters
+        - ``_CallbackType`` is used to ensure that all parameters
           for all type cases are the same.
           That's how we enforce consistency in all function signatures.
           The only exception is the first argument: it is polymorfic.
