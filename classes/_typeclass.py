@@ -26,8 +26,7 @@ def typeclass(
     """
     Function to define typeclasses.
 
-    Basic usage
-    ~~~~~~~~~~~
+    .. rubric:: Basic usage
 
     The first and the simplest example of a typeclass is just its definition:
 
