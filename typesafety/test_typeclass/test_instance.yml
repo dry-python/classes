@@ -13,7 +13,7 @@
     def _a_int_str(instance: Union[str, int]) -> str:
         return str(instance)
 
-    reveal_type(a)  # N: Revealed type is 'classes.typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (builtins.str*) -> builtins.str]'
+    reveal_type(a)  # N: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (builtins.str*) -> builtins.str, <nothing>]'
 
 
 - case: typeclass_instance_any
@@ -29,7 +29,7 @@
     def _a_int_str(instance: str) -> str:
         return str(instance)
 
-    reveal_type(a)  # N: Revealed type is 'classes.typeclass._TypeClass[builtins.str*, Any, def (builtins.str*) -> Any]'
+    reveal_type(a)  # N: Revealed type is 'classes._typeclass._TypeClass[builtins.str*, Any, def (builtins.str*) -> Any, <nothing>]'
 
 
 - case: typeclass_instance_missing_first_arg

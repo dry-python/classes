@@ -63,7 +63,7 @@ We support them, but without type parameters.
 Why? Because we cannot tell the difference
 between ``List[int]`` and ``List[str]`` in runtime.
 
-Python just does not have this information. It requires types to be infered.
+Python just does not have this information. It requires types to be inferred.
 And that's currently not possible.
 
 So, this would not work:

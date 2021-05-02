@@ -9,11 +9,10 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
 
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -27,7 +26,7 @@ jobs:
         echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
 
     - name: Set up cache
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: .venv
         key: venv-${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
@@ -36,15 +35,18 @@ jobs:
         poetry config virtualenvs.in-project true
         poetry install
 
+        poetry run pip install -U pip
+
     - name: Run tests
       run: |
         poetry run flake8 .
         poetry run mypy classes ./tests/**/*.py
-        poetry run pytest . docs/pages
+        poetry run codespell classes tests docs typesafety README.md CONTRIBUTING.md CHANGELOG.md
+        poetry run pytest classes tests docs/pages
         poetry run doc8 -q docs
         poetry run poetry check
         poetry run pip check
-        poetry run safety check --bare --full-report
+        poetry run safety check --full-report
         # We do this to speed up the build:
         poetry run pytest typesafety -p no:cov -o addopts="" --mypy-ini-file=setup.cfg
 

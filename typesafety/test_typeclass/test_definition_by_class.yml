@@ -1,0 +1,104 @@
+- case: typeclass_definied_by_type
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class ToJson(object):
+        def __call__(self, instance, verbose: bool = False) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int, verbose: bool = False) -> str:
+        return str(instance)
+
+    @to_json.instance(str)
+    def _to_json_str(instance: str, verbose: bool = False) -> str:
+        return instance
+
+    to_json(1)
+    to_json('a')
+    to_json(None)
+    reveal_type(to_json)
+  out: |
+    main:19: error: Argument 1 to "__call__" of "ToJson" has incompatible type "None"; expected "Union[str, int, Supports[ToJson]]"
+    main:20: note: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (Union[builtins.str*, builtins.int*, classes._typeclass.Supports[main.ToJson]], verbose: builtins.bool =) -> builtins.str, main.ToJson]'
+
+
+- case: typeclass_class_wrong_sig
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class ToJson(object):
+        def __call__(self, instance, verbose: bool = False) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: str) -> int:
+        ...
+  out: |
+    main:9: error: Argument 1 has incompatible type "Callable[[str], int]"; expected "Callable[[int, bool], str]"
+
+
+- case: typeclass_definied_by_protocol
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing_extensions import Protocol
+
+    class ToJson(Protocol):
+        def __call__(self, instance, verbose: bool = False) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int, verbose: bool = False) -> str:
+        return str(instance)
+
+    @to_json.instance(str)
+    def _to_json_str(instance: str, verbose: bool = False) -> str:
+        return instance
+
+    to_json(1)
+    to_json('a')
+    to_json(None)
+    reveal_type(to_json)
+  out: |
+    main:20: error: Argument 1 to "__call__" of "ToJson" has incompatible type "None"; expected "Union[str, int, Supports[ToJson]]"
+    main:21: note: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (Union[builtins.str*, builtins.int*, classes._typeclass.Supports[main.ToJson]], verbose: builtins.bool =) -> builtins.str, main.ToJson]'
+
+
+- case: typeclass_protocol_wrong_sig
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing_extensions import Protocol
+
+    class ToJson(Protocol):
+        def __call__(self, instance, verbose: bool = False) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: str) -> int:
+        ...
+  out: |
+    main:10: error: Argument 1 has incompatible type "Callable[[str], int]"; expected "Callable[[int, bool], str]"
+
+
+- case: typeclass_protocol_wrong_method
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class ToJson(object):
+        def __init__(self, instance, verbose: bool = False) -> str:  # E: The return type of "__init__" must be None
+            ...
+
+    to_json = typeclass(ToJson)

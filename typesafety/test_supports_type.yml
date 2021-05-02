@@ -1,0 +1,132 @@
+- case: typeclass_supports_type
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports
+
+    class ToJson(object):
+        def __call__(self, instance) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int) -> str:
+        return str(instance)
+
+    @to_json.instance(str)
+    def _to_json_str(instance: str) -> str:
+        return instance
+
+    def convert_to_json(instance: Supports[ToJson]) -> str:
+       return to_json(instance)
+
+    convert_to_json(1)
+    convert_to_json('a')
+    convert_to_json(None)
+  out: |
+    main:22: error: Argument 1 to "convert_to_json" has incompatible type "None"; expected "Supports[ToJson]"
+
+
+- case: typeclass_supports_callback
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports
+    from typing import Callable
+
+    class ToJson(object):
+        def __call__(self, instance) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int) -> str:
+        return str(instance)
+
+    @to_json.instance(str)
+    def _to_json_str(instance: str) -> str:
+        return instance
+
+    def convert_to_json(
+        callback: Callable[[Supports[ToJson]], str],
+        instance: Supports[ToJson],
+    ) -> str:
+        return callback(instance)
+
+    convert_to_json(to_json, 1)
+    convert_to_json(to_json, 'a')
+    convert_to_json(to_json, None)
+  out: |
+    main:26: error: Argument 2 to "convert_to_json" has incompatible type "None"; expected "Supports[ToJson]"
+
+
+- case: typeclass_supports_with_function
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports
+
+    @typeclass
+    def to_json(instance) -> str:
+        ...
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int) -> str:
+        return str(instance)
+
+    @to_json.instance(str)
+    def _to_json_str(instance: str) -> str:
+        return instance
+
+    def convert_to_json(instance: Supports[to_json]) -> str:
+       ...
+  out: |
+    main:15: error: Function "main.to_json" is not valid as a type
+    main:15: note: Perhaps you need "Callable[...]" or a callback protocol?
+
+
+- case: typeclass_supports_other
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports
+
+    class ToJson(object):
+        def __call__(self, instance) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    class Other(object):
+        def __call__(self, instance) -> str:
+            ...
+
+    def convert_to_json(instance: Supports[Other]) -> str:
+        return to_json(instance)
+  out: |
+    main:14: error: Argument 1 to "__call__" of "ToJson" has incompatible type "Supports[Other]"; expected "Union[<nothing>, Supports[ToJson]]"
+
+
+- case: supports_annotation
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports
+
+    class ToJson(object):
+        def __call__(self, instance) -> str:
+            ...
+
+    to_json = typeclass(ToJson)
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int) -> str:
+        return str(instance)
+
+    a: Supports[ToJson] = 1
+    b: Supports[ToJson] = 'a'  # E: Incompatible types in assignment (expression has type "str", variable has type "Supports[ToJson]")
+
+
+- case: supports_callable_bound
+  disable_cache: false
+  main: |
+    from classes import Supports
+
+    Supports[int]  # E: Value of type variable "_CallbackType" of "Supports" cannot be "int"
