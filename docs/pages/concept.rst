@@ -205,7 +205,7 @@ You can also use ``Supports`` as a type annotation for defining typeclasses:
     ...     def __call__(self, instance: 'Supports[MyFeature]') -> str:
     ...         ...
 
-It might be helpfull, when you have ``no-untyped-def`` rule enabled.
+It might be helpful, when you have ``no-untyped-def`` rule enabled.
 
 .. warning::
   ``Supports`` only works with typeclasses defined as Python classes.
