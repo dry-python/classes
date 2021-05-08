@@ -95,7 +95,6 @@ class _AdjustArguments(object):
     ) -> MypyType:
         assert isinstance(typeclass_def, CallableType)
         assert isinstance(ctx.default_return_type, Instance)
-        self._check_typeclass_definition(typeclass_def, ctx)
 
         typeclass_def.arg_types[0] = UninhabitedType()
 
@@ -112,27 +111,6 @@ class _AdjustArguments(object):
 
         ctx.default_return_type.args = (*args, typeclass_def, definition_type)
         return ctx.default_return_type
-
-    def _check_typeclass_definition(
-        self,
-        signature: CallableType,
-        ctx: FunctionContext,
-    ) -> None:
-        instance_type = get_proper_type(signature.arg_types[0])
-        if isinstance(instance_type, UninhabitedType):
-            return
-
-        if isinstance(instance_type, AnyType):
-            if instance_type.type_of_any != TypeOfAny.unannotated:
-                ctx.api.fail(
-                    'Typeclass instance must not be annotated',
-                    ctx.context,
-                )
-        else:
-            ctx.api.fail(
-                'Typeclass instance must be of `Any` type',
-                ctx.context,
-            )
 
 
 def _adjust_call_signature(ctx: MethodSigContext) -> CallableType:

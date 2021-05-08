@@ -197,6 +197,16 @@ And this will fail (both in runtime and during type checking):
       ...
     NotImplementedError: Missing matched typeclass instance for type: NoneType
 
+You can also use ``Supports`` as a type annotation for defining typeclasses:
+
+.. code:: python
+
+   >>> class MyFeature(object):
+    ...     def __call__(self, instance: 'Supports[MyFeature]') -> str:
+    ...         ...
+
+It might be helpfull, when you have ``no-untyped-def`` rule enabled.
+
 .. warning::
   ``Supports`` only works with typeclasses defined as Python classes.
 
