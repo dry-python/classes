@@ -197,11 +197,25 @@ And this will fail (both in runtime and during type checking):
       ...
     NotImplementedError: Missing matched typeclass instance for type: NoneType
 
+
+One more tip: you can use ``Protocol`` as the base class for this.
+It might be a good indicator that this is not a real Python class,
+but is just an abstraction. Our team would recommend this style:
+
+.. code:: python
+
+    >>> from typing_extensions import Protocol, final
+
+    >>> @final  # This type cannot have sub-types
+    ... class MyTypeclass(Protocol):  # It cannot have instances
+    ...     def __call__(self, instance) -> str:  # Protocols don't have bodies
+    ...         """Tell us, what this typeclass is about."""
+
 You can also use ``Supports`` as a type annotation for defining typeclasses:
 
 .. code:: python
 
-   >>> class MyFeature(object):
+    >>> class MyFeature(object):
     ...     def __call__(self, instance: 'Supports[MyFeature]') -> str:
     ...         ...
 
