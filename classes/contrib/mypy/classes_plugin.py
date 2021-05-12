@@ -19,6 +19,7 @@ https://github.com/TypedDjango/pytest-mypy-plugins
 
 from typing import Callable, Optional, Type, Union
 
+from mypy.nodes import ARG_POS, Decorator, MemberExpr
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext, Plugin
 from mypy.typeops import bind_self
 from mypy.types import AnyType, CallableType, Instance
@@ -46,15 +47,16 @@ class _AdjustArguments(object):
     """
 
     def __call__(self, ctx: FunctionContext) -> MypyType:
+        defn = ctx.arg_types[0][0]
         is_defined_by_class = (
-            isinstance(ctx.arg_types[0][0], CallableType) and
-            not ctx.arg_types[0][0].arg_types and
-            isinstance(ctx.arg_types[0][0].ret_type, Instance)
+            isinstance(defn, CallableType) and
+            not defn.arg_types and
+            isinstance(defn.ret_type, Instance)
         )
 
         if is_defined_by_class:
             return self._adjust_protocol_arguments(ctx)
-        elif isinstance(ctx.arg_types[0][0], CallableType):
+        elif isinstance(defn, CallableType):
             return self._adjust_function_arguments(ctx)
         return ctx.default_return_type
 
@@ -144,11 +146,86 @@ class _AdjustInstanceSignature(object):
     """
 
     def __call__(self, ctx: MethodContext) -> MypyType:
+        if not isinstance(ctx.type, Instance):
+            return ctx.default_return_type
+        if not isinstance(ctx.default_return_type, CallableType):
+            return ctx.default_return_type
+
         instance_type = self._adjust_typeclass_callable(ctx)
         self._adjust_typeclass_type(ctx, instance_type)
         if isinstance(instance_type, Instance):
             self._add_supports_metadata(ctx, instance_type)
         return ctx.default_return_type
+
+    @classmethod
+    def from_function_decorator(cls, ctx: FunctionContext) -> MypyType:
+        """
+        It is used when ``.instance`` is used without params as a decorator.
+
+        Like:
+
+        .. code:: python
+
+           @some.instance
+           def _some_str(instance: str) -> str:
+               ...
+
+        """
+        is_decorator = (
+            isinstance(ctx.context, Decorator) and
+            len(ctx.context.decorators) == 1 and
+            isinstance(ctx.context.decorators[0], MemberExpr) and
+            ctx.context.decorators[0].name == 'instance'
+        )
+        if not is_decorator:
+            return ctx.default_return_type
+
+        passed_function = ctx.arg_types[0][0]
+        assert isinstance(passed_function, CallableType)
+
+        if not passed_function.arg_types:
+            return ctx.default_return_type
+
+        annotation_type = passed_function.arg_types[0]
+        if isinstance(annotation_type, Instance):
+            if annotation_type.type and annotation_type.type.is_protocol:
+                ctx.api.fail(
+                    'Protocols must be passed with `is_protocol=True`',
+                    ctx.context,
+                )
+                return ctx.default_return_type
+        else:
+            ctx.api.fail(
+                'Only simple instance types are allowed, got: {0}'.format(
+                    annotation_type,
+                ),
+                ctx.context,
+            )
+            return ctx.default_return_type
+
+        ret_type = CallableType(
+            arg_types=[passed_function],
+            arg_kinds=[ARG_POS],
+            arg_names=[None],
+            ret_type=AnyType(TypeOfAny.implementation_artifact),
+            fallback=passed_function.fallback,
+        )
+        instance_type = ctx.api.expr_checker.accept(  # type: ignore
+            ctx.context.decorators[0].expr,  # type: ignore
+        )
+
+        # We need to change the `ctx` type from `Function` to `Method`:
+        return cls()(MethodContext(
+            type=instance_type,
+            arg_types=ctx.arg_types,
+            arg_kinds=ctx.arg_kinds,
+            arg_names=ctx.arg_names,
+            args=ctx.args,
+            callee_arg_names=ctx.callee_arg_names,
+            default_return_type=ret_type,
+            context=ctx.context,
+            api=ctx.api,
+        ))
 
     def _adjust_typeclass_callable(
         self,
@@ -302,6 +379,9 @@ class _TypedDecoratorPlugin(Plugin):
         """Here we adjust the typeclass constructor."""
         if fullname == 'classes._typeclass.typeclass':
             return _AdjustArguments()
+        if fullname == 'instance of _TypeClass':
+            # `@some.instance` call without params:
+            return _AdjustInstanceSignature.from_function_decorator
         return None
 
     def get_method_hook(
@@ -310,6 +390,7 @@ class _TypedDecoratorPlugin(Plugin):
     ) -> Optional[Callable[[MethodContext], MypyType]]:
         """Here we adjust the typeclass with new allowed types."""
         if fullname == 'classes._typeclass._TypeClass.instance':
+            # `@some.instance` call with explicit params:
             return _AdjustInstanceSignature()
         return None
 

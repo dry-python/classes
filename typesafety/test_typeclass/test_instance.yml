@@ -16,6 +16,26 @@
     reveal_type(a)  # N: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (builtins.str*) -> builtins.str, <nothing>]'
 
 
+- case: typeclass_instance_mixed_order
+  disable_cache: False
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(str)
+    def _some_str(instance: str) -> str:
+        ...
+
+    @some.instance(int)
+    def _some_int(instance: str) -> str:
+        ...
+  out: |
+    main:11: error: Argument 1 has incompatible type "Callable[[str], str]"; expected "Callable[[int], str]"
+
+
 - case: typeclass_instance_any
   disable_cache: false
   main: |
@@ -46,21 +66,7 @@
         ...
 
   out: |
-    main:7: error: No overload variant of "instance" of "_TypeClass" matches argument type "Callable[[], Any]"
-    main:7: note:     <1 more non-matching overload not shown>
-    main:7: note:     def [_InstanceType] instance(self, type_argument: Type[_InstanceType], *, is_protocol: Literal[False] = ...) -> Callable[[Callable[[_InstanceType], Any]], NoReturn]
-    main:7: note: Possible overload variant:
-
-
-- case: typeclass_wrong_param
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    typeclass(1)
-
-  out: |
-    main:3: error: Value of type variable "_CallbackType" of "typeclass" cannot be "int"
+    main:7: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "Callable[[], Any]"; expected "Callable[[<nothing>], Any]"
 
 
 - case: typeclass_instance_wrong_param
@@ -77,5 +83,60 @@
   out: |
     main:7: error: No overload variant of "instance" of "_TypeClass" matches argument type "int"
     main:7: note:     <1 more non-matching overload not shown>
+    main:7: note:     def [_InstanceType] instance(self, type_argument: Callable[[_InstanceType], Any]) -> NoReturn
     main:7: note:     def [_InstanceType] instance(self, type_argument: Type[_InstanceType], *, is_protocol: Literal[False] = ...) -> Callable[[Callable[[_InstanceType], Any]], NoReturn]
-    main:7: note: Possible overload variant:
+    main:7: note: Possible overload variants:
+
+
+- case: typeclass_instance_annotation_only
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance
+    def _some_str(instance: str) -> str:
+        ...
+
+    some('abc')
+
+
+- case: typeclass_instance_annotation_only_complex_types
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union, Sized, Type, Any
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance
+    def _some_union(instance: Union[str, int]) -> str:
+        ...
+
+    @some.instance
+    def _some_type_type(instance: Type[str]) -> str:
+        ...
+
+    @some.instance
+    def _some_protocol(instance: Sized) -> str:
+        ...
+
+    @some.instance
+    def _some_annotated(instance) -> str:
+      ...
+
+    @some.instance
+    def _some_explicit_any(instance: Any) -> str:
+      ...
+  out: |
+    main:8: error: Only simple instance types are allowed, got: Union[builtins.str, builtins.int]
+    main:12: error: Only simple instance types are allowed, got: Type[builtins.str]
+    main:16: error: Protocols must be passed with `is_protocol=True`
+    main:20: error: Only simple instance types are allowed, got: Any
+    main:24: error: Only simple instance types are allowed, got: Any
+    main:25: error: Explicit "Any" is not allowed
