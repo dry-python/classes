@@ -107,7 +107,7 @@ These instances will be executed when the corresponding type will be supplied.
   Complex type from annotations are also not supported
   like: ``Union[str, int]``.
 
-  So, use annotations for the simpliest cases only
+  So, use annotations for the simplest cases only
   and use explicit types in all other cases.
 
 And the last step is to call our typeclass
