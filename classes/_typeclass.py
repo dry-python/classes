@@ -92,6 +92,16 @@ def typeclass(
     then it will be called,
     otherwise the default implementation will be called instead.
 
+    You can also use ``.instance`` with just annotation for better readability:
+
+    .. code:: python
+
+        >>> @example.instance
+        ... def _example_float(instance: float) -> str:
+        ...     return 0.5
+
+        >>> assert example(5.1) == 0.5
+
     .. rubric:: Generics
 
     We also support generic, but the support is limited.
@@ -398,6 +408,13 @@ class _TypeClass(
     @overload
     def instance(
         self,
+        type_argument: Callable[[_InstanceType], _ReturnType],
+    ) -> NoReturn:
+        """Case for typeclasses that are defined by annotation only."""
+
+    @overload
+    def instance(
+        self,
         type_argument,
         *,
         is_protocol: Literal[True],
@@ -423,10 +440,27 @@ class _TypeClass(
         would not match ``Type[_InstanceType]`` type due to ``mypy`` rules.
 
         """
-        isinstance(object(), type_argument)  # That's how we check for generics
+        original_handler = None
+        if not is_protocol:
+            # If it is not a protocol, we can try to get an annotation from
+            annotations = getattr(type_argument, '__annotations__', None)
+            if annotations:
+                original_handler = type_argument
+                type_argument = annotations[
+                    type_argument.__code__.co_varnames[0]  # noqa: WPS609
+                ]
+
+        # That's how we check for generics,
+        # generics that look like `List[int]` or `set[T]` will fail this check,
+        # because they are `_GenericAlias` instance,
+        # which raises an exception for `__isinstancecheck__`
+        isinstance(object(), type_argument)
 
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
             container[type_argument] = implementation
             return implementation
+
+        if original_handler is not None:
+            return decorator(original_handler)  # type: ignore
         return decorator

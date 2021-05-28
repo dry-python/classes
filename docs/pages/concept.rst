@@ -13,6 +13,9 @@ works differently for ``"string"`` and ``[1, 2]``.
 Or ``+`` operator that works for numbers like "add"
 and for strings it works like "concatenate".
 
+Existing approaches
+-------------------
+
 Classes and interfaces
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -45,8 +48,17 @@ to add your own types to this process.
 So, how does it work?
 
 
+Typeclasses
+-----------
+
+So, typeclasses help us to build new abstractions near the existing types,
+not inside them.
+
+Basically, we will learn how to dispatch
+different logic based on predefined set of types.
+
 Steps
------
+~~~~~
 
 To use typeclasses you should understand these steps:
 
@@ -75,7 +87,7 @@ Let's define some instances:
 
 .. code:: python
 
-  >>> @json.instance(str)
+  >>> @json.instance  # You can use just the annotation
   ... def _json_str(instance: str) -> str:
   ...     return '"{0}"'.format(instance)
 
@@ -86,6 +98,17 @@ Let's define some instances:
 
 That's how we define instances for our typeclass.
 These instances will be executed when the corresponding type will be supplied.
+
+.. note::
+  ``.instance`` can use explicit type or just an existing annotation.
+  It is recommended to use the explicit type, because annotations can be tricky.
+  For example, sometimes you have to use ``ForwardRef``
+  or so called string-based-annotations. It is not supported.
+  Complex type from annotations are also not supported
+  like: ``Union[str, int]``.
+
+  So, use annotations for the simplest cases only
+  and use explicit types in all other cases.
 
 And the last step is to call our typeclass
 with different value of different types:

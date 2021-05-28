@@ -10,6 +10,17 @@
     reveal_type(example)  # N: Revealed type is 'classes._typeclass._TypeClass[<nothing>, builtins.bool, def (instance: <nothing>, arg: builtins.str, other: builtins.int, *, attr: builtins.bool) -> builtins.bool, <nothing>]'
 
 
+- case: typeclass_wrong_param
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    typeclass(1)
+
+  out: |
+    main:3: error: Value of type variable "_CallbackType" of "typeclass" cannot be "int"
+
+
 - case: typeclass_instance
   disable_cache: false
   main: |
