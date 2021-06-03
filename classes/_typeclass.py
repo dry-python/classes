@@ -12,17 +12,19 @@ from typing import (
 from typing_extensions import Literal, final
 
 _TypeClassType = TypeVar('_TypeClassType')
-_ReturnType = TypeVar('_ReturnType')
-_CallbackType = TypeVar('_CallbackType', bound=Callable)
+_ReturnType = TypeVar('_ReturnType')  # TODO: do we really need it?
+
+_SignatureType = TypeVar('_SignatureType', bound=Callable)
+
 _InstanceType = TypeVar('_InstanceType')
 _DefinitionType = TypeVar('_DefinitionType', bound=Type)
 
 
 def typeclass(
-    signature: _CallbackType,
+    signature: _SignatureType,
     # By default `_TypeClassType` and `_ReturnType` are `nothing`,
     # but we enhance them via mypy plugin later:
-) -> '_TypeClass[_TypeClassType, _ReturnType, _CallbackType, _DefinitionType]':
+) -> '_TypeClass[_TypeClassType, _SignatureType, _DefinitionType]':
     """
     Function to define typeclasses.
 
@@ -188,7 +190,7 @@ def typeclass(
     return _TypeClass(signature)
 
 
-class Supports(Generic[_CallbackType]):
+class Supports(Generic[_SignatureType]):
     """
     Used to specify that some value is a part of a typeclass.
 
@@ -238,9 +240,7 @@ class Supports(Generic[_CallbackType]):
 
 
 @final
-class _TypeClass(
-    Generic[_TypeClassType, _ReturnType, _CallbackType, _DefinitionType],
-):
+class _TypeClass(Generic[_TypeClassType, _SignatureType, _DefinitionType]):
     """
     That's how we represent typeclasses.
 
@@ -275,7 +275,7 @@ class _TypeClass(
 
     __slots__ = ('_instances', '_protocols')
 
-    def __init__(self, signature: _CallbackType) -> None:
+    def __init__(self, signature: _SignatureType) -> None:
         """
         Protected constructor of the typeclass.
 
@@ -298,7 +298,7 @@ class _TypeClass(
           the same return type for all cases.
           Only modified once during ``@typeclass`` creation
 
-        - ``_CallbackType`` is used to ensure that all parameters
+        - ``_SignatureType`` is used to ensure that all parameters
           for all type cases are the same.
           That's how we enforce consistency in all function signatures.
           The only exception is the first argument: it is polymorfic.
@@ -408,13 +408,6 @@ class _TypeClass(
     @overload
     def instance(
         self,
-        type_argument: Callable[[_InstanceType], _ReturnType],
-    ) -> NoReturn:
-        """Case for typeclasses that are defined by annotation only."""
-
-    @overload
-    def instance(
-        self,
         type_argument,
         *,
         is_protocol: Literal[True],
@@ -423,6 +416,25 @@ class _TypeClass(
         NoReturn,  # We need this type to disallow direct instance calls
     ]:
         """Case for protocol based typeclasses."""
+
+    @overload
+    def instance(
+        self,
+        type_argument: Callable,  # See `mypy` plugin for more specific type
+    ) -> NoReturn:
+        """
+        Case for typeclasses that are defined by annotation only.
+
+        We do not limit what callables can be passed here with type annotations,
+        because it is too complex to express.
+
+        For example, we require different variance rules
+        for different function arguments.
+        The first argument should be strictly covariant (more specific).
+        Other arguments should be similar or contravariant (less specific).
+
+        See our ``mypy`` plugin for more details.
+        """
 
     def instance(
         self,

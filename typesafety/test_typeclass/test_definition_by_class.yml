@@ -23,7 +23,7 @@
     reveal_type(to_json)
   out: |
     main:19: error: Argument 1 to "__call__" of "ToJson" has incompatible type "None"; expected "Union[str, int, Supports[ToJson]]"
-    main:20: note: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (Union[builtins.str*, builtins.int*, classes._typeclass.Supports[main.ToJson]], verbose: builtins.bool =) -> builtins.str, main.ToJson]'
+    main:20: note: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], def (Union[builtins.str*, builtins.int*, classes._typeclass.Supports[main.ToJson]], verbose: builtins.bool =) -> builtins.str, main.ToJson]'
 
 
 - case: typeclass_class_wrong_sig
@@ -70,7 +70,7 @@
     reveal_type(to_json)
   out: |
     main:20: error: Argument 1 to "__call__" of "ToJson" has incompatible type "None"; expected "Union[str, int, Supports[ToJson]]"
-    main:21: note: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (Union[builtins.str*, builtins.int*, classes._typeclass.Supports[main.ToJson]], verbose: builtins.bool =) -> builtins.str, main.ToJson]'
+    main:21: note: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], def (Union[builtins.str*, builtins.int*, classes._typeclass.Supports[main.ToJson]], verbose: builtins.bool =) -> builtins.str, main.ToJson]'
 
 
 - case: typeclass_protocol_wrong_sig
