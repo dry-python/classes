@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # we need to mokey patch that constant.
 if sphinx.version_info[0] >= 4:
     import errno  # noqa: WPS433
+
     import sphinx.util.osutil  # noqa: I003, WPS301, WPS433
     sphinx.util.osutil.ENOENT = errno.ENOENT
 

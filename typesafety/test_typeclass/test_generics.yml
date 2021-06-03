@@ -1,0 +1,21 @@
+- case: typeclass_generic_definition
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, TypeVar
+
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance: Iterable[X], b: int) -> X:
+        ...
+
+    @some.instance
+    def _some_ex(instance: List[X], b: int) -> X:
+        return instance[b]  # We need this line to test inner inference
+
+    x = ['a', 'b']
+    y = [1, 2, 3]
+    reveal_type(some(x, 0))  # N: Revealed type is 'builtins.str*'
+    reveal_type(some(y, 0))  # N: Revealed type is 'builtins.int*'

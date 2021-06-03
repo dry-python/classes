@@ -25,7 +25,7 @@
     def some(instance) -> str:
         ...
 
-    @some.instance(str)
+    @some.instance(int)
     def _some_str(instance: str) -> str:
         ...
 
@@ -33,7 +33,41 @@
     def _some_int(instance: str) -> str:
         ...
   out: |
+    main:7: error: Argument 1 has incompatible type "Callable[[str], str]"; expected "Callable[[int], str]"
     main:11: error: Argument 1 has incompatible type "Callable[[str], str]"; expected "Callable[[int], str]"
+
+
+- case: typeclass_instance_variance
+  disable_cache: False
+  main: |
+    from classes import typeclass
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance, arg: B) -> str:
+        ...
+
+    @some.instance(str)
+    def _some_str(instance: str, arg: A) -> str:
+        ...
+
+    @some.instance(bool)
+    def _some_bool(instance: bool, arg: B) -> str:
+        ...
+
+    @some.instance(int)
+    def _some_int(instance: int, arg: C) -> str:
+        ...
+  out: |
+    main:20: error: Argument 1 has incompatible type "Callable[[int, C], str]"; expected "Callable[[int, B], str]"
 
 
 - case: typeclass_instance_any
