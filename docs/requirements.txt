@@ -14,4 +14,4 @@ typing-extensions==3.10.0.0
 
 # TODO: Remove this lock when we found and fix the route case.
 # See: https://github.com/typlog/sphinx-typlog-theme/issues/22
-jinja2==2.11.2
+jinja2==2.11.3
