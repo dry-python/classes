@@ -7,8 +7,40 @@ from mypy.subtypes import is_subtype
 from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny
+from typing_extensions import Final
 
 from classes.contrib.mypy.typeops import inference, type_queries
+
+_INCOMPATIBLE_INSTANCE_MSG: Final = (
+    'Instance callback is incompatible "{0}"; expected "{1}"'
+)
+
+_INSTANCE_RESTRICTION_MSG: Final = (
+    'Instance "{0}" does not match original type "{1}"'
+)
+
+_INSTANCE_RUNTIME_MISMATCH: Final = (
+    'Instance "{0}" does not match runtime type "{1}"'
+)
+
+_IS_PROTOCOL_LITERAL_BOOL: Final = (
+    'Use literal bool for "is_protocol" argument, got: "{0}"'
+)
+
+_IS_PROTOCOL_MISSING: Final = 'Protocols must be passed with "is_protocol=True"'
+
+_IS_PROTOCOL_UNWANTED: Final = (
+    'Regular types must be passed with "is_protocol=False"'
+)
+
+_CONCRETE_GENERIC_MSG: Final = (
+    'Instance "{0}" has concrete generic type, ' +
+    'it is not supported during runtime'
+)
+
+_UNBOUND_TYPE_MSG: Final = (
+    'Runtime type "{0}" has unbound type, use implicit any'
+)
 
 
 def check_typeclass(
@@ -90,12 +122,12 @@ def _check_typeclass_signature(
         ],
     )
     signature_check = is_subtype(
-        simplified_typeclass_signature,
         simplified_instance_signature,
+        simplified_typeclass_signature,
     )
     if not signature_check:
         ctx.api.fail(
-            'Instance callback is incompatible "{0}"; expected "{1}"'.format(
+            _INCOMPATIBLE_INSTANCE_MSG.format(
                 instance_signature,
                 typeclass_signature.copy_modified(arg_types=[
                     instance_signature.arg_types[0],  # Better error message
@@ -142,7 +174,7 @@ def _check_instance_type(
     )
     if not instance_check:
         ctx.api.fail(
-            'Instance "{0}" does not match original type "{1}"'.format(
+            _INSTANCE_RESTRICTION_MSG.format(
                 instance_signature.arg_types[0],
                 typeclass_signature.arg_types[0],
             ),
@@ -187,10 +219,7 @@ def _check_runtime_type(
     )
     if not instance_check:
         ctx.api.fail(
-            'Instance "{0}" does not match runtime type "{1}"'.format(
-                instance_type,
-                runtime_type,
-            ),
+            _INSTANCE_RUNTIME_MISMATCH.format(instance_type, runtime_type),
             ctx.context,
         )
 
@@ -213,12 +242,10 @@ def _check_protocol_arg(
         isinstance(passed_arg.last_known_value.value, bool)
     )
     if is_literal_bool:
-        return passed_arg.last_known_value.value, True
+        return passed_arg.last_known_value.value, True  # type: ignore
 
     ctx.api.fail(
-        'Use literal bool for "is_protocol" argument, got: "{0}"'.format(
-            passed_types.items[1],
-        ),
+        _IS_PROTOCOL_LITERAL_BOOL.format(passed_types.items[1]),
         ctx.context,
     )
     return False, False
@@ -232,16 +259,10 @@ def _check_runtime_protocol(
 ) -> bool:
     if isinstance(runtime_type, Instance) and runtime_type.type:
         if not is_protocol and runtime_type.type.is_protocol:
-            ctx.api.fail(
-                'Protocols must be passed with "is_protocol=True"',
-                ctx.context,
-            )
+            ctx.api.fail(_IS_PROTOCOL_MISSING, ctx.context)
             return False
         elif is_protocol and not runtime_type.type.is_protocol:
-            ctx.api.fail(
-                'Regular types must be passed with "is_protocol=False"',
-                ctx.context,
-            )
+            ctx.api.fail(_IS_PROTOCOL_UNWANTED, ctx.context)
             return False
     return True
 
@@ -252,23 +273,22 @@ def _check_concrete_generics(
     ctx: MethodContext,
 ) -> bool:
     has_concrete_type = False
-    for type_ in (instance_type, runtime_type):
-        local_check = type_queries.has_concrete_type(type_, ctx)
+    type_settings = (  # Not a dict, because of `hash` problems
+        (instance_type, False),
+        (runtime_type, True),
+    )
+
+    for type_, forbid_explicit_any in type_settings:
+        local_check = type_queries.has_concrete_type(
+            type_,
+            ctx,
+            forbid_explicit_any=forbid_explicit_any,
+        )
         if local_check:
-            ctx.api.fail(
-                'Instance "{0}" has concrete type, use typevars or any'.format(
-                    type_,
-                ),
-                ctx.context,
-            )
+            ctx.api.fail(_CONCRETE_GENERIC_MSG.format(type_), ctx.context)
         has_concrete_type = has_concrete_type or local_check
 
-    has_unbound_type = type_queries.has_unbound_type(runtime_type, ctx)
-    if has_unbound_type:
-        ctx.api.fail(
-            'Runtime type "{0}" has unbound type, use implicit any'.format(
-                runtime_type,
-            ),
-            ctx.context,
-        )
-    return has_concrete_type and has_unbound_type
+    if type_queries.has_unbound_type(runtime_type, ctx):
+        ctx.api.fail(_UNBOUND_TYPE_MSG.format(runtime_type), ctx.context)
+        return False
+    return has_concrete_type

@@ -1,4 +1,14 @@
-from typing import TYPE_CHECKING, Callable, Dict, Generic, Type, TypeVar, Union
+from typing import (  # noqa: WPS235
+    TYPE_CHECKING,
+    Callable,
+    ClassVar,
+    Dict,
+    Generic,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from typing_extensions import final
 
@@ -172,6 +182,16 @@ def typeclass(
     Remember, that generic protocols have the same limitation as generic types.
 
     """
+    if signature in _TypeClass._known_signatures:  # type: ignore # noqa: WPS437
+        raise TypeError(
+            'Typeclass definition "{0}" cannot be reused'.format(
+                signature,
+            ),
+        )
+    if isinstance(signature, type):
+        _TypeClass._known_signatures.add(  # type: ignore # noqa: WPS437
+            signature,
+        )
     return _TypeClass(signature)
 
 
@@ -262,6 +282,7 @@ class _TypeClass(
     """
 
     __slots__ = ('_instances', '_protocols')
+    _known_signatures: ClassVar[Set[_SignatureType]] = set()
 
     def __init__(self, signature: _SignatureType) -> None:
         """

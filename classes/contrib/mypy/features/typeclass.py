@@ -1,5 +1,6 @@
 from typing import Optional
 
+from mypy.nodes import Decorator, TypeInfo
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext
 from mypy.typeops import bind_self
 from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
@@ -7,7 +8,12 @@ from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny, UninhabitedType, UnionType, get_proper_type
 from typing_extensions import final
 
-from classes.contrib.mypy.typeops import instance_args, type_loader, typecheck
+from classes.contrib.mypy.typeops import (
+    inference,
+    instance_args,
+    type_loader,
+    typecheck,
+)
 
 
 @final
@@ -33,10 +39,14 @@ class ConstructorReturnType(object):
 
         if is_defined_by_class:
             return self._adjust_protocol_arguments(ctx)
-        elif isinstance(defn, CallableType):
-            assert defn.definition
+        elif isinstance(defn, CallableType) and defn.definition:
             return self._adjust_typeclass(defn, defn.definition.fullname, ctx)
-        return ctx.default_return_type
+
+        ctx.api.fail(
+            'Invalid typeclass definition: "{0}"'.format(defn),
+            ctx.context,
+        )
+        return UninhabitedType()
 
     def _adjust_protocol_arguments(self, ctx: FunctionContext) -> MypyType:
         assert isinstance(ctx.arg_types[0][0], CallableType)
@@ -54,12 +64,14 @@ class ConstructorReturnType(object):
 
         signature_type = get_proper_type(signature.type)
         assert isinstance(signature_type, CallableType)
-        return self._adjust_typeclass(
+        typeclass = self._adjust_typeclass(
             bind_self(signature_type),
             type_info.fullname,
             ctx,
             class_definition=instance,
         )
+        self._process_typeclass_metadata(type_info, typeclass, ctx)
+        return typeclass
 
     def _adjust_typeclass(
         self,
@@ -81,6 +93,23 @@ class ConstructorReturnType(object):
             LiteralType(definition_fullname, str_fallback),
         )
         return ctx.default_return_type
+
+    def _process_typeclass_metadata(
+        self,
+        type_info: TypeInfo,
+        typeclass: MypyType,
+        ctx: FunctionContext,
+    ) -> None:
+        namespace = type_info.metadata.setdefault('classes', {})
+        if namespace.get('typeclass'):  # TODO: the same for functions
+            ctx.api.fail(
+                'Typeclass definition "{0}" cannot be reused'.format(
+                    type_info.fullname,
+                ),
+                ctx.context,
+            )
+            return
+        namespace['typeclass'] = typeclass
 
 
 def instance_return_type(ctx: MethodContext) -> MypyType:
@@ -142,7 +171,13 @@ class InstanceDefReturnType(object):
             passed_types=ctx.type.args[0],
             ctx=ctx,
         )
-        self._add_new_instance_type(typeclass, instance_type)
+        self._add_new_instance_type(
+            typeclass=typeclass,
+            new_type=instance_type,
+            fullname=typeclass_ref.args[3].value,
+            ctx=ctx,
+        )
+        ctx.type.args[1].args = typeclass.args  # Without this line
         self._add_supports_metadata(typeclass, instance_type, ctx)
         return ctx.default_return_type
 
@@ -150,7 +185,21 @@ class InstanceDefReturnType(object):
         self,
         typeclass: Instance,
         new_type: MypyType,
+        fullname: str,
+        ctx: MethodContext,
     ) -> None:
+        has_multiple_decorators = (
+            isinstance(ctx.context, Decorator) and
+            len(ctx.context.decorators) > 1
+        )
+        if has_multiple_decorators:
+            # TODO: what happens here?
+            new_type = inference.infer_runtime_type_from_context(
+                fallback=new_type,
+                fullname=fullname,
+                ctx=ctx,
+            )
+
         typeclass.args = (
             instance_args.add_unique(new_type, typeclass.args[0]),
             *typeclass.args[1:],
@@ -208,8 +257,13 @@ class InstanceDefReturnType(object):
         """
         if not isinstance(instance_type, Instance):
             return
+        if not isinstance(typeclass.args[2], Instance):
+            return
 
         assert isinstance(ctx.type, Instance)
+
+        # We also need to modify the metadata for a typeclass typeinfo:
+        typeclass.args[2].type.metadata['classes']['typeclass'] = typeclass
 
         supports_spec = type_loader.load_supports_type(typeclass.args[2], ctx)
         if supports_spec not in instance_type.type.bases:

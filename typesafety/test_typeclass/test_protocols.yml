@@ -17,7 +17,7 @@
     protocols(None, 'xyz')  # E: Argument 1 to "protocols" has incompatible type "None"; expected "Sized"
 
 
-- case: typeclass_protocol_wrong_usage
+- case: typeclass_protocol_wrong_usage0
   disable_cache: false
   main: |
     from typing import Sized
@@ -27,6 +27,98 @@
     def protocols(instance, other: str) -> str:
         ...
 
-    @protocols.instance(Sized)  # E: Only concrete class can be given where "Type[Sized]" is expected
+    @protocols.instance(Sized)
     def _sized_protocols(instance: Sized, other: str) -> str:
         ...
+  out: |
+    main:8: error: Protocols must be passed with "is_protocol=True"
+
+
+- case: typeclass_protocol_wrong_usage1
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    @protocols.instance(Sized, is_protocol=False)
+    def _sized_protocols(instance: Sized, other: str) -> str:
+        ...
+  out: |
+    main:8: error: Protocols must be passed with "is_protocol=True"
+
+
+- case: typeclass_protocol_wrong_usage2
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    @protocols.instance(int, is_protocol=True)
+    def _sized_protocols(instance: int, other: str) -> str:
+        ...
+  out: |
+    main:8: error: Regular types must be passed with "is_protocol=False"
+
+
+- case: typeclass_protocol_wrong_usage3
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    p: bool
+
+    @protocols.instance(int, is_protocol=p)
+    def _sized_protocols(instance: int, other: str) -> str:
+        ...
+  out: |
+    main:10: error: Use literal bool for "is_protocol" argument, got: "builtins.bool"
+
+
+- case: typeclass_protocol_wrong_usage4
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    @protocols.instance(int, is_protocol='abc')
+    def _sized_protocols(instance: int, other: str) -> str:
+        ...
+  out: |
+    main:8: error: Argument "is_protocol" to "instance" of "_TypeClass" has incompatible type "str"; expected "bool"
+    main:8: error: Use literal bool for "is_protocol" argument, got: "Literal['abc']?"
+
+
+- case: typeclass_protocol_wrong_usage5
+  disable_cache: false
+  main: |
+    from typing import Sized
+    from classes import typeclass
+
+    @typeclass
+    def protocols(instance, other: str) -> str:
+        ...
+
+    @protocols.instance(int, is_protocol=bool)
+    def _sized_protocols(instance: int, other: str) -> str:
+        ...
+  out: |
+    main:8: error: Argument "is_protocol" to "instance" of "_TypeClass" has incompatible type "Type[bool]"; expected "bool"
+    main:8: error: Use literal bool for "is_protocol" argument, got: "def (builtins.object =) -> builtins.bool*"
+

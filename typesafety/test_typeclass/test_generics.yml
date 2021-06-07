@@ -1,8 +1,27 @@
 - case: typeclass_generic_definition
   disable_cache: false
   main: |
-    from typing import Iterable, List, TypeVar
+    from typing import List, TypeVar
+    from classes import typeclass
 
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance, b: int) -> X:
+        ...
+
+    @some.instance(list)
+    def _some_ex(instance: List[X], b: int) -> X:
+        return instance[b]  # We need this line to test inner inference
+
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is 'builtins.str*'
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is 'builtins.int*'
+
+
+- case: typeclass_generic_definition_restriction_correct
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, TypeVar
     from classes import typeclass
 
     X = TypeVar('X')
@@ -11,11 +30,131 @@
     def some(instance: Iterable[X], b: int) -> X:
         ...
 
-    @some.instance
+    @some.instance(list)
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
 
-    x = ['a', 'b']
-    y = [1, 2, 3]
-    reveal_type(some(x, 0))  # N: Revealed type is 'builtins.str*'
-    reveal_type(some(y, 0))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is 'builtins.str*'
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is 'builtins.int*'
+
+
+- case: typeclass_generic_definition_restriction_wrong
+  disable_cache: false
+  main: |
+    from typing import Generic, List, TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    class Some(Generic[X]):
+        ...
+
+    @typeclass
+    def some(instance: Some[X], b: int) -> X:
+        ...
+
+    @some.instance(list)
+    def _some_ex(instance: List[X], b: int) -> X:
+        return instance[b]  # We need this line to test inner inference
+  out: |
+    main:13: error: Instance "builtins.list[X`-1]" does not match original type "main.Some[X`-1]"
+
+
+- case: typeclass_generic_definition_any1
+  disable_cache: false
+  mypy_config: |
+    disallow_any_explicit = false
+    disallow_any_generics = false
+  main: |
+    from typing import Iterable, List, TypeVar, Any
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance, b: int) -> int:
+        ...
+
+    @some.instance(list)
+    def _some_ex(instance: List[Any], b: int) -> int:
+        ...
+
+
+- case: typeclass_generic_definition_any2
+  disable_cache: false
+  mypy_config: |
+    disallow_any_explicit = false
+    disallow_any_generics = false
+  main: |
+    from typing import Iterable, List, TypeVar, Any
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance, b: int) -> int:
+        ...
+
+    @some.instance(List[Any])
+    def _some_ex(instance: list, b: int) -> int:
+        ...
+  out: |
+    main:10: error: Instance "builtins.list[Any]" has concrete generic type, it is not supported during runtime
+
+
+- case: typeclass_generic_definition_unbound
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance, b: int) -> X:
+        ...
+
+    @some.instance(List[X])
+    def _some_ex(instance: List[X], b: int) -> X:
+        return instance[b]  # We need this line to test inner inference
+  out: |
+    main:10: error: Runtime type "builtins.list[X?]" has unbound type, use implicit any
+
+
+- case: typeclass_generic_definition_concrete1
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance, b: int) -> X:
+        ...
+
+    @some.instance(list)
+    def _some_ex(instance: List[int], b: int) -> X:
+        return instance[b]  # We need this line to test inner inference
+  out: |
+    main:10: error: Instance "builtins.list[builtins.int]" has concrete generic type, it is not supported during runtime
+    main:12: error: Incompatible return value type (got "int", expected "X")
+
+
+- case: typeclass_generic_definition_concrete2
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance, b: int) -> X:
+        ...
+
+    @some.instance(List[int])
+    def _some_ex(instance: List[X], b: int) -> X:
+        return instance[b]  # We need this line to test inner inference
+  out: |
+    main:10: error: Instance "builtins.list[builtins.int*]" has concrete generic type, it is not supported during runtime

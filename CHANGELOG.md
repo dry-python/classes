@@ -3,6 +3,12 @@
 We follow Semantic Versions since the `0.1.0` release.
 
 
+## Version 0.3.0 WIP
+
+### Features
+
+
+
 ## Version 0.2.0
 
 ### Features

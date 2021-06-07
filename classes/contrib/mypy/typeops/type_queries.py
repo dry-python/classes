@@ -1,11 +1,18 @@
+from typing import Callable, Iterable
+
 from mypy.plugin import MethodContext
 from mypy.type_visitor import TypeQuery
-from mypy.types import Instance
+from mypy.types import AnyType, Instance
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, get_proper_type
 
 
-def has_concrete_type(instance_type: MypyType, ctx: MethodContext) -> bool:
+def has_concrete_type(
+    instance_type: MypyType,
+    ctx: MethodContext,
+    *,
+    forbid_explicit_any: bool,
+) -> bool:
     """
     Queries if your instance has any concrete types.
 
@@ -33,7 +40,10 @@ def has_concrete_type(instance_type: MypyType, ctx: MethodContext) -> bool:
     instance_type = get_proper_type(instance_type)
     if isinstance(instance_type, Instance):
         return any(
-            type_arg.accept(_HasNoConcreteTypes(lambda _: True))
+            type_arg.accept(_HasNoConcreteTypes(
+                lambda _: True,
+                forbid_explicit_any=forbid_explicit_any,
+            ))
             for type_arg in instance_type.args
         )
     return False
@@ -71,9 +81,24 @@ def has_unbound_type(runtime_type: MypyType, ctx: MethodContext) -> bool:
     return False
 
 
-class _HasNoConcreteTypes(TypeQuery[bool]):  # TODO: support explicit `any`
+class _HasNoConcreteTypes(TypeQuery[bool]):
+    def __init__(
+        self,
+        strategy: Callable[[Iterable[bool]], bool],
+        *,
+        forbid_explicit_any: bool,
+    ) -> None:
+        super().__init__(strategy)
+        self._forbid_explicit_any = forbid_explicit_any
+
     def visit_type_var(self, type_: TypeVarType) -> bool:
         return False
+
+    def visit_unbound_type(self, type_: UnboundType) -> bool:
+        return False
+
+    def visit_any(self, type_: AnyType) -> bool:
+        return self._forbid_explicit_any
 
 
 class _HasUnboundTypes(TypeQuery[bool]):
