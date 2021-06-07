@@ -1,0 +1,131 @@
+- case: typeclass_instance_arg_variance
+  disable_cache: False
+  main: |
+    from classes import typeclass
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance, arg: B) -> str:
+        ...
+
+    @some.instance(str)
+    def _some_str(instance: str, arg: A) -> str:
+        ...
+
+    @some.instance(bool)
+    def _some_bool(instance: bool, arg: B) -> str:
+        ...
+
+    @some.instance(int)
+    def _some_int(instance: int, arg: C) -> str:
+        ...
+  out: |
+    main:24: error: Instance callback is incompatible "def (instance: builtins.int, arg: main.C) -> builtins.str"; expected "def (instance: builtins.int, arg: main.B) -> builtins.str"
+
+
+- case: typeclass_instance_ret_type_variance
+  disable_cache: False
+  main: |
+    from classes import typeclass
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> B:
+        ...
+
+    @some.instance(str)
+    def _some_str(instance: str) -> A:
+        ...
+
+    @some.instance(bool)
+    def _some_bool(instance: bool) -> B:
+        ...
+
+    @some.instance(int)
+    def _some_int(instance: int) -> C:
+        ...
+  out: |
+    main:16: error: Instance callback is incompatible "def (instance: builtins.str) -> main.A"; expected "def (instance: builtins.str) -> main.B"
+
+
+- case: typeclass_instance_self_variance
+  disable_cache: False
+  main: |
+    from classes import typeclass
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance: B):
+        ...
+
+    @some.instance(A)
+    def _some_a(instance: A):
+        ...
+
+    @some.instance(B)
+    def _some_b(instance: B):
+        ...
+
+    @some.instance(C)
+    def _some_c(instance: C):
+        ...
+  out: |
+    main:16: error: Instance "main.A" does not match original type "main.B"
+
+
+- case: typeclass_instance_runtime_variance
+  disable_cache: False
+  main: |
+    from classes import typeclass
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(A)
+    def _some_a(instance: B) -> str:
+        ...
+
+    @some.instance(B)
+    def _some_b(instance: B) -> str:
+        ...
+
+    @some.instance(C)
+    def _some_c(instance: B) -> str:
+        ...
+  out: |
+    main:16: error: Instance "main.B" does not match runtime type "main.A"
+    main:24: error: Instance "main.B" does not match runtime type "main.C"

@@ -2,12 +2,18 @@ from typing import List, Union
 
 from mypy.plugin import FunctionContext, MethodContext
 from mypy.typeops import make_simplified_union
-from mypy.types import Instance, TupleType
+from mypy.types import AnyType, Instance, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, UninhabitedType
 from typing_extensions import Final
 
-_TYPES_TO_FILTER_OUT: Final = (TypeVarType, UninhabitedType, UnboundType)
+#: Types that polute instance args.
+_TYPES_TO_FILTER_OUT: Final = (
+    TypeVarType,
+    UninhabitedType,
+    UnboundType,
+    AnyType,
+)
 
 
 def add_unique(

@@ -4,7 +4,7 @@ from typing import Optional
 from mypy.nodes import Decorator, Expression
 from mypy.plugin import MethodContext
 from mypy.typeops import make_simplified_union
-from mypy.types import FunctionLike, Instance
+from mypy.types import FunctionLike, Instance, LiteralType
 from mypy.types import Type as MypyType
 from typing_extensions import Final
 
@@ -16,6 +16,7 @@ _TYPECLASS_DEF_FULLNAMES: Final = frozenset((
 def infer_runtime_type_from_context(
     fallback: MypyType,
     ctx: MethodContext,
+    fullname: Optional[str] = None,
 ) -> MypyType:
     """
     Infers instance type from several ``@some.instance()`` decorators.
@@ -49,7 +50,7 @@ def infer_runtime_type_from_context(
         # Infered type from `mypy` is good enough, just return `fallback`.
         instance_types = []
         for decorator in ctx.context.decorators:
-            instance_type = _get_typeclass_instance_type(decorator, ctx)
+            instance_type = _get_typeclass_instance_type(decorator, fullname, ctx)
             if instance_type is not None:
                 instance_types.append(_post_process_type(instance_type))
 
@@ -60,16 +61,24 @@ def infer_runtime_type_from_context(
 
 def _get_typeclass_instance_type(
     expr: Expression,
+    fullname: Optional[str],
     ctx: MethodContext,
 ) -> Optional[MypyType]:
     expr_type = ctx.api.expr_checker.accept(expr)  # type: ignore
     is_typeclass_instance_def = (
         isinstance(expr_type, Instance) and
         bool(expr_type.type) and
-        expr_type.type.fullname in _TYPECLASS_DEF_FULLNAMES
+        expr_type.type.fullname in _TYPECLASS_DEF_FULLNAMES and
+        isinstance(expr_type.args[1], Instance)
     )
     if is_typeclass_instance_def:
-        return expr_type.args[0].items[0]
+        is_same_typeclass = (
+            isinstance(expr_type.args[1].args[3], LiteralType) and
+            expr_type.args[1].args[3].value == fullname or
+            fullname is None
+        )
+        if is_same_typeclass:
+            return expr_type.args[0].items[0]
     return None
 
 

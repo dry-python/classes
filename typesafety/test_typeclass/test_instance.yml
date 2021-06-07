@@ -1,4 +1,65 @@
-- case: typeclass_instances_union
+- case: typeclass_two_typeclasses_two_instances
+  disable_cache: false
+  main: |
+    from typing import Union
+    from classes import typeclass
+
+    @typeclass
+    def a(instance) -> str:
+        ...
+
+    @typeclass
+    def b(instance) -> str:
+      ...
+
+    @a.instance(str)
+    def _a_str(instance: str) -> str:
+        ...
+
+    @b.instance(int)
+    def _b_int(instance: int) -> str:
+        ...
+
+    a('a')
+    b(2)
+
+    a(1)
+    b('b')
+  out: |
+    main:23: error: Argument 1 to "a" has incompatible type "int"; expected "str"
+    main:24: error: Argument 1 to "b" has incompatible type "str"; expected "int"
+
+
+- case: typeclass_two_typeclasses_one_instance
+  disable_cache: false
+  main: |
+    from typing import Union
+    from classes import typeclass
+
+    @typeclass
+    def a(instance) -> str:
+        ...
+
+    @typeclass
+    def b(instance) -> str:
+      ...
+
+    @a.instance(str)
+    @b.instance(int)
+    def _a_int_str(instance: Union[str, int]) -> str:
+        return str(instance)
+
+    a('a')
+    b(2)
+
+    a(1)
+    b('b')
+  out: |
+    main:20: error: Argument 1 to "a" has incompatible type "int"; expected "str"
+    main:21: error: Argument 1 to "b" has incompatible type "str"; expected "int"
+
+
+- case: typeclass_instances_union1
   disable_cache: false
   main: |
     from typing import Union
@@ -13,7 +74,61 @@
     def _a_int_str(instance: Union[str, int]) -> str:
         return str(instance)
 
-    reveal_type(a)  # N: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*], builtins.str, def (builtins.str*) -> builtins.str, <nothing>]'
+    a(1)
+    a('a')
+    a(None) # E: Argument 1 to "a" has incompatible type "None"; expected "Union[str, int]"
+
+
+- case: typeclass_instances_union2
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def a(instance) -> str:
+        ...
+
+    @a.instance(str)
+    @a.instance(int)
+    def _a_int_str(instance: int) -> str:
+        ...
+  out: |
+    main:7: error: Instance "builtins.int" does not match runtime type "Union[builtins.str*, builtins.int*]"
+
+
+- case: typeclass_instances_union3
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def a(instance) -> str:
+        ...
+
+    @a.instance(str)
+    @a.instance(int)
+    def _a_int_str(instance: str) -> str:
+        ...
+  out: |
+    main:7: error: Instance "builtins.str" does not match runtime type "Union[builtins.str*, builtins.int*]"
+
+
+- case: typeclass_instances_union4
+  disable_cache: false
+  main: |
+    from typing import Union
+    from classes import typeclass
+
+    @typeclass
+    def a(instance) -> str:
+        ...
+
+    @a.instance(str)
+    @a.instance(int)
+    def _a_int_str(instance: Union[str, int, None]) -> str:
+        ...
+  out: |
+    main:8: error: Instance "Union[builtins.str, builtins.int, None]" does not match runtime type "Union[builtins.str*, builtins.int*]"
 
 
 - case: typeclass_instance_mixed_order
@@ -33,74 +148,49 @@
     def _some_int(instance: str) -> str:
         ...
   out: |
-    main:7: error: Argument 1 has incompatible type "Callable[[str], str]"; expected "Callable[[int], str]"
-    main:11: error: Argument 1 has incompatible type "Callable[[str], str]"; expected "Callable[[int], str]"
+    main:7: error: Instance "builtins.str" does not match runtime type "builtins.int*"
+    main:11: error: Instance "builtins.str" does not match runtime type "builtins.int*"
 
 
-- case: typeclass_instance_variance
-  disable_cache: False
+- case: typeclass_instance_any1
+  disable_cache: false
+  mypy_config: |
+    disallow_any_explicit = false
+    disallow_any_generics = false
   main: |
+    from typing import Any
     from classes import typeclass
 
-    class A(object):
-        ...
-
-    class B(A):
-        ...
-
-    class C(B):
-        ...
-
     @typeclass
-    def some(instance, arg: B) -> str:
+    def a(instance) -> str:
         ...
 
-    @some.instance(str)
-    def _some_str(instance: str, arg: A) -> str:
-        ...
-
-    @some.instance(bool)
-    def _some_bool(instance: bool, arg: B) -> str:
-        ...
-
-    @some.instance(int)
-    def _some_int(instance: int, arg: C) -> str:
+    @a.instance(int)
+    def _a_int(instance: Any) -> str:
         ...
   out: |
-    main:20: error: Argument 1 has incompatible type "Callable[[int, C], str]"; expected "Callable[[int, B], str]"
+    main:8: error: Instance "Any" does not match runtime type "builtins.int*"
 
 
-- case: typeclass_instance_any
+- case: typeclass_instance_any2
   disable_cache: false
+  mypy_config: |
+    disallow_any_explicit = false
+    disallow_any_generics = false
   main: |
+    from typing import Any
     from classes import typeclass
 
     @typeclass
-    def a(instance):
+    def a(instance) -> str:
         ...
 
-    @a.instance(str)
-    def _a_int_str(instance: str) -> str:
-        return str(instance)
-
-    reveal_type(a)  # N: Revealed type is 'classes._typeclass._TypeClass[builtins.str*, Any, def (builtins.str*) -> Any, <nothing>]'
-
-
-- case: typeclass_instance_missing_first_arg
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def a(instance):
+    @a.instance(Any)
+    def _a_any(instance: Any) -> str:
         ...
-
-    @a.instance
-    def some():
-        ...
-
   out: |
-    main:7: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "Callable[[], Any]"; expected "Callable[[<nothing>], Any]"
+    main:8: error: Instance "Any" does not match runtime type "builtins.object"
+    main:8: error: Value of type variable "_NewInstanceType" of "instance" of "_TypeClass" cannot be "object"
 
 
 - case: typeclass_instance_wrong_param
@@ -109,68 +199,7 @@
     from classes import typeclass
 
     @typeclass
-    def a(instance):
+    def a(instance) -> str:
         ...
 
-    a.instance(1)
-
-  out: |
-    main:7: error: No overload variant of "instance" of "_TypeClass" matches argument type "int"
-    main:7: note:     <1 more non-matching overload not shown>
-    main:7: note:     def [_InstanceType] instance(self, type_argument: Callable[[_InstanceType], Any]) -> NoReturn
-    main:7: note:     def [_InstanceType] instance(self, type_argument: Type[_InstanceType], *, is_protocol: Literal[False] = ...) -> Callable[[Callable[[_InstanceType], Any]], NoReturn]
-    main:7: note: Possible overload variants:
-
-
-- case: typeclass_instance_annotation_only
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def some(instance) -> str:
-        ...
-
-    @some.instance
-    def _some_str(instance: str) -> str:
-        ...
-
-    some('abc')
-
-
-- case: typeclass_instance_annotation_only_complex_types
-  disable_cache: false
-  main: |
-    from classes import typeclass
-    from typing import Union, Sized, Type, Any
-
-    @typeclass
-    def some(instance) -> str:
-        ...
-
-    @some.instance
-    def _some_union(instance: Union[str, int]) -> str:
-        ...
-
-    @some.instance
-    def _some_type_type(instance: Type[str]) -> str:
-        ...
-
-    @some.instance
-    def _some_protocol(instance: Sized) -> str:
-        ...
-
-    @some.instance
-    def _some_annotated(instance) -> str:
-      ...
-
-    @some.instance
-    def _some_explicit_any(instance: Any) -> str:
-      ...
-  out: |
-    main:8: error: Only simple instance types are allowed, got: Union[builtins.str, builtins.int]
-    main:12: error: Only simple instance types are allowed, got: Type[builtins.str]
-    main:16: error: Protocols must be passed with `is_protocol=True`
-    main:20: error: Only simple instance types are allowed, got: Any
-    main:24: error: Only simple instance types are allowed, got: Any
-    main:25: error: Explicit "Any" is not allowed
+    a.instance(1)  # E: Value of type variable "_NewInstanceType" of "instance" of "_TypeClass" cannot be "int"
