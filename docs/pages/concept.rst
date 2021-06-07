@@ -87,7 +87,7 @@ Let's define some instances:
 
 .. code:: python
 
-  >>> @json.instance  # You can use just the annotation
+  >>> @json.instance(str)
   ... def _json_str(instance: str) -> str:
   ...     return '"{0}"'.format(instance)
 
