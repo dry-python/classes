@@ -197,7 +197,7 @@ def _check_runtime_type(
     1. We check that type passed in ``some.instance(...)`` matches
        one defined in a type annotation
     2. We check that types don't have any concrete types
-    3. We check that types dont' have any unbound type variables
+    3. We check that types don't have any unbound type variables
     4. We check that ``is_protocol`` is passed correctly
 
     """
