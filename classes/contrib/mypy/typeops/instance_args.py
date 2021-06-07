@@ -7,7 +7,7 @@ from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, UninhabitedType
 from typing_extensions import Final
 
-#: Types that polute instance args.
+#: Types that pollute instance args.
 _TYPES_TO_FILTER_OUT: Final = (
     TypeVarType,
     UninhabitedType,
