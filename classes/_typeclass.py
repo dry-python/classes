@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Generic, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Callable, Dict, Generic, Type, TypeVar, Union
 
 from typing_extensions import final
 
@@ -87,19 +87,9 @@ def typeclass(
     then it will be called,
     otherwise the default implementation will be called instead.
 
-    You can also use ``.instance`` with just annotation for better readability:
-
-    .. code:: python
-
-        >>> @example.instance
-        ... def _example_float(instance: float) -> str:
-        ...     return 0.5
-
-        >>> assert example(5.1) == 0.5
-
     .. rubric:: Generics
 
-    We also support generic, but the support is limited.
+    We also support generics, but the support is limited.
     We cannot rely on type parameters of the generic type,
     only on the base generic class:
 
@@ -144,6 +134,7 @@ def typeclass(
     .. code:: python
 
         >>> from typing import Sequence
+
         >>> @example.instance(Sequence, is_protocol=True)
         ... def _sequence_example(instance: Sequence) -> str:
         ...     return ','.join(str(item) for item in instance)
@@ -161,6 +152,7 @@ def typeclass(
     .. code:: python
 
         >>> from typing_extensions import Protocol
+
         >>> class CustomProtocol(Protocol):
         ...     field: str
 
@@ -183,6 +175,7 @@ def typeclass(
     return _TypeClass(signature)
 
 
+@final
 class Supports(Generic[_SignatureType]):
     """
     Used to specify that some value is a part of a typeclass.
@@ -404,7 +397,7 @@ class _TypeClass(
         # generics that look like `List[int]` or `set[T]` will fail this check,
         # because they are `_GenericAlias` instance,
         # which raises an exception for `__isinstancecheck__`
-        isinstance(object(), type_argument)  # TODO: support _GenericAlias
+        isinstance(object(), type_argument)
 
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
@@ -413,10 +406,25 @@ class _TypeClass(
         return decorator
 
 
-from typing_extensions import Protocol
+if TYPE_CHECKING:
+    from typing_extensions import Protocol
 
+    class _TypeClassInstanceDef(  # type: ignore
+        Protocol[_InstanceType, _TypeClassType],
+    ):
+        """
+        Callable protocol to help us with typeclass instance callbacks.
 
-# TODO: use `if TYPE_CHECK:`
-class _TypeClassInstanceDef(Protocol[_InstanceType, _TypeClassType]):
-    def __call__(self, callback: _SignatureType) -> _SignatureType:
-        ...
+        This protocol does not exist in real life,
+        we just need it because we use it in ``mypy`` plugin.
+        That's why we define it under ``if TYPE_CHECKING:``.
+        It should not be used
+
+        See ``InstanceDefReturnType`` for more information.
+
+        One more important thing here: we fill its type vars inside our plugin,
+        so, don't even care about its definition.
+        """
+
+        def __call__(self, callback: _SignatureType) -> _SignatureType:
+            """It can be called, because in real life it is a function."""

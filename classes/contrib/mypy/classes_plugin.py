@@ -32,9 +32,10 @@ class _TypeClassPlugin(Plugin):
     """
     Our plugin for typeclasses.
 
-    It has three steps:
+    It has four steps:
     - Creating typeclasses via ``typeclass`` function
-    - Adding cases for typeclasses via ``.instance()`` calls
+    - Adding cases for typeclasses via ``.instance()`` calls with explicit types
+    - Adding callbacks functions after the ``.instance()`` decorator
     - Converting typeclasses to simple callable via ``__call__`` method
 
     Hooks are in the logical order.
@@ -57,8 +58,7 @@ class _TypeClassPlugin(Plugin):
         if fullname == 'classes._typeclass._TypeClassInstanceDef.__call__':
             return typeclass.InstanceDefReturnType()
         if fullname == 'classes._typeclass._TypeClass.instance':
-            # `@some.instance` call with explicit params:
-            return typeclass.InstanceReturnType()
+            return typeclass.instance_return_type
         return None
 
     def get_method_signature_hook(

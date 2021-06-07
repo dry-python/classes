@@ -99,17 +99,6 @@ Let's define some instances:
 That's how we define instances for our typeclass.
 These instances will be executed when the corresponding type will be supplied.
 
-.. note::
-  ``.instance`` can use explicit type or just an existing annotation.
-  It is recommended to use the explicit type, because annotations can be tricky.
-  For example, sometimes you have to use ``ForwardRef``
-  or so called string-based-annotations. It is not supported.
-  Complex type from annotations are also not supported
-  like: ``Union[str, int]``.
-
-  So, use annotations for the simplest cases only
-  and use explicit types in all other cases.
-
 And the last step is to call our typeclass
 with different value of different types:
 
