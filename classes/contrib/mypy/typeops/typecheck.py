@@ -1,3 +1,4 @@
+from mypy.erasetype import erase_type
 from mypy.plugin import MethodContext
 from mypy.sametypes import is_same_type
 from mypy.subtypes import is_subtype
@@ -5,7 +6,7 @@ from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny
 
-from classes.contrib.mypy.typeops import inference
+from classes.contrib.mypy.typeops import inference, type_queries
 
 
 def check_typeclass(
@@ -120,22 +121,26 @@ def _check_runtime_type(
     else:
         is_protocol = False
 
+
+    instance_type = instance_signature.arg_types[0]
     instance_check = is_same_type(
-        instance_signature.arg_types[0],
-        runtime_type,
+        erase_type(instance_type),
+        erase_type(runtime_type),
     )
     if not instance_check:
         ctx.api.fail(
             'Instance "{0}" does not match runtime type "{1}"'.format(
-                instance_signature.arg_types[0],
+                instance_type,
                 runtime_type,
             ),
             ctx.context,
         )
 
-    return _check_runtime_protocol(
-        runtime_type, ctx, is_protocol=is_protocol,
-    ) and instance_check
+    return (
+        _check_runtime_protocol(runtime_type, ctx, is_protocol=is_protocol) and
+        _check_concrete_generics(instance_type, runtime_type, ctx) and
+        instance_check
+    )
 
 
 def _check_runtime_protocol(
@@ -152,3 +157,29 @@ def _check_runtime_protocol(
             )
             return False
     return True
+
+
+def _check_concrete_generics(
+    instance_type: MypyType,
+    runtime_type: MypyType,
+    ctx: MethodContext,
+) -> bool:
+    has_concrete_type = type_queries.has_concrete_type(instance_type, ctx)
+    if has_concrete_type:
+        ctx.api.fail(
+            'Instance "{0}" has concrete type, use generics instead'.format(
+                instance_type,
+            ),
+            ctx.context,
+        )
+
+    has_unbound_type = type_queries.has_unbound_type(runtime_type, ctx)
+    if has_unbound_type:
+        print(runtime_type.args[0], type(runtime_type.args[0]))
+        ctx.api.fail(
+            'Runtime type "{0}" has unbound type, use implicit any'.format(
+                runtime_type,
+            ),
+            ctx.context,
+        )
+    return has_concrete_type and has_unbound_type
