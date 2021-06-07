@@ -47,9 +47,6 @@ class _TypeClassPlugin(Plugin):
         """Here we adjust the typeclass constructor."""
         if fullname == 'classes._typeclass.typeclass':
             return typeclass.ConstructorReturnType()
-        if fullname == 'instance of _TypeClass':
-            # `@some.instance` call without params:
-            return typeclass.InstanceReturnType.from_function_decorator
         return None
 
     def get_method_hook(
@@ -57,6 +54,8 @@ class _TypeClassPlugin(Plugin):
         fullname: str,
     ) -> Optional[Callable[[MethodContext], MypyType]]:
         """Here we adjust the typeclass with new allowed types."""
+        if fullname == 'classes._typeclass._TypeClassInstanceDef.__call__':
+            return typeclass.InstanceDefReturnType()
         if fullname == 'classes._typeclass._TypeClass.instance':
             # `@some.instance` call with explicit params:
             return typeclass.InstanceReturnType()

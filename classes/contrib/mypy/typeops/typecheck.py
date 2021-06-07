@@ -1,10 +1,17 @@
 from mypy.plugin import MethodContext
+from mypy.sametypes import is_same_type
 from mypy.subtypes import is_subtype
-from mypy.types import AnyType, CallableType, Instance, TypeOfAny
+from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
+from mypy.types import Type as MypyType
+from mypy.types import TypeOfAny
+
+from classes.contrib.mypy.typeops import inference
 
 
 def check_typeclass(
+    typeclass_signature: CallableType,
     instance_signature: CallableType,
+    passed_types: TupleType,
     ctx: MethodContext,
 ) -> bool:
     """
@@ -17,15 +24,10 @@ def check_typeclass(
     2. If ``def _some_ex(instance: type_)`` is used,
        we also check the function signature
        to be compatible with the typeclass definition
+    3. TODO
 
+    TODO: explain covariance and contravariance
     """
-    assert isinstance(ctx.default_return_type, CallableType)
-    assert isinstance(ctx.type, Instance)
-    assert isinstance(ctx.type.args[1], CallableType)
-
-    typeclass_signature = ctx.type.args[1]
-    assert isinstance(typeclass_signature, CallableType)
-
     signature_check = _check_typeclass_signature(
         typeclass_signature,
         instance_signature,
@@ -36,7 +38,13 @@ def check_typeclass(
         instance_signature,
         ctx,
     )
-    return signature_check and instance_check
+    # TODO: check cases like `some.instance(1)`, only allow types and calls
+    runtime_check = _check_runtime_type(
+        passed_types,
+        instance_signature,
+        ctx,
+    )
+    return signature_check and instance_check and runtime_check
 
 
 def _check_typeclass_signature(
@@ -44,10 +52,6 @@ def _check_typeclass_signature(
     instance_signature: CallableType,
     ctx: MethodContext,
 ) -> bool:
-    if ctx.arg_names[0]:
-        # This check only makes sence when we use annotations directly.
-        return True
-
     simplified_typeclass_signature = typeclass_signature.copy_modified(
         arg_types=[
             AnyType(TypeOfAny.implementation_artifact),
@@ -96,3 +100,55 @@ def _check_instance_type(
             ctx.context,
         )
     return instance_check
+
+
+def _check_runtime_type(
+    passed_types: TupleType,
+    instance_signature: CallableType,
+    ctx: MethodContext,
+) -> bool:
+    runtime_type = inference.infer_runtime_type_from_context(
+        passed_types.items[0],
+        ctx,
+    )
+
+    if len(passed_types.items) == 2:
+        assert isinstance(passed_types.items[1], Instance)
+        assert isinstance(passed_types.items[1].last_known_value, LiteralType)
+        is_protocol = passed_types.items[1].last_known_value.value
+        assert isinstance(is_protocol, bool)
+    else:
+        is_protocol = False
+
+    instance_check = is_same_type(
+        instance_signature.arg_types[0],
+        runtime_type,
+    )
+    if not instance_check:
+        ctx.api.fail(
+            'Instance "{0}" does not match runtime type "{1}"'.format(
+                instance_signature.arg_types[0],
+                runtime_type,
+            ),
+            ctx.context,
+        )
+
+    return _check_runtime_protocol(
+        runtime_type, ctx, is_protocol=is_protocol,
+    ) and instance_check
+
+
+def _check_runtime_protocol(
+    runtime_type: MypyType,
+    ctx: MethodContext,
+    *,
+    is_protocol: bool,
+) -> bool:
+    if isinstance(runtime_type, Instance) and not is_protocol:
+        if runtime_type.type and runtime_type.type.is_protocol:
+            ctx.api.fail(
+                'Protocols must be passed with `is_protocol=True`',
+                ctx.context,
+            )
+            return False
+    return True

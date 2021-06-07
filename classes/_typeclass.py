@@ -1,30 +1,23 @@
-from typing import (
-    Callable,
-    Dict,
-    Generic,
-    NoReturn,
-    Type,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Callable, Dict, Generic, Type, TypeVar, Union
 
-from typing_extensions import Literal, final
-
-_TypeClassType = TypeVar('_TypeClassType')
-_ReturnType = TypeVar('_ReturnType')  # TODO: do we really need it?
-
-_SignatureType = TypeVar('_SignatureType', bound=Callable)
+from typing_extensions import final
 
 _InstanceType = TypeVar('_InstanceType')
+_SignatureType = TypeVar('_SignatureType', bound=Callable)
 _DefinitionType = TypeVar('_DefinitionType', bound=Type)
+_Fullname = TypeVar('_Fullname', bound=str)  # Literal value
+
+_NewInstanceType = TypeVar('_NewInstanceType', bound=Type)
+
+_TypeClassType = TypeVar('_TypeClassType', bound='_TypeClass')
+_ReturnType = TypeVar('_ReturnType')
 
 
 def typeclass(
     signature: _SignatureType,
-    # By default `_TypeClassType` and `_ReturnType` are `nothing`,
+    # By default almost all variables are `nothing`,
     # but we enhance them via mypy plugin later:
-) -> '_TypeClass[_TypeClassType, _SignatureType, _DefinitionType]':
+) -> '_TypeClass[_InstanceType, _SignatureType, _DefinitionType, _Fullname]':
     """
     Function to define typeclasses.
 
@@ -240,7 +233,9 @@ class Supports(Generic[_SignatureType]):
 
 
 @final
-class _TypeClass(Generic[_TypeClassType, _SignatureType, _DefinitionType]):
+class _TypeClass(
+    Generic[_InstanceType, _SignatureType, _DefinitionType, _Fullname],
+):
     """
     That's how we represent typeclasses.
 
@@ -309,7 +304,7 @@ class _TypeClass(Generic[_TypeClassType, _SignatureType, _DefinitionType]):
 
     def __call__(
         self,
-        instance: Union[_TypeClassType, Supports[_DefinitionType]],
+        instance: Union[_InstanceType, Supports[_DefinitionType]],
         *args,
         **kwargs,
     ) -> _ReturnType:
@@ -393,86 +388,35 @@ class _TypeClass(Generic[_TypeClassType, _SignatureType, _DefinitionType]):
             instance_type in self._protocols
         )
 
-    @overload
     def instance(
         self,
-        type_argument: Type[_InstanceType],
-        *,
-        is_protocol: Literal[False] = ...,
-    ) -> Callable[
-        [Callable[[_InstanceType], _ReturnType]],
-        NoReturn,  # We need this type to disallow direct instance calls
-    ]:
-        """Case for regular typeclasses."""
-
-    @overload
-    def instance(
-        self,
-        type_argument,
-        *,
-        is_protocol: Literal[True],
-    ) -> Callable[
-        [Callable[[_InstanceType], _ReturnType]],
-        NoReturn,  # We need this type to disallow direct instance calls
-    ]:
-        """Case for protocol based typeclasses."""
-
-    @overload
-    def instance(
-        self,
-        type_argument: Callable,  # See `mypy` plugin for more specific type
-    ) -> NoReturn:
-        """
-        Case for typeclasses that are defined by annotation only.
-
-        We do not limit what callables can be passed here with type annotations,
-        because it is too complex to express.
-
-        For example, we require different variance rules
-        for different function arguments.
-        The first argument should be strictly covariant (more specific).
-        Other arguments should be similar or contravariant (less specific).
-
-        See our ``mypy`` plugin for more details.
-        """
-
-    def instance(
-        self,
-        type_argument,
+        type_argument: _NewInstanceType,
         *,
         is_protocol: bool = False,
-    ):
+    ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
         """
         We use this method to store implementation for each specific type.
 
         The only setting we provide is ``is_protocol`` which is required
-        when passing protocols.
-        That's why we also have this ugly ``@overload`` cases.
-        Otherwise, ``Protocol`` instances
-        would not match ``Type[_InstanceType]`` type due to ``mypy`` rules.
-
+        when passing protocols. See our ``mypy`` plugin for that.
         """
-        original_handler = None
-        if not is_protocol:
-            # If it is not a protocol, we can try to get an annotation from
-            annotations = getattr(type_argument, '__annotations__', None)
-            if annotations:
-                original_handler = type_argument
-                type_argument = annotations[
-                    type_argument.__code__.co_varnames[0]  # noqa: WPS609
-                ]
-
         # That's how we check for generics,
         # generics that look like `List[int]` or `set[T]` will fail this check,
         # because they are `_GenericAlias` instance,
         # which raises an exception for `__isinstancecheck__`
-        isinstance(object(), type_argument)
+        isinstance(object(), type_argument)  # TODO: support _GenericAlias
 
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
             container[type_argument] = implementation
             return implementation
-
-        if original_handler is not None:
-            return decorator(original_handler)  # type: ignore
         return decorator
+
+
+from typing_extensions import Protocol
+
+
+# TODO: use `if TYPE_CHECK:`
+class _TypeClassInstanceDef(Protocol[_InstanceType, _TypeClassType]):
+    def __call__(self, callback: _SignatureType) -> _SignatureType:
+        ...

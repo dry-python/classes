@@ -25,3 +25,12 @@ def load_supports_type(
     assert supports_spec
     supports_spec.type._promote = None  # noqa: WPS437
     return supports_spec
+
+
+def load_typeclass(
+    fullname: str,
+    ctx: MethodContext,
+) -> Instance:
+    typeclass_info = ctx.api.lookup_qualified(fullname)  # type: ignore
+    assert isinstance(typeclass_info.type, Instance)
+    return typeclass_info.type
