@@ -17,7 +17,7 @@ def test_class_reuse() -> None:
     typeclass(_Example)
 
     with pytest.raises(TypeError):
-        typeclass(_Example)
+        typeclass(_Example)  # type: ignore
 
 
 def test_function_reuse() -> None:
