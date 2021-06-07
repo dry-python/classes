@@ -23,6 +23,7 @@ class ConstructorReturnType(object):
     """
 
     def __call__(self, ctx: FunctionContext) -> MypyType:
+        """Main entry point."""
         defn = ctx.arg_types[0][0]
         is_defined_by_class = (
             isinstance(defn, CallableType) and
@@ -82,44 +83,41 @@ class ConstructorReturnType(object):
         return ctx.default_return_type
 
 
-@final
-class InstanceReturnType(object):
-    """
-    Adjusts the typing signature after ``.instance(type)`` call.
+def instance_return_type(ctx: MethodContext) -> MypyType:
+    """Adjusts the typing signature on ``.instance(type)`` call."""
+    assert isinstance(ctx.default_return_type, Instance)
+    assert isinstance(ctx.type, Instance)
 
-    We need this to get typing match working:
-    so the type mentioned in ``.instance()`` call
-    will be the same as the one in a function later on.
-
-    We use ``ctx.arg_names[0]`` to determine which mode is used:
-    1. If it is empty, than annotation-based dispatch method is used
-    2. If it is not empty, that means that decorator with arguments is used,
-       like ``@some.instance(MyType)``
-
-    """
-
-    def __call__(self, ctx: MethodContext) -> MypyType:
-        """"""
-        assert isinstance(ctx.default_return_type, Instance)
-        assert isinstance(ctx.type, Instance)
-
-        # This is the case for `@some.instance(str)` decorator:
-        instance_args.mutate_typeclass_instance_def(
-            ctx.default_return_type,
-            ctx=ctx,
-            typeclass=ctx.type,
-            passed_types=[
-                type_
-                for args in ctx.arg_types
-                for type_ in args
-            ],
-        )
-        return ctx.default_return_type
+    instance_args.mutate_typeclass_instance_def(
+        ctx.default_return_type,
+        ctx=ctx,
+        typeclass=ctx.type,
+        passed_types=[
+            type_
+            for args in ctx.arg_types
+            for type_ in args
+        ],
+    )
+    return ctx.default_return_type
 
 
 @final
 class InstanceDefReturnType(object):
-    def __call__(self, ctx: MethodContext) -> MypyType:
+    """
+    Class to check how instance definition is created.
+
+    When it is called?
+    It is called on the second call of ``.instance(str)(callback)``.
+
+    We do a lot of stuff here:
+    1. Typecheck usage correctness
+    2. Adding new instance types to typeclass definition
+    3. Adding ``Supports[]`` metadata
+
+    """
+
+    def __call__(self, ctx: MethodContext) -> MypyType:  # noqa: WPS218
+        """Main entry point."""
         assert isinstance(ctx.type, Instance)
         assert isinstance(ctx.type.args[0], TupleType)
         assert isinstance(ctx.type.args[1], Instance)
@@ -181,6 +179,7 @@ class InstanceDefReturnType(object):
           ...         ...
 
           >>> to_str = typeclass(ToStr)
+
           >>> @to_str.instance(int)
           ... def _to_str_int(instance: int) -> str:
           ...      return 'Number: {0}'.format(instance)
