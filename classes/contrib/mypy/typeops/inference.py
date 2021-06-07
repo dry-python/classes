@@ -47,7 +47,7 @@ def infer_runtime_type_from_context(
         # Why do we only care for this case?
         # Because if it is a call / or just a single decorator,
         # then we are fine with regular type inference.
-        # Infered type from `mypy` is good enough, just return `fallback`.
+        # Inferred type from `mypy` is good enough, just return `fallback`.
         instance_types = []
         for decorator in ctx.context.decorators:
             instance_type = _get_typeclass_instance_type(
@@ -58,7 +58,7 @@ def infer_runtime_type_from_context(
             if instance_type is not None:
                 instance_types.append(_post_process_type(instance_type))
 
-        # Infered resulting type:
+        # Inferred resulting type:
         return make_simplified_union(instance_types)
     return _post_process_type(fallback)
 
@@ -95,7 +95,7 @@ def _post_process_type(type_: MypyType) -> MypyType:
         # @some.instance(Sized)
         # (instance: Sized, b: int) -> str: ...
         #
-        # So, you will recieve callable type
+        # So, you will receive callable type
         # `def () -> Sized` as `runtime_type` in this case.
         # We need to convert it back to regular `Instance`.
         #
