@@ -50,7 +50,11 @@ def infer_runtime_type_from_context(
         # Infered type from `mypy` is good enough, just return `fallback`.
         instance_types = []
         for decorator in ctx.context.decorators:
-            instance_type = _get_typeclass_instance_type(decorator, fullname, ctx)
+            instance_type = _get_typeclass_instance_type(
+                decorator,
+                fullname,
+                ctx,
+            )
             if instance_type is not None:
                 instance_types.append(_post_process_type(instance_type))
 
@@ -72,9 +76,10 @@ def _get_typeclass_instance_type(
         isinstance(expr_type.args[1], Instance)
     )
     if is_typeclass_instance_def:
+        inst = expr_type.args[1]
         is_same_typeclass = (
-            isinstance(expr_type.args[1].args[3], LiteralType) and
-            expr_type.args[1].args[3].value == fullname or
+            isinstance(inst.args[3], LiteralType) and
+            inst.args[3].value == fullname or
             fullname is None
         )
         if is_same_typeclass:

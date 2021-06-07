@@ -177,8 +177,10 @@ class InstanceDefReturnType(object):
             fullname=typeclass_ref.args[3].value,
             ctx=ctx,
         )
-        ctx.type.args[1].args = typeclass.args  # Without this line
         self._add_supports_metadata(typeclass, instance_type, ctx)
+
+        # Without this line we won't mutate args of a class-defined typeclass:
+        ctx.type.args[1].args = typeclass.args
         return ctx.default_return_type
 
     def _add_new_instance_type(
@@ -263,7 +265,8 @@ class InstanceDefReturnType(object):
         assert isinstance(ctx.type, Instance)
 
         # We also need to modify the metadata for a typeclass typeinfo:
-        typeclass.args[2].type.metadata['classes']['typeclass'] = typeclass
+        metadata = typeclass.args[2].type.metadata
+        metadata['classes']['typeclass'] = typeclass
 
         supports_spec = type_loader.load_supports_type(typeclass.args[2], ctx)
         if supports_spec not in instance_type.type.bases:
