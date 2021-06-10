@@ -201,7 +201,18 @@ class InstanceDefReturnType(object):
             len(ctx.context.decorators) > 1
         )
         if has_multiple_decorators:
-            # TODO: what happens here?
+            # If we have multiple decorators on a function,
+            # it is not safe to assume
+            # that all the regular instance type is fine. Here's an example:
+            #
+            # @some.instance(str)
+            # @other.instance(int)
+            # (instance: Union[str, int]) -> ...
+            #
+            # So, if we just copy copy `instance`,
+            # both typeclasses will have both `int` and `str`
+            # as their instance types. This is not what we want.
+            # We want: `some` to have `str` and `other` to have `int`
             new_type = inference.infer_runtime_type_from_context(
                 fallback=new_type,
                 fullname=fullname,
