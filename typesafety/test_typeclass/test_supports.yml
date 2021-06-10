@@ -1,36 +1,14 @@
 - case: typeclass_object_supports
   disable_cache: false
   main: |
-    from classes import typeclass
+    from classes import typeclass, AssociatedType
 
-    class ToJson(object):
-        def __call__(self, instance) -> str:
-            ...
-
-    to_json = typeclass(ToJson)
-
-    @to_json.instance(int)
-    def _to_json_int(instance: int) -> str:
+    class ToJson(AssociatedType):
         ...
 
-    reveal_type(to_json.supports(str))
-    reveal_type(to_json.supports(int))
-  out: |
-    main:13: note: Revealed type is 'builtins.bool'
-    main:14: note: Revealed type is 'builtins.bool'
-
-
-- case: typeclass_protocol_supports
-  disable_cache: false
-  main: |
-    from classes import typeclass
-    from typing_extensions import Protocol
-
-    class ToJson(Protocol):
-        def __call__(self, instance) -> str:
-            ...
-
-    to_json = typeclass(ToJson)
+    @typeclass(ToJson)
+    def to_json(instance) -> str:
+        ...
 
     @to_json.instance(int)
     def _to_json_int(instance: int) -> str:

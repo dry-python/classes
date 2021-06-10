@@ -38,10 +38,5 @@ def load_typeclass(
     # TODO
     """
     typeclass_info = ctx.api.lookup_qualified(fullname)  # type: ignore
-    if isinstance(typeclass_info.type, Instance):
-        return typeclass_info.type
-
-    assert typeclass_info.node
-    metadata = typeclass_info.node.metadata['classes']['typeclass']
-    assert isinstance(metadata, Instance)
-    return metadata
+    assert isinstance(typeclass_info.type, Instance)
+    return typeclass_info.type

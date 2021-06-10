@@ -203,3 +203,32 @@
         ...
 
     a.instance(1)  # E: Value of type variable "_NewInstanceType" of "instance" of "_TypeClass" cannot be "int"
+
+
+- case: typeclass_instance_callback_def
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def some(instance, b: int) -> int:
+        ...
+
+    def _some_str(instance: str, b: int) -> int:
+        ...
+    some.instance(str)(_some_str)
+
+    some('a', 1)
+    some(None, 1)  # E: Argument 1 to "some" has incompatible type "None"; expected "str"
+
+
+- case: typeclass_instance_named_alias
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def some(instance, b: int) -> int:
+        ...
+
+    alias = some.instance(str)  # E: Need type annotation for 'alias'

@@ -121,4 +121,3 @@
   out: |
     main:8: error: Argument "is_protocol" to "instance" of "_TypeClass" has incompatible type "Type[bool]"; expected "bool"
     main:8: error: Use literal bool for "is_protocol" argument, got: "def (builtins.object =) -> builtins.bool*"
-

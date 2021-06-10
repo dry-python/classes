@@ -22,9 +22,15 @@ from typing import Callable, Optional, Type
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext, Plugin
 from mypy.types import CallableType
 from mypy.types import Type as MypyType
-from typing_extensions import final
+from typing_extensions import Final, final
 
 from classes.contrib.mypy.features import typeclass
+
+_TYPECLASS_FULLNAME: Final = 'classes._typeclass._TypeClass'
+_TYPECLASS_DEF_FULLNAME: Final = 'classes._typeclass._TypeClassDef'
+_TYPECLASS_INSTANCE_DEF_FULLNAME: Final = (
+    'classes._typeclass._TypeClassInstanceDef'
+)
 
 
 @final
@@ -47,7 +53,10 @@ class _TypeClassPlugin(Plugin):
     ) -> Optional[Callable[[FunctionContext], MypyType]]:
         """Here we adjust the typeclass constructor."""
         if fullname == 'classes._typeclass.typeclass':
-            return typeclass.ConstructorReturnType()
+            return typeclass.TypeClassReturnType(
+                typeclass=_TYPECLASS_FULLNAME,
+                typeclass_def=_TYPECLASS_DEF_FULLNAME,
+            )
         return None
 
     def get_method_hook(
@@ -55,9 +64,11 @@ class _TypeClassPlugin(Plugin):
         fullname: str,
     ) -> Optional[Callable[[MethodContext], MypyType]]:
         """Here we adjust the typeclass with new allowed types."""
-        if fullname == 'classes._typeclass._TypeClassInstanceDef.__call__':
+        if fullname == '{0}.__call__'.format(_TYPECLASS_DEF_FULLNAME):
+            return typeclass.typeclass_def_return_type
+        if fullname == '{0}.__call__'.format(_TYPECLASS_INSTANCE_DEF_FULLNAME):
             return typeclass.InstanceDefReturnType()
-        if fullname == 'classes._typeclass._TypeClass.instance':
+        if fullname == '{0}.instance'.format(_TYPECLASS_FULLNAME):
             return typeclass.instance_return_type
         return None
 
@@ -66,7 +77,7 @@ class _TypeClassPlugin(Plugin):
         fullname: str,
     ) -> Optional[Callable[[MethodSigContext], CallableType]]:
         """Here we fix the calling method types to accept only valid types."""
-        if fullname == 'classes._typeclass._TypeClass.__call__':
+        if fullname == '{0}.__call__'.format(_TYPECLASS_FULLNAME):
             return typeclass.call_signature
         return None
 

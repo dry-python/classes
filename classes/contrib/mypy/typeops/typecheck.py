@@ -19,17 +19,19 @@ _INSTANCE_RESTRICTION_MSG: Final = (
     'Instance "{0}" does not match original type "{1}"'
 )
 
-_INSTANCE_RUNTIME_MISMATCH: Final = (
+_INSTANCE_RUNTIME_MISMATCH_MSG: Final = (
     'Instance "{0}" does not match runtime type "{1}"'
 )
 
-_IS_PROTOCOL_LITERAL_BOOL: Final = (
+_IS_PROTOCOL_LITERAL_BOOL_MSG: Final = (
     'Use literal bool for "is_protocol" argument, got: "{0}"'
 )
 
-_IS_PROTOCOL_MISSING: Final = 'Protocols must be passed with "is_protocol=True"'
+_IS_PROTOCOL_MISSING_MSG: Final = (
+    'Protocols must be passed with "is_protocol=True"'
+)
 
-_IS_PROTOCOL_UNWANTED: Final = (
+_IS_PROTOCOL_UNWANTED_MSG: Final = (
     'Regular types must be passed with "is_protocol=False"'
 )
 
@@ -219,7 +221,7 @@ def _check_runtime_type(
     )
     if not instance_check:
         ctx.api.fail(
-            _INSTANCE_RUNTIME_MISMATCH.format(instance_type, runtime_type),
+            _INSTANCE_RUNTIME_MISMATCH_MSG.format(instance_type, runtime_type),
             ctx.context,
         )
 
@@ -245,7 +247,7 @@ def _check_protocol_arg(
         return passed_arg.last_known_value.value, True  # type: ignore
 
     ctx.api.fail(
-        _IS_PROTOCOL_LITERAL_BOOL.format(passed_types.items[1]),
+        _IS_PROTOCOL_LITERAL_BOOL_MSG.format(passed_types.items[1]),
         ctx.context,
     )
     return False, False
@@ -259,10 +261,10 @@ def _check_runtime_protocol(
 ) -> bool:
     if isinstance(runtime_type, Instance) and runtime_type.type:
         if not is_protocol and runtime_type.type.is_protocol:
-            ctx.api.fail(_IS_PROTOCOL_MISSING, ctx.context)
+            ctx.api.fail(_IS_PROTOCOL_MISSING_MSG, ctx.context)
             return False
         elif is_protocol and not runtime_type.type.is_protocol:
-            ctx.api.fail(_IS_PROTOCOL_UNWANTED, ctx.context)
+            ctx.api.fail(_IS_PROTOCOL_UNWANTED_MSG, ctx.context)
             return False
     return True
 

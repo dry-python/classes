@@ -1,14 +1,20 @@
-from typing import Optional
 
-from mypy.nodes import Decorator, TypeInfo
+from mypy.nodes import Decorator
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext
-from mypy.typeops import bind_self
-from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
+from mypy.types import (
+    AnyType,
+    CallableType,
+    FunctionLike,
+    Instance,
+    LiteralType,
+    TupleType,
+)
 from mypy.types import Type as MypyType
-from mypy.types import TypeOfAny, UninhabitedType, UnionType, get_proper_type
+from mypy.types import TypeOfAny, UnionType
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import (
+    associated_types,
     inference,
     instance_args,
     type_loader,
@@ -17,7 +23,7 @@ from classes.contrib.mypy.typeops import (
 
 
 @final
-class ConstructorReturnType(object):
+class TypeClassReturnType(object):
     """
     Adjust argument types when we define typeclasses via ``typeclass`` function.
 
@@ -28,88 +34,85 @@ class ConstructorReturnType(object):
     It also checks how typeclasses are defined.
     """
 
+    __slots__ = ('_typeclass', '_typeclass_def')
+
+    def __init__(self, typeclass: str, typeclass_def: str) -> None:
+        """We pass exact type names as the context."""
+        self._typeclass = typeclass
+        self._typeclass_def = typeclass_def
+
     def __call__(self, ctx: FunctionContext) -> MypyType:
         """Main entry point."""
         defn = ctx.arg_types[0][0]
-        is_defined_by_class = (
+
+        is_typeclass_def = (
+            isinstance(ctx.default_return_type, Instance) and
+            ctx.default_return_type.type.fullname == self._typeclass_def and
+            isinstance(defn, FunctionLike) and
+            defn.is_type_obj()
+        )
+        is_typeclass = (
+            isinstance(ctx.default_return_type, Instance) and
+            ctx.default_return_type.type.fullname == self._typeclass and
             isinstance(defn, CallableType) and
-            not defn.arg_types and
-            isinstance(defn.ret_type, Instance)
+            defn.definition
         )
 
-        if is_defined_by_class:
-            return self._adjust_protocol_arguments(ctx)
-        elif isinstance(defn, CallableType) and defn.definition:
-            return self._adjust_typeclass(defn, defn.definition.fullname, ctx)
-
-        ctx.api.fail(
-            'Invalid typeclass definition: "{0}"'.format(defn),
-            ctx.context,
-        )
-        return UninhabitedType()
-
-    def _adjust_protocol_arguments(self, ctx: FunctionContext) -> MypyType:
-        assert isinstance(ctx.arg_types[0][0], CallableType)
-        assert isinstance(ctx.arg_types[0][0].ret_type, Instance)
-
-        instance = ctx.arg_types[0][0].ret_type
-        type_info = instance.type
-        signature = type_info.get_method('__call__')
-        if not signature:
-            ctx.api.fail(
-                'Typeclass definition must have `__call__` method',
-                ctx.context,
+        if is_typeclass_def:
+            assert isinstance(ctx.default_return_type, Instance)
+            assert isinstance(defn, FunctionLike)
+            return self._process_typeclass_def_return_type(
+                ctx.default_return_type,
+                defn,
+                ctx,
             )
-            return AnyType(TypeOfAny.from_error)
+        elif is_typeclass:
+            assert isinstance(ctx.default_return_type, Instance)
+            assert isinstance(defn, CallableType)
+            assert defn.definition
+            instance_args.mutate_typeclass_def(
+                ctx.default_return_type,
+                defn.definition.fullname,
+                ctx,
+            )
+            return ctx.default_return_type
+        return AnyType(TypeOfAny.from_error)
 
-        signature_type = get_proper_type(signature.type)
-        assert isinstance(signature_type, CallableType)
-        typeclass = self._adjust_typeclass(
-            bind_self(signature_type),
-            type_info.fullname,
-            ctx,
-            class_definition=instance,
-        )
-        self._process_typeclass_metadata(type_info, typeclass, ctx)
-        return typeclass
-
-    def _adjust_typeclass(
+    def _process_typeclass_def_return_type(
         self,
-        typeclass_def: MypyType,
-        definition_fullname: str,
+        typeclass_intermediate_def: Instance,
+        defn: FunctionLike,
         ctx: FunctionContext,
-        *,
-        class_definition: Optional[Instance] = None,
     ) -> MypyType:
-        assert isinstance(typeclass_def, CallableType)
-        assert isinstance(ctx.default_return_type, Instance)
+        type_info = defn.type_object()
+        instance = Instance(type_info, [])
+        typeclass_intermediate_def.args = (instance,)
+        return typeclass_intermediate_def
 
-        str_fallback = ctx.api.str_type()  # type: ignore
 
-        ctx.default_return_type.args = (
-            UninhabitedType(),  # We start with empty set of instances
-            typeclass_def,
-            class_definition if class_definition else UninhabitedType(),
-            LiteralType(definition_fullname, str_fallback),
-        )
-        return ctx.default_return_type
+def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
+    """
+    Callback for cases like ``@typeclass(SomeType)``.
 
-    def _process_typeclass_metadata(
-        self,
-        type_info: TypeInfo,
-        typeclass: MypyType,
-        ctx: FunctionContext,
-    ) -> None:
-        namespace = type_info.metadata.setdefault('classes', {})
-        if namespace.get('typeclass'):  # TODO: the same for functions
-            ctx.api.fail(
-                'Typeclass definition "{0}" cannot be reused'.format(
-                    type_info.fullname,
-                ),
-                ctx.context,
-            )
-            return
-        namespace['typeclass'] = typeclass
+    What it does? It works with the associated types.
+    It checks that ``SomeType`` is correct, modifies the current typeclass.
+    And returns it back.
+    """
+    assert isinstance(ctx.default_return_type, Instance)
+    # TODO: change to condition
+    # This will allow us to warn users on `x = typeclass(T)(func)`,
+    # instead of falling with exception.
+    assert isinstance(ctx.context, Decorator)
+
+    if isinstance(ctx.default_return_type.args[2], Instance):
+        associated_types.check_type(ctx.default_return_type.args[2], ctx)
+
+    instance_args.mutate_typeclass_def(
+        ctx.default_return_type,
+        ctx.context.func.fullname,
+        ctx,
+    )
+    return ctx.default_return_type
 
 
 def instance_return_type(ctx: MethodContext) -> MypyType:
@@ -165,6 +168,10 @@ class InstanceDefReturnType(object):
         assert isinstance(instance_signature, CallableType)
         instance_type = instance_signature.arg_types[0]
 
+        # We need to add `Supports` metadata before typechecking,
+        # because it will affect type hierarchies.
+        self._add_supports_metadata(typeclass, instance_type, ctx)
+
         typecheck.check_typeclass(
             typeclass_signature=typeclass.args[1],
             instance_signature=instance_signature,
@@ -177,7 +184,6 @@ class InstanceDefReturnType(object):
             fullname=typeclass_ref.args[3].value,
             ctx=ctx,
         )
-        self._add_supports_metadata(typeclass, instance_type, ctx)
 
         # Without this line we won't mutate args of a class-defined typeclass:
         ctx.type.args[1].args = typeclass.args
@@ -223,13 +229,13 @@ class InstanceDefReturnType(object):
         .. code:: python
 
           >>> from classes import Supports, typeclass
-          >>> from typing_extensions import Protocol
 
-          >>> class ToStr(Protocol):
-          ...     def __call__(self, instance) -> str:
-          ...         ...
+          >>> class ToStr(object):
+          ...     ...
 
-          >>> to_str = typeclass(ToStr)
+          >>> @typeclass(ToStr)
+          ... def to_str(instance) -> str:
+          ...     ...
 
           >>> @to_str.instance(int)
           ... def _to_str_int(instance: int) -> str:
@@ -263,10 +269,6 @@ class InstanceDefReturnType(object):
             return
 
         assert isinstance(ctx.type, Instance)
-
-        # We also need to modify the metadata for a typeclass typeinfo:
-        metadata = typeclass.args[2].type.metadata
-        metadata['classes']['typeclass'] = typeclass
 
         supports_spec = type_loader.load_supports_type(typeclass.args[2], ctx)
         if supports_spec not in instance_type.type.bases:
