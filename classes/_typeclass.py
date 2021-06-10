@@ -1,202 +1,192 @@
+"""
+Typeclasses for Python.
+
+.. rubric:: Basic usage
+
+The first and the simplest example of a typeclass is just its definition:
+
+.. code:: python
+
+    >>> from classes import typeclass
+
+    >>> @typeclass
+    ... def example(instance) -> str:
+    ...     '''Example typeclass.'''
+
+    >>> example(1)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: Missing matched typeclass instance for type: int
+
+In this example we work with the default implementation of a typeclass.
+It raises a ``NotImplementedError`` when no instances match.
+And we don't yet have a special case for ``int``,
+that why we fallback to the default implementation.
+
+It works almost like a regular function right now.
+Let's do the next step and introduce
+the ``int`` instance for our typeclass:
+
+.. code:: python
+
+    >>> @example.instance(int)
+    ... def _example_int(instance: int) -> str:
+    ...     return 'int case'
+
+    >>> assert example(1) == 'int case'
+
+Now we have a specific instance for ``int``
+which does something different from the default implementation.
+
+What will happen if we pass something new, like ``str``?
+
+.. code:: python
+
+    >>> example('a')
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: Missing matched typeclass instance for type: str
+
+Because again, we don't yet have
+an instance of this typeclass for ``str`` type.
+Let's fix that.
+
+.. code:: python
+
+    >>> @example.instance(str)
+    ... def _example_str(instance: str) -> str:
+    ...     return instance
+
+    >>> assert example('a') == 'a'
+
+Now it works with ``str`` as well. But differently.
+This allows developer to base the implementation on type information.
+
+So, the rule is clear:
+if we have a typeclass instance for a specific type,
+then it will be called,
+otherwise the default implementation will be called instead.
+
+.. rubric:: Protocols
+
+We also support protocols. It has the same limitation as ``Generic`` types.
+It is also dispatched after all regular instances are checked.
+
+To work with protocols, one needs to pass ``is_protocol`` flag to instance:
+
+.. code:: python
+
+    >>> from typing import Sequence
+
+    >>> @example.instance(Sequence, is_protocol=True)
+    ... def _sequence_example(instance: Sequence) -> str:
+    ...     return ','.join(str(item) for item in instance)
+
+    >>> assert example([1, 2, 3]) == '1,2,3'
+
+But, ``str`` will still have higher priority over ``Sequence``:
+
+.. code:: python
+
+    >>> assert example('abc') == 'abc'
+
+We also support user-defined protocols:
+
+.. code:: python
+
+    >>> from typing_extensions import Protocol
+
+    >>> class CustomProtocol(Protocol):
+    ...     field: str
+
+    >>> @example.instance(CustomProtocol, is_protocol=True)
+    ... def _custom_protocol_example(instance: CustomProtocol) -> str:
+    ...     return instance.field
+
+Now, let's build a class that match this protocol and test it:
+
+.. code:: python
+
+    >>> class WithField(object):
+    ...    field: str = 'with field'
+
+    >>> assert example(WithField()) == 'with field'
+
+"""
+
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
     Callable,
-    ClassVar,
     Dict,
     Generic,
-    Set,
     Type,
     TypeVar,
     Union,
+    overload,
 )
 
 from typing_extensions import final
 
 _InstanceType = TypeVar('_InstanceType')
 _SignatureType = TypeVar('_SignatureType', bound=Callable)
-_DefinitionType = TypeVar('_DefinitionType', bound=Type)
+_AssociatedType = TypeVar('_AssociatedType')
 _Fullname = TypeVar('_Fullname', bound=str)  # Literal value
 
 _NewInstanceType = TypeVar('_NewInstanceType', bound=Type)
 
+_StrictAssociatedType = TypeVar('_StrictAssociatedType', bound='AssociatedType')
 _TypeClassType = TypeVar('_TypeClassType', bound='_TypeClass')
 _ReturnType = TypeVar('_ReturnType')
 
 
+@overload
+def typeclass(
+    definition: Type[_AssociatedType],
+) -> '_TypeClassDef[_AssociatedType]':
+    """Function to created typeclasses with associated types."""
+
+
+@overload
 def typeclass(
     signature: _SignatureType,
     # By default almost all variables are `nothing`,
     # but we enhance them via mypy plugin later:
-) -> '_TypeClass[_InstanceType, _SignatureType, _DefinitionType, _Fullname]':
-    """
-    Function to define typeclasses.
+) -> '_TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]':
+    """Function to define typeclasses with just functions."""
 
-    .. rubric:: Basic usage
 
-    The first and the simplest example of a typeclass is just its definition:
-
-    .. code:: python
-
-        >>> from classes import typeclass
-
-        >>> @typeclass
-        ... def example(instance) -> str:
-        ...     '''Example typeclass.'''
-
-        >>> example(1)
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Missing matched typeclass instance for type: int
-
-    In this example we work with the default implementation of a typeclass.
-    It raise a ``NotImplementedError`` when no instances match.
-    And we don't yet have a special case for ``int``,
-    that why we fallback to the default implementation.
-
-    It works like a regular function right now.
-    Let's do the next step and introduce
-    the ``int`` instance for the typeclass:
-
-    .. code:: python
-
-        >>> @example.instance(int)
-        ... def _example_int(instance: int) -> str:
-        ...     return 'int case'
-
-        >>> assert example(1) == 'int case'
-
-    Now we have a specific instance for ``int``
-    which does something different from the default implementation.
-
-    What will happen if we pass something new, like ``str``?
-
-    .. code:: python
-
-        >>> example('a')
-        Traceback (most recent call last):
-        ...
-        NotImplementedError: Missing matched typeclass instance for type: str
-
-    Because again, we don't yet have
-    an instance of this typeclass for ``str`` type.
-    Let's fix that.
-
-    .. code:: python
-
-        >>> @example.instance(str)
-        ... def _example_str(instance: str) -> str:
-        ...     return instance
-
-        >>> assert example('a') == 'a'
-
-    Now it works with ``str`` as well. But differently.
-    This allows developer to base the implementation on type information.
-
-    So, the rule is clear:
-    if we have a typeclass instance for a specific type,
-    then it will be called,
-    otherwise the default implementation will be called instead.
-
-    .. rubric:: Generics
-
-    We also support generics, but the support is limited.
-    We cannot rely on type parameters of the generic type,
-    only on the base generic class:
-
-    .. code:: python
-
-        >>> from typing import Generic, TypeVar
-
-        >>> T = TypeVar('T')
-
-        >>> class MyGeneric(Generic[T]):
-        ...     def __init__(self, arg: T) -> None:
-        ...          self.arg = arg
-
-    Now, let's define the typeclass instance for this type:
-
-    .. code:: python
-
-        >>> @example.instance(MyGeneric)
-        ... def _my_generic_example(instance: MyGeneric) -> str:
-        ...     return 'generi' + str(instance.arg)
-
-        >>> assert example(MyGeneric('c')) == 'generic'
-
-    This case will work for all type parameters of ``MyGeneric``,
-    or in other words it can be assumed as ``MyGeneric[Any]``:
-
-    .. code:: python
-
-        >>> assert example(MyGeneric(1)) == 'generi1'
-
-    In the future, when Python will have new type mechanisms,
-    we would like to improve our support for specific generic instances
-    like ``MyGeneric[int]`` only. But, that's the best we can do for now.
-
-    .. rubric:: Protocols
-
-    We also support protocols. It has the same limitation as ``Generic`` types.
-    It is also dispatched after all regular instances are checked.
-
-    To work with protocols, one needs to pass ``is_protocol`` flag to instance:
-
-    .. code:: python
-
-        >>> from typing import Sequence
-
-        >>> @example.instance(Sequence, is_protocol=True)
-        ... def _sequence_example(instance: Sequence) -> str:
-        ...     return ','.join(str(item) for item in instance)
-
-        >>> assert example([1, 2, 3]) == '1,2,3'
-
-    But, ``str`` will still have higher priority over ``Sequence``:
-
-    .. code:: python
-
-        >>> assert example('abc') == 'abc'
-
-    We also support user-defined protocols:
-
-    .. code:: python
-
-        >>> from typing_extensions import Protocol
-
-        >>> class CustomProtocol(Protocol):
-        ...     field: str
-
-        >>> @example.instance(CustomProtocol, is_protocol=True)
-        ... def _custom_protocol_example(instance: CustomProtocol) -> str:
-        ...     return instance.field
-
-    Now, let's build a class that match this protocol and test it:
-
-    .. code:: python
-
-        >>> class WithField(object):
-        ...    field: str = 'with field'
-
-        >>> assert example(WithField()) == 'with field'
-
-    Remember, that generic protocols have the same limitation as generic types.
-
-    """
-    if signature in _TypeClass._known_signatures:  # type: ignore # noqa: WPS437
-        raise TypeError(
-            'Typeclass definition "{0}" cannot be reused'.format(
-                signature,
-            ),
-        )
+def typeclass(signature):
+    """General case function to create typeclasses."""
     if isinstance(signature, type):
-        _TypeClass._known_signatures.add(  # type: ignore # noqa: WPS437
-            signature,
-        )
-    return _TypeClass(signature)
+        return _TypeClass  # It means, that it has a associated type with it
+    return _TypeClass(signature)  # In this case it is a regular function
+
+
+class AssociatedType(object):
+    """
+    Base class for all associated types.
+
+    How to use? Just import and subclass it:
+
+    .. code:: python
+
+       >>> from classes import AssociatedType, typeclass
+
+       >>> class Example(AssociatedType):
+       ...     ...
+
+       >>> @typeclass(Example)
+       ... def example(instance) -> str:
+       ...     ...
+
+    Right now it does nothing in runtime, but this can change in the future.
+    """
+
+    __slots__ = ()
 
 
 @final
-class Supports(Generic[_SignatureType]):
+class Supports(Generic[_StrictAssociatedType]):
     """
     Used to specify that some value is a part of a typeclass.
 
@@ -207,10 +197,11 @@ class Supports(Generic[_SignatureType]):
       >>> from classes import typeclass, Supports
 
       >>> class ToJson(object):
-      ...     def __call__(self, instance) -> str:
-      ...         ...
+      ...     ...
 
-      >>> to_json = typeclass(ToJson)
+      >>> @typeclass(ToJson)
+      ... def to_json(instance) -> str:
+      ...     ...
 
       >>> @to_json.instance(int)
       ... def _to_json_int(instance: int) -> str:
@@ -240,14 +231,16 @@ class Supports(Generic[_SignatureType]):
       # (expression has type "str", variable has type "Supports[ToJson]")
 
     .. warning::
-      ``Supports`` only works with typeclasses defined as types.
+      ``Supports`` only works with typeclasses defined with associated types.
 
     """
+
+    __slots__ = ()
 
 
 @final
 class _TypeClass(
-    Generic[_InstanceType, _SignatureType, _DefinitionType, _Fullname],
+    Generic[_InstanceType, _SignatureType, _AssociatedType, _Fullname],
 ):
     """
     That's how we represent typeclasses.
@@ -282,7 +275,6 @@ class _TypeClass(
     """
 
     __slots__ = ('_instances', '_protocols')
-    _known_signatures: ClassVar[Set[_SignatureType]] = set()
 
     def __init__(self, signature: _SignatureType) -> None:
         """
@@ -318,7 +310,10 @@ class _TypeClass(
 
     def __call__(
         self,
-        instance: Union[_InstanceType, Supports[_DefinitionType]],
+        instance: Union[  # type: ignore
+            _InstanceType,
+            Supports[_AssociatedType],
+        ],
         *args,
         **kwargs,
     ) -> _ReturnType:
@@ -430,6 +425,29 @@ class _TypeClass(
 if TYPE_CHECKING:
     from typing_extensions import Protocol
 
+    class _TypeClassDef(Protocol[_AssociatedType]):
+        """
+        Callable protocol to help us with typeclass definition.
+
+        This protocol does not exist in real life,
+        we just need it because we use it in ``mypy`` plugin.
+        That's why we define it under ``if TYPE_CHECKING:``.
+        It should not be used directly.
+
+        See ``TypeClassDefReturnType`` for more information.
+        """
+
+        def __call__(
+            self,
+            signature: _SignatureType,
+        ) -> _TypeClass[
+            _InstanceType,
+            _SignatureType,
+            _AssociatedType,
+            _Fullname,
+        ]:
+            """It can be called, because in real life it is a function."""
+
     class _TypeClassInstanceDef(  # type: ignore
         Protocol[_InstanceType, _TypeClassType],
     ):
@@ -439,7 +457,7 @@ if TYPE_CHECKING:
         This protocol does not exist in real life,
         we just need it because we use it in ``mypy`` plugin.
         That's why we define it under ``if TYPE_CHECKING:``.
-        It should not be used
+        It should not be used directly.
 
         See ``InstanceDefReturnType`` for more information.
 

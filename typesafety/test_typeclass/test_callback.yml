@@ -1,7 +1,7 @@
 - case: typeclass_callback_correct
   disable_cache: false
   main: |
-    from typing import Callable
+    from typing import Callable, Union
     from classes import typeclass
 
     @typeclass
@@ -10,7 +10,7 @@
 
     @example.instance(int)
     @example.instance(float)
-    def _example_int_float(instance, attr: bool) -> bool:
+    def _example_int_float(instance: Union[int, float], attr: bool) -> bool:
         ...
 
 
@@ -23,7 +23,7 @@
 - case: typeclass_callback_wrong
   disable_cache: false
   main: |
-    from typing import Callable
+    from typing import Callable, Union
     from classes import typeclass
 
     @typeclass
@@ -32,7 +32,7 @@
 
     @example.instance(int)
     @example.instance(float)
-    def _example_int_float(instance, attr: bool) -> bool:
+    def _example_int_float(instance: Union[int, float], attr: bool) -> bool:
         ...
 
     def accepts_typeclass(callback: Callable[[str, bool], bool]) -> bool:
@@ -40,6 +40,6 @@
 
     reveal_type(accepts_typeclass(example))
   out: |
-    main:16: error: Argument 1 to "accepts_typeclass" has incompatible type "_TypeClass[Union[int, float], bool, Callable[[int, bool], bool], <nothing>]"; expected "Callable[[str, bool], bool]"
-    main:16: note: "_TypeClass[Union[int, float], bool, Callable[[int, bool], bool], <nothing>].__call__" has type "Callable[[Arg(Supports[<nothing>], 'instance'), VarArg(Any), KwArg(Any)], bool]"
+    main:16: error: Argument 1 to "accepts_typeclass" has incompatible type "_TypeClass[float, Callable[[Any, bool], bool], <nothing>, Literal['main.example']]"; expected "Callable[[str, bool], bool]"
+    main:16: note: "_TypeClass[float, Callable[[Any, bool], bool], <nothing>, Literal['main.example']].__call__" has type "Callable[[Arg(Union[float, Supports[<nothing>]], 'instance'), VarArg(Any), KwArg(Any)], _ReturnType]"
     main:16: note: Revealed type is 'builtins.bool'

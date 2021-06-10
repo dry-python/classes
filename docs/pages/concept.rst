@@ -125,29 +125,24 @@ Example:
   >>> assert json.supports(int) is True
   >>> assert json.supports(dict) is False
 
-Class-based definition
-~~~~~~~~~~~~~~~~~~~~~~
+Typeclasses with associated types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can also define typeclasses not as functions, but as classes.
-It won't affect anything, except some advanced ``mypy`` usage.
-For example, functions in ``mypy`` cannot be used as type arguments.
+You can also define typeclasses with associated types.
+It will allow you to use ``Supports`` type later on.
 
-Instead of regular functions, you can define classes with ``__call__`` method.
 The syntax looks like this:
 
 .. code:: python
 
-  >>> from classes import typeclass
+  >>> from classes import AssociatedType, typeclass
 
-  >>> class CanBeTrimmed(object):
-  ...     def __call__(self, instance, length: int) -> str:
-  ...         ...
+  >>> class CanBeTrimmed(AssociatedType):  # Associated type definition
+  ...     ...
 
-  >>> can_be_trimmed = typeclass(CanBeTrimmed)
-
-.. note::
-  Note that you have to use ``typeclass`` as a function call here,
-  class decorator won't work. Because ``mypy`` does not type-check them yet.
+  >>> @typeclass(CanBeTrimmed)
+  ... def can_be_trimmed(instance, length: int) -> str:
+  ...    ...
 
 The instance definition syntax is the same:
 
@@ -174,13 +169,14 @@ that are able to be converted to JSON:
 
 .. code:: python
 
-    >>> from classes import Supports, typeclass
+    >>> from classes import AssociatedType, Supports, typeclass
 
-    >>> class ToJson(object):
-    ...     def __call__(self, instance) -> str:
-    ...         ...
+    >>> class ToJson(AssociatedType):
+    ...     ...
 
-    >>> to_json = typeclass(ToJson)
+    >>> @typeclass(ToJson)
+    ... def to_json(instance) -> str:
+    ...    ...
 
     >>> @to_json.instance(int)
     ... def _to_json_int(instance: int) -> str:
@@ -209,32 +205,31 @@ And this will fail (both in runtime and during type checking):
       ...
     NotImplementedError: Missing matched typeclass instance for type: NoneType
 
+You can also use ``Supports`` as a type annotation for defining typeclasses:
 
-One more tip: you can use ``Protocol`` as the base class for this.
-It might be a good indicator that this is not a real Python class,
-but is just an abstraction. Our team would recommend this style:
+.. code:: python
+
+    >>> class MyFeature(AssociatedType):
+    ...     ...
+
+    >>> @typeclass(MyFeature)
+    ... def my_feature(instance: 'Supports[MyFeature]') -> str:
+    ...     ...
+
+It might be helpful, when you have ``no-untyped-def`` rule enabled.
+
+One more tip: our team would recommend this style:
 
 .. code:: python
 
     >>> from typing_extensions import Protocol, final
 
     >>> @final  # This type cannot have sub-types
-    ... class MyTypeclass(Protocol):  # It cannot have instances
-    ...     def __call__(self, instance) -> str:  # Protocols don't have bodies
-    ...         """Tell us, what this typeclass is about."""
-
-You can also use ``Supports`` as a type annotation for defining typeclasses:
-
-.. code:: python
-
-    >>> class MyFeature(object):
-    ...     def __call__(self, instance: 'Supports[MyFeature]') -> str:
-    ...         ...
-
-It might be helpful, when you have ``no-untyped-def`` rule enabled.
+    ... class MyTypeclass(AssociatedType):
+    ...     """Tell us, what this typeclass is about."""
 
 .. warning::
-  ``Supports`` only works with typeclasses defined as Python classes.
+  ``Supports`` only works with typeclasses defined with associated types.
 
 
 Related concepts

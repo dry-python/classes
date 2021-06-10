@@ -2,7 +2,7 @@ from typing import List, Union
 
 from mypy.plugin import FunctionContext, MethodContext
 from mypy.typeops import make_simplified_union
-from mypy.types import AnyType, Instance, TupleType
+from mypy.types import AnyType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, UninhabitedType
 from typing_extensions import Final
@@ -31,6 +31,20 @@ def add_unique(
         [new_instance_type, existing_instance_type],
     ))
     return make_simplified_union(unified)
+
+
+def mutate_typeclass_def(
+    typeclass: Instance,
+    definition_fullname: str,
+    ctx: Union[FunctionContext, MethodContext],
+) -> None:
+    """Adds definition fullname to the typeclass type."""
+    str_fallback = ctx.api.str_type()  # type: ignore
+
+    typeclass.args = (
+        *typeclass.args[:3],
+        LiteralType(definition_fullname, str_fallback),
+    )
 
 
 def mutate_typeclass_instance_def(

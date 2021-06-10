@@ -1,16 +1,4 @@
-- case: typeclass_definition
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def example(instance, arg: str, other: int, *, attr: bool) -> bool:
-        ...
-
-    reveal_type(example)  # N: Revealed type is 'classes._typeclass._TypeClass[<nothing>, builtins.bool, def (instance: <nothing>, arg: builtins.str, other: builtins.int, *, attr: builtins.bool) -> builtins.bool, <nothing>]'
-
-
-- case: typeclass_definition_wrong
+- case: typeclass_definition_any
   disable_cache: false
   main: |
     from classes import typeclass
@@ -20,106 +8,94 @@
         ...
 
 
-- case: typeclass_wrong_param
+- case: typeclass_definied_by_type
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class ToJson(AssociatedType):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance, verbose: bool = False) -> str:
+        ...
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int, verbose: bool = False) -> str:
+        return str(instance)
+
+    @to_json.instance(str)
+    def _to_json_str(instance: str, verbose: bool = False) -> str:
+        return instance
+
+    to_json(1, verbose=True)
+    to_json('a')
+    to_json(None)
+  out: |
+    main:20: error: Argument 1 to "to_json" has incompatible type "None"; expected "Union[str, int, Supports[ToJson]]"
+
+
+- case: typeclass_class_wrong_sig
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class ToJson(AssociatedType):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance, verbose: bool = False) -> str:
+        ...
+
+    @to_json.instance(int)
+    def _to_json_int(instance: str) -> int:
+        ...
+  out: |
+    main:10: error: Instance "builtins.str" does not match runtime type "builtins.int*"
+    main:10: error: Instance callback is incompatible "def (instance: builtins.str) -> builtins.int"; expected "def (instance: builtins.str, verbose: builtins.bool =) -> builtins.str"
+
+
+- case: typeclass_definied_by_wrong_type
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class ToJson(object):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance, verbose: bool = False) -> str:
+        ...
+  out: |
+    main:6: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"
+
+
+- case: typeclass_definied_by_multiple_parents
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class A(object):
+        ...
+
+    class ToJson(AssociatedType, A):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance, verbose: bool = False) -> str:
+        ...
+  out: |
+    main:9: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"
+
+
+- case: typeclass_definied_by_literal
   disable_cache: false
   main: |
     from classes import typeclass
 
     typeclass(1)
-
   out: |
-    main:3: error: Value of type variable "_CallbackType" of "typeclass" cannot be "int"
-
-
-- case: typeclass_instance
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def example(instance, arg: str) -> bool:
-        ...
-
-    @example.instance(str)
-    def _example_str(instance: str, arg: str) -> bool:
-        ...
-
-    reveal_type(example)  # N: Revealed type is 'classes._typeclass._TypeClass[builtins.str*, builtins.bool, def (builtins.str*, arg: builtins.str) -> builtins.bool, <nothing>]'
-
-
-- case: typeclass_instance_union
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def example(instance, arg: str) -> bool:
-        ...
-
-    @example.instance(int)
-    @example.instance(float)
-    def _example_int_float(instance, arg: str) -> bool:
-        ...
-
-    @example.instance(str)
-    def _example_str(instance: str, arg: str) -> bool:
-        ...
-
-    reveal_type(example)  # N: Revealed type is 'classes._typeclass._TypeClass[Union[builtins.str*, builtins.int*, builtins.float*], builtins.bool, def (builtins.str*, arg: builtins.str) -> builtins.bool, <nothing>]'
-
-
-- case: typeclass_incorrect_instance_callback1
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def example(instance, arg: str) -> bool:
-        ...
-
-    @example.instance(int)
-    def _example_int(instance: str, arg: str) -> bool:
-        ...
-
-    reveal_type(example)
-  out: |
-    main:7: error: Argument 1 has incompatible type "Callable[[str, str], bool]"; expected "Callable[[int, str], bool]"
-    main:11: note: Revealed type is 'classes._typeclass._TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool, <nothing>]'
-
-
-- case: typeclass_incorrect_instance_callback2
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def example(instance, arg: str) -> bool:
-        ...
-
-    @example.instance(int)
-    def _example_int(instance: int) -> bool:
-        ...
-
-    reveal_type(example)
-  out: |
-    main:7: error: Argument 1 has incompatible type "Callable[[int], bool]"; expected "Callable[[int, str], bool]"
-    main:11: note: Revealed type is 'classes._typeclass._TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool, <nothing>]'
-
-
-- case: typeclass_incorrect_instance_callback3
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    @typeclass
-    def example(instance, arg: str) -> bool:
-        ...
-
-    @example.instance(int)
-    def _example_int(instance, arg: int) -> bool:
-        ...
-
-    reveal_type(example)
-  out: |
-    main:7: error: Argument 1 has incompatible type "Callable[[Any, int], bool]"; expected "Callable[[int, str], bool]"
-    main:11: note: Revealed type is 'classes._typeclass._TypeClass[builtins.int*, builtins.bool, def (builtins.int*, arg: builtins.str) -> builtins.bool, <nothing>]'
+    main:3: error: No overload variant of "typeclass" matches argument type "int"
+    main:3: note:     def [_AssociatedType] typeclass(definition: Type[_AssociatedType]) -> _TypeClassDef[_AssociatedType]
+    main:3: note:     def [_SignatureType, _InstanceType, _AssociatedType, _Fullname <: str] typeclass(signature: _SignatureType) -> _TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]
+    main:3: note: Possible overload variants:
