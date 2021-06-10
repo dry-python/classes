@@ -31,12 +31,7 @@ def load_typeclass(
     fullname: str,
     ctx: MethodContext,
 ) -> Instance:
-    """
-    Loads given typeclass from a symboltable by a fullname.
-
-    There are two ways to load a typeclass by name:
-    # TODO
-    """
+    """Loads given typeclass from a symboltable by a fullname."""
     typeclass_info = ctx.api.lookup_qualified(fullname)  # type: ignore
     assert isinstance(typeclass_info.type, Instance)
     return typeclass_info.type
