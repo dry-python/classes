@@ -1,0 +1,111 @@
+- case: typeclass_supports_generic_correct1
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, Set, TypeVar, Union
+    from classes import AssociatedType, Supports, typeclass
+
+    X = TypeVar('X')
+
+    class Some(AssociatedType[X]):
+        ...
+
+    @typeclass(Some)
+    def some(instance: Iterable[X]) -> X:
+        ...
+
+    @some.instance(list)
+    @some.instance(set)
+    def _some_ex(instance: Union[List[X], Set[X]]) -> X:
+        ...
+
+    x: Supports[Some[int]] = [1, 2, 3]
+    y = {1, 2, 3}
+    reveal_type(some(x))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(y))  # N: Revealed type is 'builtins.int*'
+
+
+- case: typeclass_supports_generic_correct2
+  disable_cache: false
+  main: |
+    from typing import TypeVar, Union, Mapping, Dict
+    from classes import AssociatedType, Supports, typeclass
+
+    X = TypeVar('X')
+    Y = TypeVar('Y')
+
+    class Some(AssociatedType[X, Y]):
+        ...
+
+    @typeclass(Some)
+    def some(instance: Mapping[X, Y], a: X, b: Y) -> Y:
+        ...
+
+    @some.instance(dict)
+    def _some_ex(instance: Dict[X, Y],  a: X, b: Y) -> Y:
+        ...
+
+    x: Supports[Some[int, str]] = {1: 'a'}
+
+    reveal_type(some(x, 1, 'a'))  # N: Revealed type is 'builtins.str*'
+    reveal_type(some({'a': 1}, 'a', 1))  # N: Revealed type is 'builtins.int*'
+
+
+- case: typeclass_supports_generic_wrong1
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, TypeVar
+    from classes import AssociatedType, Supports, typeclass
+
+    X = TypeVar('X')
+
+    class Some(AssociatedType[X]):
+        ...
+
+    @typeclass(Some)
+    def some(instance: Iterable[X]) -> X:
+        ...
+
+    @some.instance(list)
+    def _some_ex(instance: List[X]) -> X:
+        ...
+
+    x: Supports[Some[int]] = {1, 2, 3}
+    some({1, 2, 3})
+  out: |
+    main:17: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")
+    main:18: error: Argument 1 to "some" has incompatible type "Set[int]"; expected "Supports[Some[<nothing>]]"
+
+
+- case: typeclass_supports_generic_wrong2
+  disable_cache: false
+  main: |
+    from typing import Iterable, List, Set, TypeVar, Union
+    from classes import AssociatedType, Supports, typeclass
+
+    X = TypeVar('X')
+
+    class Some(AssociatedType[X]):
+        ...
+
+    @typeclass(Some)
+    def some(instance: Iterable[X]) -> X:
+        ...
+
+    @typeclass
+    def other(instance: Iterable[X]) -> X:
+        ...
+
+    @other.instance(list)
+    @some.instance(set)
+    def _some_ex(instance: Union[List[X], Set[X]]) -> X:
+        ...
+
+    x: Supports[Some[int]] = [1, 2, 3]
+    y: Supports[Some[int]] = {1, 2, 3}
+    z: Supports[Some[int]] = 1
+  out: |
+    main:17: error: Found different typeclass ".instance" calls, use only "main.some"
+    main:17: error: Instance "Union[builtins.list[X`-1], builtins.set[X`-1]]" does not match runtime type "builtins.set[_T`1]"
+    main:22: error: Incompatible types in assignment (expression has type "List[int]", variable has type "Supports[Some[int]]")
+    main:23: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")
+    main:24: error: Incompatible types in assignment (expression has type "int", variable has type "Supports[Some[int]]")

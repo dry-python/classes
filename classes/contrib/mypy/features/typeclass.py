@@ -1,4 +1,3 @@
-
 from typing import Tuple
 
 from mypy.nodes import Decorator

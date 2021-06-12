@@ -19,12 +19,12 @@ https://github.com/TypedDjango/pytest-mypy-plugins
 
 from typing import Callable, Optional, Type
 
-from mypy.plugin import FunctionContext, MethodContext, MethodSigContext, Plugin
+from mypy.plugin import FunctionContext, MethodContext, MethodSigContext, Plugin, AnalyzeTypeContext
 from mypy.types import CallableType
 from mypy.types import Type as MypyType
 from typing_extensions import Final, final
 
-from classes.contrib.mypy.features import typeclass
+from classes.contrib.mypy.features import typeclass, associated_type
 
 _TYPECLASS_FULLNAME: Final = 'classes._typeclass._TypeClass'
 _TYPECLASS_DEF_FULLNAME: Final = 'classes._typeclass._TypeClassDef'
@@ -46,6 +46,14 @@ class _TypeClassPlugin(Plugin):
 
     Hooks are in the logical order.
     """
+
+    def get_type_analyze_hook(
+        self,
+        fullname: str,
+    ) -> Optional[Callable[[AnalyzeTypeContext], MypyType]]:
+        if fullname == 'classes._typeclass.AssociatedType':
+            return associated_type.variadic_generic
+        return None
 
     def get_function_hook(
         self,
