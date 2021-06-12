@@ -8,6 +8,7 @@ from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny
 from typing_extensions import Final
+from mypy.nodes import Decorator
 
 from classes.contrib.mypy.typeops import inference, type_queries
 
@@ -21,6 +22,10 @@ _INSTANCE_RESTRICTION_MSG: Final = (
 
 _INSTANCE_RUNTIME_MISMATCH_MSG: Final = (
     'Instance "{0}" does not match runtime type "{1}"'
+)
+
+_DIFFERENT_INSTANCE_CALLS_MSG: Final = (
+    'Found different typeclass ".instance" calls, use only "{0}"'
 )
 
 _IS_PROTOCOL_LITERAL_BOOL_MSG: Final = (
@@ -48,6 +53,7 @@ _UNBOUND_TYPE_MSG: Final = (
 def check_typeclass(
     typeclass_signature: CallableType,
     instance_signature: CallableType,
+    fullname: str,
     passed_types: TupleType,
     ctx: MethodContext,
 ) -> bool:
@@ -56,22 +62,16 @@ def check_typeclass(
 
     Please, see docs on each step.
     """
-    signature_check = _check_typeclass_signature(
-        typeclass_signature,
-        instance_signature,
-        ctx,
-    )
-    instance_check = _check_instance_type(
-        typeclass_signature,
-        instance_signature,
-        ctx,
-    )
-    runtime_check = _check_runtime_type(
-        passed_types,
-        instance_signature,
-        ctx,
-    )
-    return signature_check and instance_check and runtime_check
+    return all([
+        _check_typeclass_signature(
+            typeclass_signature,
+            instance_signature,
+            ctx,
+        ),
+        _check_instance_type(typeclass_signature, instance_signature, ctx),
+        _check_same_typeclass(fullname, ctx),
+        _check_runtime_type(passed_types, instance_signature, fullname, ctx),
+    ])
 
 
 def _check_typeclass_signature(
@@ -185,9 +185,41 @@ def _check_instance_type(
     return instance_check
 
 
+def _check_same_typeclass(
+    fullname: str,
+    ctx: MethodContext,
+) -> bool:
+    """
+    Checks that only one typeclass can be referenced in all of decorators.
+
+    If we have multiple decorators on a function,
+    it is not safe to assume
+    that we have ``.instance`` calls from the same typeclass.
+    We don't want this:
+
+    .. code:: python
+
+      @some.instance(str)
+      @other.instance(int)
+      def some(instance: Union[str, int]) ->
+          ...
+
+    We don't allow this way of instance definition.
+    See "FAQ" in docs for more information.
+    """
+    if not inference.all_same_instance_calls(fullname, ctx):
+        ctx.api.fail(
+            _DIFFERENT_INSTANCE_CALLS_MSG.format(fullname),
+            ctx.context,
+        )
+        return False
+    return True
+
+
 def _check_runtime_type(
     passed_types: TupleType,
     instance_signature: CallableType,
+    fullname: str,
     ctx: MethodContext,
 ) -> bool:
     """
@@ -204,8 +236,9 @@ def _check_runtime_type(
 
     """
     runtime_type = inference.infer_runtime_type_from_context(
-        passed_types.items[0],
-        ctx,
+        fallback=passed_types.items[0],
+        fullname=fullname,
+        ctx=ctx,
     )
 
     if len(passed_types.items) == 2:
@@ -225,12 +258,12 @@ def _check_runtime_type(
             ctx.context,
         )
 
-    return (
-        _check_runtime_protocol(runtime_type, ctx, is_protocol=is_protocol) and
-        _check_concrete_generics(instance_type, runtime_type, ctx) and
-        protocol_arg_check and
-        instance_check
-    )
+    return all([
+        _check_runtime_protocol(runtime_type, ctx, is_protocol=is_protocol),
+        _check_concrete_generics(instance_type, runtime_type, ctx),
+        protocol_arg_check,
+        instance_check,
+    ])
 
 
 def _check_protocol_arg(
@@ -293,4 +326,4 @@ def _check_concrete_generics(
     if type_queries.has_unbound_type(runtime_type, ctx):
         ctx.api.fail(_UNBOUND_TYPE_MSG.format(runtime_type), ctx.context)
         return False
-    return has_concrete_type
+    return not has_concrete_type

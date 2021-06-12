@@ -8,10 +8,13 @@ from mypy.types import (
     Instance,
     LiteralType,
     TupleType,
+    TypeVarType
 )
+from mypy.typeops import get_type_vars
 from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny, UnionType
 from typing_extensions import final
+from typing import Tuple
 
 from classes.contrib.mypy.typeops import (
     associated_types,
@@ -19,6 +22,7 @@ from classes.contrib.mypy.typeops import (
     instance_args,
     type_loader,
     typecheck,
+    mro,
 )
 
 
@@ -148,13 +152,57 @@ class InstanceDefReturnType(object):
 
     """
 
-    def __call__(self, ctx: MethodContext) -> MypyType:  # noqa: WPS218
+    def __call__(self, ctx: MethodContext) -> MypyType:
         """Main entry point."""
         assert isinstance(ctx.type, Instance)
         assert isinstance(ctx.type.args[0], TupleType)
         assert isinstance(ctx.type.args[1], Instance)
 
-        typeclass_ref = ctx.type.args[1]
+        typeclass, fullname = self._load_typeclass(ctx.type.args[1], ctx)
+        assert isinstance(typeclass.args[1], CallableType)
+
+        instance_signature = ctx.arg_types[0][0]
+        if not isinstance(instance_signature, CallableType):
+            return ctx.default_return_type
+
+        instance_type = instance_signature.arg_types[0]
+
+        # We need to add `Supports` metadata before typechecking,
+        # because it will affect type hierarchies.
+        metadata = mro.MetadataInjector(typeclass.args[2], instance_type)
+        metadata.add_supports_metadata()
+
+        is_proper_typeclass = typecheck.check_typeclass(
+            typeclass_signature=typeclass.args[1],
+            instance_signature=instance_signature,
+            fullname=fullname,
+            passed_types=ctx.type.args[0],
+            ctx=ctx,
+        )
+        print('a,', is_proper_typeclass)
+        if not is_proper_typeclass:
+            # Since the typeclass is not valid,
+            # we undo the metadata manipulation,
+            # otherwise we would spam with invalid `Supports[]` base types:
+            metadata.remove_supports_metadata()
+            return AnyType(TypeOfAny.from_error)
+
+        # If typeclass is checked, than it is safe to add new instance types:
+        self._add_new_instance_type(
+            typeclass=typeclass,
+            new_type=instance_type,
+            ctx=ctx,
+        )
+
+        # Without this line we won't mutate args of a class-defined typeclass:
+        ctx.type.args[1].args = typeclass.args  # TODO remove?
+        return ctx.default_return_type
+
+    def _load_typeclass(
+        self,
+        typeclass_ref: Instance,
+        ctx: MethodContext,
+    ) -> Tuple[Instance, str]:
         assert isinstance(typeclass_ref.args[3], LiteralType)
         assert isinstance(typeclass_ref.args[3].value, str)
 
@@ -162,130 +210,19 @@ class InstanceDefReturnType(object):
             fullname=typeclass_ref.args[3].value,
             ctx=ctx,
         )
-        assert isinstance(typeclass.args[1], CallableType)
-
-        instance_signature = ctx.arg_types[0][0]
-        assert isinstance(instance_signature, CallableType)
-        instance_type = instance_signature.arg_types[0]
-
-        # We need to add `Supports` metadata before typechecking,
-        # because it will affect type hierarchies.
-        self._add_supports_metadata(typeclass, instance_type, ctx)
-
-        typecheck.check_typeclass(
-            typeclass_signature=typeclass.args[1],
-            instance_signature=instance_signature,
-            passed_types=ctx.type.args[0],
-            ctx=ctx,
-        )
-        self._add_new_instance_type(
-            typeclass=typeclass,
-            new_type=instance_type,
-            fullname=typeclass_ref.args[3].value,
-            ctx=ctx,
-        )
-
-        # Without this line we won't mutate args of a class-defined typeclass:
-        ctx.type.args[1].args = typeclass.args
-        return ctx.default_return_type
+        assert isinstance(typeclass, Instance)
+        return typeclass, typeclass_ref.args[3].value
 
     def _add_new_instance_type(
         self,
         typeclass: Instance,
         new_type: MypyType,
-        fullname: str,
         ctx: MethodContext,
     ) -> None:
-        has_multiple_decorators = (
-            isinstance(ctx.context, Decorator) and
-            len(ctx.context.decorators) > 1
-        )
-        if has_multiple_decorators:
-            # If we have multiple decorators on a function,
-            # it is not safe to assume
-            # that all the regular instance type is fine. Here's an example:
-            #
-            # @some.instance(str)
-            # @other.instance(int)
-            # (instance: Union[str, int]) -> ...
-            #
-            # So, if we just copy copy `instance`,
-            # both typeclasses will have both `int` and `str`
-            # as their instance types. This is not what we want.
-            # We want: `some` to have `str` and `other` to have `int`
-            new_type = inference.infer_runtime_type_from_context(
-                fallback=new_type,
-                fullname=fullname,
-                ctx=ctx,
-            )
-
         typeclass.args = (
             instance_args.add_unique(new_type, typeclass.args[0]),
             *typeclass.args[1:],
         )
-
-    def _add_supports_metadata(
-        self,
-        typeclass: Instance,
-        instance_type: MypyType,
-        ctx: MethodContext,
-    ) -> None:
-        """
-        Injects fake ``Supports[TypeClass]`` parent classes into ``mro``.
-
-        Ok, this is wild. Why do we need this?
-        Because, otherwise expressing ``Supports`` is not possible,
-        here's an example:
-
-        .. code:: python
-
-          >>> from classes import Supports, typeclass
-
-          >>> class ToStr(object):
-          ...     ...
-
-          >>> @typeclass(ToStr)
-          ... def to_str(instance) -> str:
-          ...     ...
-
-          >>> @to_str.instance(int)
-          ... def _to_str_int(instance: int) -> str:
-          ...      return 'Number: {0}'.format(instance)
-
-          >>> assert to_str(1) == 'Number: 1'
-
-        Now, let's use ``Supports`` to only pass specific
-        typeclass instances in a function:
-
-        .. code:: python
-
-           >>> def convert_to_string(arg: Supports[ToStr]) -> str:
-           ...     return to_str(arg)
-
-        This is possible, due to a fact that we insert ``Supports[ToStr]``
-        into all classes that are mentioned as ``.instance()`` for ``ToStr``
-        typeclass.
-
-        So, we can call:
-
-        .. code:: python
-
-           >>> assert convert_to_string(1) == 'Number: 1'
-
-        But, ``convert_to_string(None)`` will raise a type error.
-        """
-        if not isinstance(instance_type, Instance):
-            return
-        if not isinstance(typeclass.args[2], Instance):
-            return
-
-        assert isinstance(ctx.type, Instance)
-
-        supports_spec = type_loader.load_supports_type(typeclass.args[2], ctx)
-        if supports_spec not in instance_type.type.bases:
-            instance_type.type.bases.append(supports_spec)
-        if supports_spec.type not in instance_type.type.mro:
-            instance_type.type.mro.insert(0, supports_spec.type)
 
 
 def call_signature(ctx: MethodSigContext) -> CallableType:
@@ -305,9 +242,10 @@ def call_signature(ctx: MethodSigContext) -> CallableType:
         # `Union[str, int]` as the first argument type.
         # But, we need `Union[str, int, Supports[ToJson]]`
         # That's why we are loading this type if the definition is there.
-        supports_spec = type_loader.load_supports_type(ctx.type.args[2], ctx)
         real_signature.arg_types[0] = UnionType.make_union([
             real_signature.arg_types[0],
-            supports_spec,
+            ctx.type.args[2].copy_modified(args=set(get_type_vars(real_signature.arg_types[0]))),
         ])
+    print(ctx.type.args[0])
+    print(real_signature)
     return real_signature

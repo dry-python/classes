@@ -13,10 +13,22 @@ _TYPECLASS_DEF_FULLNAMES: Final = frozenset((
 ))
 
 
+def all_same_instance_calls(
+    fullname: str,
+    ctx: MethodContext,
+) -> bool:
+    if isinstance(ctx.context, Decorator) and len(ctx.context.decorators) > 1:
+        return all(
+            _get_typeclass_instance_type(func_dec, fullname, ctx) is not None
+            for func_dec in ctx.context.decorators
+        )
+    return True
+
+
 def infer_runtime_type_from_context(
     fallback: MypyType,
     ctx: MethodContext,
-    fullname: Optional[str] = None,
+    fullname: str,
 ) -> MypyType:
     """
     Infers instance type from several ``@some.instance()`` decorators.
@@ -65,7 +77,7 @@ def infer_runtime_type_from_context(
 
 def _get_typeclass_instance_type(
     expr: Expression,
-    fullname: Optional[str],
+    fullname: str,
     ctx: MethodContext,
 ) -> Optional[MypyType]:
     expr_type = ctx.api.expr_checker.accept(expr)  # type: ignore
@@ -79,8 +91,7 @@ def _get_typeclass_instance_type(
         inst = expr_type.args[1]
         is_same_typeclass = (
             isinstance(inst.args[3], LiteralType) and
-            inst.args[3].value == fullname or
-            fullname is None
+            inst.args[3].value == fullname
         )
         if is_same_typeclass:
             return expr_type.args[0].items[0]
