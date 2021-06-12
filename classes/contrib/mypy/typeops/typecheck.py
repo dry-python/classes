@@ -8,7 +8,6 @@ from mypy.types import AnyType, CallableType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny
 from typing_extensions import Final
-from mypy.nodes import Decorator
 
 from classes.contrib.mypy.typeops import inference, type_queries
 

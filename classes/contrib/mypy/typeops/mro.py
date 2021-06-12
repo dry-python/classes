@@ -1,7 +1,12 @@
-from typing_extensions import final
-from mypy.types import Type as MypyType, UnionType, Instance, union_items, TypeVarType
-from typing import Sequence, List
+from typing import List
+
 from mypy.plugin import MethodContext
+from mypy.types import Instance
+from mypy.types import Type as MypyType
+from mypy.types import TypeVarType, union_items
+from typing_extensions import final
+
+from classes.contrib.mypy.typeops import type_loader
 
 
 @final
@@ -51,15 +56,17 @@ class MetadataInjector(object):
     But, ``convert_to_string(None)`` will raise a type error.
     """
 
-    __slots__ = ('_associated_type', '_instance_types', '_added_types')
+    __slots__ = ('_associated_type', '_instance_types', '_ctx', '_added_types')
 
     def __init__(
         self,
         associated_type: MypyType,
         instance_type: MypyType,
+        ctx: MethodContext,
     ) -> None:
         self._associated_type = associated_type
         self._instance_types = union_items(instance_type)
+        self._ctx = ctx
         self._added_types: List[Instance] = []
 
     def add_supports_metadata(self) -> None:
@@ -73,7 +80,10 @@ class MetadataInjector(object):
                 TypeVarType(var_def)
                 for var_def in instance_type.type.defn.type_vars
             ])
-            print('supports_spec', supports_spec)
+            supports_spec = type_loader.load_supports_type(
+                supports_spec,
+                self._ctx,
+            )
 
             if supports_spec not in instance_type.type.bases:
                 instance_type.type.bases.append(supports_spec)

@@ -1,6 +1,9 @@
 
+from typing import Tuple
+
 from mypy.nodes import Decorator
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext
+from mypy.typeops import get_type_vars
 from mypy.types import (
     AnyType,
     CallableType,
@@ -8,21 +11,17 @@ from mypy.types import (
     Instance,
     LiteralType,
     TupleType,
-    TypeVarType
 )
-from mypy.typeops import get_type_vars
 from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny, UnionType
 from typing_extensions import final
-from typing import Tuple
 
 from classes.contrib.mypy.typeops import (
     associated_types,
-    inference,
     instance_args,
+    mro,
     type_loader,
     typecheck,
-    mro,
 )
 
 
@@ -169,7 +168,7 @@ class InstanceDefReturnType(object):
 
         # We need to add `Supports` metadata before typechecking,
         # because it will affect type hierarchies.
-        metadata = mro.MetadataInjector(typeclass.args[2], instance_type)
+        metadata = mro.MetadataInjector(typeclass.args[2], instance_type, ctx)
         metadata.add_supports_metadata()
 
         is_proper_typeclass = typecheck.check_typeclass(
@@ -179,7 +178,6 @@ class InstanceDefReturnType(object):
             passed_types=ctx.type.args[0],
             ctx=ctx,
         )
-        print('a,', is_proper_typeclass)
         if not is_proper_typeclass:
             # Since the typeclass is not valid,
             # we undo the metadata manipulation,
@@ -242,10 +240,12 @@ def call_signature(ctx: MethodSigContext) -> CallableType:
         # `Union[str, int]` as the first argument type.
         # But, we need `Union[str, int, Supports[ToJson]]`
         # That's why we are loading this type if the definition is there.
+        associated_type = ctx.type.args[2].copy_modified(
+            args=set(get_type_vars(real_signature.arg_types[0])),
+        )
+        supports_spec = type_loader.load_supports_type(associated_type, ctx)
         real_signature.arg_types[0] = UnionType.make_union([
             real_signature.arg_types[0],
-            ctx.type.args[2].copy_modified(args=set(get_type_vars(real_signature.arg_types[0]))),
+            supports_spec,
         ])
-    print(ctx.type.args[0])
-    print(real_signature)
     return real_signature
