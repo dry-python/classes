@@ -186,6 +186,59 @@ class AssociatedType(Generic[_InstanceType]):
 
 
 @final
+class Supports(Generic[_StrictAssociatedType]):
+    """
+    Used to specify that some value is a part of a typeclass.
+
+    For example:
+
+    .. code:: python
+
+      >>> from classes import typeclass, Supports
+
+      >>> class ToJson(object):
+      ...     ...
+
+      >>> @typeclass(ToJson)
+      ... def to_json(instance) -> str:
+      ...     ...
+
+      >>> @to_json.instance(int)
+      ... def _to_json_int(instance: int) -> str:
+      ...     return str(instance)
+
+      >>> def convert_to_json(instance: Supports[ToJson]) -> str:
+      ...     return to_json(instance)
+
+      >>> assert convert_to_json(1) == '1'
+      >>> convert_to_json(None)
+      Traceback (most recent call last):
+        ...
+      NotImplementedError: Missing matched typeclass instance for type: NoneType
+
+    You can also annotate values as ``Supports`` if you need to:
+
+    .. code:: python
+
+      >>> my_int: Supports[ToJson] = 1
+
+    But, this will fail in ``mypy``:
+
+    .. code:: python
+
+      my_str: Supports[ToJson] = 'abc'
+      # Incompatible types in assignment
+      # (expression has type "str", variable has type "Supports[ToJson]")
+
+    .. warning::
+      ``Supports`` only works with typeclasses defined with associated types.
+
+    """
+
+    __slots__ = ()
+
+
+@final
 class _TypeClass(
     Generic[_InstanceType, _SignatureType, _AssociatedType, _Fullname],
 ):
