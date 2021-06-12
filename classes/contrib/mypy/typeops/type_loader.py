@@ -5,27 +5,6 @@ from mypy.types import Instance
 from mypy.types import Type as MypyType
 from typing_extensions import Final
 
-_SUPPORTS_QUALIFIED_NAME: Final = 'classes.Supports'
-
-
-def load_supports_type(
-    arg_type: MypyType,
-    ctx: Union[MethodContext, MethodSigContext],
-) -> Instance:
-    """
-    Loads ``Supports[]`` type with proper generic type.
-
-    It uses the short name,
-    because for some reason full name is not always loaded.
-    """
-    supports_spec = ctx.api.named_generic_type(
-        _SUPPORTS_QUALIFIED_NAME,
-        [arg_type],
-    )
-    assert supports_spec
-    supports_spec.type._promote = None  # noqa: WPS437
-    return supports_spec
-
 
 def load_typeclass(
     fullname: str,

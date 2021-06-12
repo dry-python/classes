@@ -26,7 +26,9 @@ def add_unique(
     It is smart: filters our junk and uses unique and flat ``Union`` types.
     """
     unified = list(filter(
-        # We filter our `NoReturn` and
+        # We filter our `NoReturn` and other things like `Any`
+        # that can break our instances union.
+        # TODO: maybe use `has_uninhabited_component`?
         lambda type_: not isinstance(type_, _TYPES_TO_FILTER_OUT),
         [new_instance_type, existing_instance_type],
     ))
