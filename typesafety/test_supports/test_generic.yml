@@ -25,7 +25,7 @@
 
 
 - case: supports_generic_correct2
-  disable_cache: false
+  disable_cache: true
   main: |
     from typing import TypeVar, Union, Mapping, Dict
     from classes import AssociatedType, Supports, typeclass
@@ -41,7 +41,7 @@
         ...
 
     @some.instance(dict)
-    def _some_ex(instance: Dict[X, Y],  a: X, b: Y) -> Y:
+    def _some_ex(instance: Dict[X, Y], a: X, b: Y) -> Y:
         ...
 
     x: Supports[Some[int, str]] = {1: 'a'}
