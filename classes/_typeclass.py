@@ -170,19 +170,66 @@ class AssociatedType(Generic[_InstanceType]):
 
     .. code:: python
 
-       >>> from classes import AssociatedType, typeclass
+      >>> from classes import AssociatedType, typeclass
 
-       >>> class Example(AssociatedType):
-       ...     ...
+      >>> class Example(AssociatedType):
+      ...     ...
 
-       >>> @typeclass(Example)
-       ... def example(instance) -> str:
-       ...     ...
+      >>> @typeclass(Example)
+      ... def example(instance) -> str:
+      ...     ...
+
+    It is special, since it can be used as variadic generic type
+    (generic with any amount of type variables),
+    thanks to our ``mypy`` plugin:
+
+    .. code:: python
+
+      >>> from typing import TypeVar
+
+      >>> A = TypeVar('A')
+      >>> B = TypeVar('B')
+      >>> C = TypeVar('C')
+
+      >>> class WithOne(AssociatedType[A]):
+      ...    ...
+
+      >>> class WithTwo(AssociatedType[A, B]):
+      ...    ...
+
+      >>> class WithThree(AssociatedType[A, B, C]):
+      ...    ...
+
+    At the moment of writing,
+    https://www.python.org/dev/peps/pep-0646/
+    is not accepted and is not supported by ``mypy``.
 
     Right now it does nothing in runtime, but this can change in the future.
     """
 
     __slots__ = ()
+
+    if not TYPE_CHECKING:  # noqa: WPS604  # pragma: no cover
+        def __class_getitem__(cls, type_params) -> type:
+            """
+            Not-so-ugly hack to add variadic generic support in runtime.
+
+            What it does?
+            It forces class-level type ``__parameters__`` count
+            and the passed one during runtime subscruption
+            to match during validation.
+
+            Then, we revert everything back.
+            """
+            if not isinstance(type_params, tuple):
+                type_params = (type_params,)  # noqa: WPS434
+
+            old_parameters = cls.__parameters__
+            cls.__parameters__ = type_params
+            try:  # noqa: WPS501
+                return super().__class_getitem__(type_params)
+            finally:
+                cls.__parameters__ = old_parameters
 
 
 @final
@@ -310,7 +357,10 @@ class _TypeClass(
 
     def __call__(
         self,
-        instance: Union[_InstanceType, _AssociatedType],
+        instance: Union[  # type: ignore
+            _InstanceType,
+            Supports[_AssociatedType],
+        ],
         *args,
         **kwargs,
     ) -> _ReturnType:

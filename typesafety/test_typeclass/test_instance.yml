@@ -51,12 +51,11 @@
 
     a('a')
     b(2)
-
-    a(1)
-    b('b')
   out: |
-    main:20: error: Argument 1 to "a" has incompatible type "int"; expected "str"
-    main:21: error: Argument 1 to "b" has incompatible type "str"; expected "int"
+     main:12: error: Found different typeclass ".instance" calls, use only "main.b"
+     main:12: error: Instance "Union[builtins.str, builtins.int]" does not match runtime type "builtins.int*"
+     main:17: error: Argument 1 to "a" has incompatible type "str"; expected <nothing>
+     main:18: error: Argument 1 to "b" has incompatible type "int"; expected <nothing>
 
 
 - case: typeclass_instances_union1

@@ -64,12 +64,23 @@ class MetadataInjector(object):
         instance_type: MypyType,
         ctx: MethodContext,
     ) -> None:
+        """
+        Smart constructor for the metadata injector.
+
+        It is smart, because it handles ``instance_type`` properly.
+        It supports ``Instance`` and ``Union`` types.
+        """
         self._associated_type = associated_type
         self._instance_types = union_items(instance_type)
         self._ctx = ctx
+
+        # Why do we store added types in a mutable global state?
+        # Because, these types are hard to replicate without the proper context.
+        # So, we just keep them here. Based on usage, it is fine.
         self._added_types: List[Instance] = []
 
     def add_supports_metadata(self) -> None:
+        """Injects ``Supports`` metadata into instance types' mro."""
         if not isinstance(self._associated_type, Instance):
             return
 
@@ -93,6 +104,7 @@ class MetadataInjector(object):
             self._added_types.append(supports_spec)
 
     def remove_supports_metadata(self) -> None:
+        """Removes ``Supports`` metadata from instance types' mro."""
         if not isinstance(self._associated_type, Instance):
             return
 
