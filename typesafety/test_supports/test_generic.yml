@@ -25,7 +25,8 @@
 
 
 - case: supports_generic_correct2
-  disable_cache: true
+  disable_cache: False
+  skip: sys.version_info[:2] < (3, 8)
   main: |
     from typing import TypeVar, Union, Mapping, Dict
     from classes import AssociatedType, Supports, typeclass
