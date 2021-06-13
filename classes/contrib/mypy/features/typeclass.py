@@ -99,9 +99,6 @@ def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
     And returns it back.
     """
     assert isinstance(ctx.default_return_type, Instance)
-    # TODO: change to condition
-    # This will allow us to warn users on `x = typeclass(T)(func)`,
-    # instead of falling with exception.
     assert isinstance(ctx.context, Decorator)
 
     if isinstance(ctx.default_return_type.args[2], Instance):
@@ -193,9 +190,6 @@ class InstanceDefReturnType(object):
             new_type=instance_signature.arg_types[0],
             ctx=ctx,
         )
-
-        # Without this line we won't mutate args of a class-defined typeclass:
-        ctx.type.args[1].args = typeclass.args  # TODO remove?
         return ctx.default_return_type
 
     def _load_typeclass(
