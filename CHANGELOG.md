@@ -7,6 +7,15 @@ We follow Semantic Versions since the `0.1.0` release.
 
 ### Features
 
+- **Breaking**: drops `python3.6` support
+- Adds generic typeclasses
+- Adds better typeclass validation during `mypy` typechecking
+- Adds `Supports` type
+- Adds `AssociatedType` variadic type
+
+### Misc
+
+- Improves docs
 
 
 ## Version 0.2.0
