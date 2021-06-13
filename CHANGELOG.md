@@ -8,6 +8,7 @@ We follow Semantic Versions since the `0.1.0` release.
 ### Features
 
 - **Breaking**: drops `python3.6` support
+- **Breaking**: now requires `typing_extensions>=3.10`
 - Adds generic typeclasses
 - Adds better typeclass validation during `mypy` typechecking
 - Adds `Supports` type
