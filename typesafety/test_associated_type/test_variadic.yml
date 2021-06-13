@@ -1,0 +1,25 @@
+- case: associated_type_variadic
+  disable_cache: false
+  main: |
+    from classes import AssociatedType
+    from typing import TypeVar
+
+    _A = TypeVar('_A')
+    _B = TypeVar('_B')
+
+    class One(AssociatedType[_A]):
+        ...
+
+    class Two(AssociatedType[_A, _B]):
+        ...
+
+    # Correct:
+    One[int]
+    Two[int, str]
+
+    # Wrong:
+    One[int, str]
+    Two[int]
+  out: |
+    main:18: error: Type application has too many types (1 expected)
+    main:19: error: Type application has too few types (2 expected)

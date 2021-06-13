@@ -1,4 +1,4 @@
-- case: typeclass_supports_generic_correct1
+- case: supports_generic_correct1
   disable_cache: false
   main: |
     from typing import Iterable, List, Set, TypeVar, Union
@@ -24,7 +24,7 @@
     reveal_type(some(y))  # N: Revealed type is 'builtins.int*'
 
 
-- case: typeclass_supports_generic_correct2
+- case: supports_generic_correct2
   disable_cache: false
   main: |
     from typing import TypeVar, Union, Mapping, Dict
@@ -50,7 +50,7 @@
     reveal_type(some({'a': 1}, 'a', 1))  # N: Revealed type is 'builtins.int*'
 
 
-- case: typeclass_supports_generic_wrong1
+- case: supports_generic_wrong1
   disable_cache: false
   main: |
     from typing import Iterable, List, TypeVar
@@ -76,7 +76,7 @@
     main:18: error: Argument 1 to "some" has incompatible type "Set[int]"; expected "Supports[Some[<nothing>]]"
 
 
-- case: typeclass_supports_generic_wrong2
+- case: supports_generic_wrong2
   disable_cache: false
   main: |
     from typing import Iterable, List, Set, TypeVar, Union
