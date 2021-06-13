@@ -17,6 +17,11 @@ def all_same_instance_calls(
     fullname: str,
     ctx: MethodContext,
 ) -> bool:
+    """
+    Checks whether a given context has instance calls of only one typeclass.
+
+    In other words, it checks that all decorators come from the same typeclass.
+    """
     if isinstance(ctx.context, Decorator) and len(ctx.context.decorators) > 1:
         return all(
             _get_typeclass_instance_type(func_dec, fullname, ctx) is not None

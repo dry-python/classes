@@ -15,12 +15,10 @@ from mypy.types import Type as MypyType
 from mypy.types import TypeOfAny, UnionType
 from typing_extensions import final
 
-from classes.contrib.mypy.typeops import (
-    associated_types,
-    instance_args,
-    mro,
-    type_loader,
-    typecheck,
+from classes.contrib.mypy.typeops import instance_args, mro, type_loader
+from classes.contrib.mypy.validation import (
+    validate_associated_type,
+    validate_typeclass,
 )
 
 
@@ -107,7 +105,10 @@ def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
     assert isinstance(ctx.context, Decorator)
 
     if isinstance(ctx.default_return_type.args[2], Instance):
-        associated_types.check_type(ctx.default_return_type.args[2], ctx)
+        validate_associated_type.check_type(
+            associated_type=ctx.default_return_type.args[2],
+            ctx=ctx,
+        )
 
     instance_args.mutate_typeclass_def(
         ctx.default_return_type,
@@ -163,14 +164,16 @@ class InstanceDefReturnType(object):
         if not isinstance(instance_signature, CallableType):
             return ctx.default_return_type
 
-        instance_type = instance_signature.arg_types[0]
-
         # We need to add `Supports` metadata before typechecking,
         # because it will affect type hierarchies.
-        metadata = mro.MetadataInjector(typeclass.args[2], instance_type, ctx)
+        metadata = mro.MetadataInjector(
+            typeclass.args[2],
+            instance_signature.arg_types[0],
+            ctx,
+        )
         metadata.add_supports_metadata()
 
-        is_proper_typeclass = typecheck.check_typeclass(
+        is_proper_typeclass = validate_typeclass.check_typeclass(
             typeclass_signature=typeclass.args[1],
             instance_signature=instance_signature,
             fullname=fullname,
@@ -187,7 +190,7 @@ class InstanceDefReturnType(object):
         # If typeclass is checked, than it is safe to add new instance types:
         self._add_new_instance_type(
             typeclass=typeclass,
-            new_type=instance_type,
+            new_type=instance_signature.arg_types[0],
             ctx=ctx,
         )
 

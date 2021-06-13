@@ -19,12 +19,18 @@ https://github.com/TypedDjango/pytest-mypy-plugins
 
 from typing import Callable, Optional, Type
 
-from mypy.plugin import FunctionContext, MethodContext, MethodSigContext, Plugin, AnalyzeTypeContext
+from mypy.plugin import (
+    AnalyzeTypeContext,
+    FunctionContext,
+    MethodContext,
+    MethodSigContext,
+    Plugin,
+)
 from mypy.types import CallableType
 from mypy.types import Type as MypyType
 from typing_extensions import Final, final
 
-from classes.contrib.mypy.features import typeclass, associated_type
+from classes.contrib.mypy.features import associated_type, typeclass
 
 _TYPECLASS_FULLNAME: Final = 'classes._typeclass._TypeClass'
 _TYPECLASS_DEF_FULLNAME: Final = 'classes._typeclass._TypeClassDef'
