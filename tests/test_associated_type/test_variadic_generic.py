@@ -12,7 +12,7 @@ _ThirdType = TypeVar('_ThirdType')
 def test_type_validation():
     """Ensures that type validation still works."""
     with pytest.raises(TypeError):
-        class Example(AssociatedType[1]):
+        class Example(AssociatedType[1]):  # type: ignore
             """Should fail, because of ``1``."""
 
 
@@ -21,9 +21,9 @@ def test_type_resets():
     class Example(AssociatedType[_FirstType]):
         """Correct type."""
 
-    old_args = Example.__parameters__  # noqa: WPS609
-    assert Example[int, int, int]
-    assert Example.__parameters__ == old_args  # noqa: WPS609
+    old_args = Example.__parameters__  # type: ignore # noqa: WPS609
+    assert Example[int, int, int]  # type: ignore
+    assert Example.__parameters__ == old_args  # type: ignore # noqa: WPS609
 
 
 def test_subtype_is_variadic():
@@ -32,5 +32,5 @@ def test_subtype_is_variadic():
         """Correct type."""
 
     assert Example[int]
-    assert Example[int, int]
-    assert Example[int, int, str]
+    assert Example[int, int]  # type: ignore
+    assert Example[int, int, str]  # type: ignore
