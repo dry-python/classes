@@ -2,7 +2,6 @@ from typing import Tuple
 
 from mypy.nodes import Decorator
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext
-from mypy.typeops import get_type_vars
 from mypy.types import (
     AnyType,
     CallableType,
@@ -12,10 +11,15 @@ from mypy.types import (
     TupleType,
 )
 from mypy.types import Type as MypyType
-from mypy.types import TypeOfAny, UnionType
+from mypy.types import TypeOfAny
 from typing_extensions import final
 
-from classes.contrib.mypy.typeops import instance_args, mro, type_loader
+from classes.contrib.mypy.typeops import (
+    call_signatures,
+    instance_args,
+    mro,
+    type_loader,
+)
 from classes.contrib.mypy.validation import (
     validate_associated_type,
     validate_typeclass,
@@ -227,21 +231,10 @@ def call_signature(ctx: MethodSigContext) -> CallableType:
     if not isinstance(real_signature, CallableType):
         return ctx.default_signature
 
-    real_signature.arg_types[0] = ctx.type.args[0]
-
-    if isinstance(ctx.type.args[2], Instance):
-        # Why do we need this check?
-        # Let's see what will happen without it:
-        # For example, typeclass `ToJson` with `int` and `str` have will have
-        # `Union[str, int]` as the first argument type.
-        # But, we need `Union[str, int, Supports[ToJson]]`
-        # That's why we are loading this type if the definition is there.
-        associated_type = ctx.type.args[2].copy_modified(
-            args=set(get_type_vars(real_signature.arg_types[0])),
-        )
-        supports_spec = type_loader.load_supports_type(associated_type, ctx)
-        real_signature.arg_types[0] = UnionType.make_union([
-            real_signature.arg_types[0],
-            supports_spec,
-        ])
-    return real_signature
+    passed_type = ctx.api.expr_checker.accept(ctx.args[0][0])  # type: ignore
+    return call_signatures.SmartCallSignature(
+        signature=real_signature,
+        instance_type=ctx.type.args[0],
+        associated_type=ctx.type.args[2],
+        ctx=ctx,
+    ).mutate_and_infer(passed_type)

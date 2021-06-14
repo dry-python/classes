@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import NamedTuple, Tuple
 
 from mypy.erasetype import erase_type
 from mypy.plugin import MethodContext
@@ -35,12 +35,18 @@ _UNBOUND_TYPE_MSG: Final = (
 )
 
 
+class _RuntimeValidationContext(NamedTuple):
+    runtime_type: MypyType
+    is_protocol: bool
+    check_result: bool
+
+
 def check_instance_definition(
     passed_types: TupleType,
     instance_signature: CallableType,
     fullname: str,
     ctx: MethodContext,
-) -> bool:
+) -> _RuntimeValidationContext:
     """
     Checks runtime type.
 
@@ -77,12 +83,12 @@ def check_instance_definition(
             ctx.context,
         )
 
-    return all([
+    return _RuntimeValidationContext(runtime_type, is_protocol, all([
         _check_runtime_protocol(runtime_type, ctx, is_protocol=is_protocol),
         _check_concrete_generics(instance_type, runtime_type, ctx),
         protocol_arg_check,
         instance_check,
-    ])
+    ]))
 
 
 def _check_protocol_arg(

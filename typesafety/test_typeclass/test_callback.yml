@@ -16,7 +16,7 @@
     def accepts_typeclass(callback: Callable[[int, bool], bool]) -> bool:
         return callback(1, True)
 
-    reveal_type(accepts_typeclass(example))  # N: Revealed type is 'builtins.bool'
+    reveal_type(accepts_typeclass(example))  # N: Revealed type is "builtins.bool"
 
 
 - case: typeclass_callback_wrong

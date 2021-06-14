@@ -125,7 +125,7 @@ from typing import (  # noqa: WPS235
     overload,
 )
 
-from typing_extensions import final
+from typing_extensions import TypeGuard, final
 
 _InstanceType = TypeVar('_InstanceType')
 _SignatureType = TypeVar('_SignatureType', bound=Callable)
@@ -207,9 +207,9 @@ class AssociatedType(Generic[_InstanceType]):
     Right now it does nothing in runtime, but this can change in the future.
     """
 
-    __slots__ = ()
-
     if not TYPE_CHECKING:  # noqa: WPS604  # pragma: no cover
+        __slots__ = ()
+
         def __class_getitem__(cls, type_params) -> type:
             """
             Not-so-ugly hack to add variadic generic support in runtime.
@@ -399,8 +399,8 @@ class _TypeClass(
 
     def supports(
         self,
-        instance_type: type,
-    ) -> bool:
+        instance,
+    ) -> TypeGuard[_InstanceType]:
         """
         Tells whether a typeclass is supported by a given type.
 
@@ -416,32 +416,37 @@ class _TypeClass(
           ... def _example_int(instance: int) -> str:
           ...     return 'Example: {0}'.format(instance)
 
-          >>> assert example.supports(int) is True
-          >>> assert example.supports(list) is False
+          >>> assert example.supports(1) is True
+          >>> assert example.supports('a') is False
 
-        You can go an extra mile and add ``Literal`` types here,
-        something like:
+        It also works with protocols:
 
         .. code:: python
 
-          @overload
-          def supports(
-              self, instance_type: Type[_TypeClassType],
-          ) -> Literal[True]:
-              ...
+          >>> from typing import Sized
 
-          @overload
-          def supports(
-              self, instance_type: type,
-          ) -> Literal[False]:
-              ...
+          >>> @example.instance(Sized, is_protocol=True)
+          ... def _example_sized(instance: Sized) -> str:
+          ...     return 'Size is {0}'.format(len(instance))
 
-        This will make the return type even more specific,
-        but we are not yet sure about possible errors here.
+          >>> assert example.supports([1, 2]) is True
+          >>> assert example([1, 2]) == 'Size is 2'
+
+        We also use new ``TypeGuard`` type to ensure
+        that type is narrowed when ``.supports()`` is used:
+
+        .. code:: python
+
+          some_var: Any
+          if my_typeclass.supports(some_var):
+              reveal_type(some_var)  # Revealed type is 'Supports[MyTypeclass]'
+
+        See also: https://www.python.org/dev/peps/pep-0647
         """
+        instance_type = type(instance)
         return (
             instance_type in self._instances or
-            instance_type in self._protocols
+            any(isinstance(instance, protocol) for protocol in self._protocols)
         )
 
     def instance(

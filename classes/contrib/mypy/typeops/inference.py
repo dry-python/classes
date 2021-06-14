@@ -1,16 +1,53 @@
 
-from typing import Optional
+from typing import List, Optional
 
 from mypy.nodes import Decorator, Expression
 from mypy.plugin import MethodContext
 from mypy.typeops import make_simplified_union
-from mypy.types import FunctionLike, Instance, LiteralType
+from mypy.types import CallableType, FunctionLike, Instance, LiteralType
 from mypy.types import Type as MypyType
+from mypy.types import TypeVarType
 from typing_extensions import Final
 
 _TYPECLASS_DEF_FULLNAMES: Final = frozenset((
     'classes._typeclass._TypeClassInstanceDef',
 ))
+
+
+def try_to_apply_generics(
+    signature: CallableType,
+    runtime_type: MypyType,
+    ctx: MethodContext,
+) -> CallableType:
+    """
+    Conditionally applies runtime type on typeclass'es signature.
+
+    What we are looking for here?
+    We are interested in typeclass where instance is a type variable.
+    For example:
+
+    .. code:: python
+
+      def copy(instance: X) -> X:
+          ...
+
+    In this case, we would apply runtime type on top of this signature
+    to get the real one for this instance.
+    """
+    if not isinstance(signature.arg_types[0], TypeVarType):
+        return signature
+
+    type_args: List[Optional[MypyType]] = [runtime_type]
+    if len(signature.variables) > 1:
+        # `None` here means that a type variable won't be replaced
+        type_args.extend(None for _ in range(len(signature.variables) - 1))
+
+    checker = ctx.api.expr_checker  # type: ignore
+    return checker.apply_type_arguments_to_callable(
+        signature,
+        type_args,
+        ctx.context,
+    )
 
 
 def all_same_instance_calls(

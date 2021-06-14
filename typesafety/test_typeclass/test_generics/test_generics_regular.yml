@@ -14,8 +14,8 @@
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
 
-    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is 'builtins.str*'
-    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str*"
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int*"
 
 
 # TODO: enable after fixing how `Supports[X]` is inserted into a metadata
@@ -39,8 +39,8 @@
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
 
-    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is 'builtins.str*'
-    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str*"
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int*"
 
 
 - case: typeclass_generic_definition_restriction_correct
@@ -59,8 +59,8 @@
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
 
-    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is 'builtins.str*'
-    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str*"
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int*"
 
 
 - case: typeclass_generic_definition_restriction_wrong
@@ -183,3 +183,90 @@
         return instance[b]  # We need this line to test inner inference
   out: |
     main:10: error: Instance "builtins.list[builtins.int*]" has concrete generic type, it is not supported during runtime
+
+
+- case: typeclass_generic_call_union1
+  disable_cache: false
+  main: |
+    from typing import Union, Iterable, List, Set, TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def copy(instance: Iterable[X]) -> X:
+        ...
+
+    @copy.instance(list)
+    def _copy_int(instance: List[X]) -> X:
+        ...
+
+    @copy.instance(set)
+    def _copy_str(instance: Set[X]) -> X:
+        ...
+
+    a: Union[Set[str], List[str]]
+
+    reveal_type(copy(a))
+  out: |
+    main:20: note: Revealed type is "builtins.str*"
+
+
+- case: typeclass_generic_call_union2
+  disable_cache: false
+  main: |
+    from typing import TypeVar, Union, Iterable, List, Set
+    from classes import typeclass, AssociatedType, Supports
+
+    X = TypeVar('X')
+
+    class Copy(AssociatedType[X]):
+        ...
+
+    @typeclass(Copy)
+    def copy(instance: Iterable[X]) -> X:
+        ...
+
+    @copy.instance(list)
+    def _copy_int(instance: List[X]) -> X:
+        ...
+
+    @copy.instance(set)
+    def _copy_str(instance: Set[X]) -> X:
+        ...
+
+    a: Union[Set[str], List[str]]
+
+    reveal_type(copy(a))
+  out: |
+    main:23: note: Revealed type is "builtins.str*"
+
+
+- case: typeclass_generic_call_union3
+  disable_cache: false
+  main: |
+    from typing import TypeVar, Union, Iterable, List, Set
+    from classes import typeclass, AssociatedType, Supports
+
+    X = TypeVar('X')
+
+    class Copy(AssociatedType):  # NOTE: no typevar
+        ...
+
+    @typeclass(Copy)
+    def copy(instance: Iterable[X]) -> X:
+        ...
+
+    @copy.instance(list)
+    def _copy_int(instance: List[X]) -> X:
+        ...
+
+    @copy.instance(set)
+    def _copy_str(instance: Set[X]) -> X:
+        ...
+
+    a: Union[Set[str], List[str]]
+
+    reveal_type(copy(a))
+  out: |
+    main:23: note: Revealed type is "<nothing>"

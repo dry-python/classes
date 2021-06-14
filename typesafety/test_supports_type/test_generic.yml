@@ -20,8 +20,8 @@
 
     x: Supports[Some[int]] = [1, 2, 3]
     y = {1, 2, 3}
-    reveal_type(some(x))  # N: Revealed type is 'builtins.int*'
-    reveal_type(some(y))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(x))  # N: Revealed type is "builtins.int*"
+    reveal_type(some(y))  # N: Revealed type is "builtins.int*"
 
 
 - case: supports_generic_correct2
@@ -47,8 +47,8 @@
 
     x: Supports[Some[int, str]] = {1: 'a'}
 
-    reveal_type(some(x, 1, 'a'))  # N: Revealed type is 'builtins.str*'
-    reveal_type(some({'a': 1}, 'a', 1))  # N: Revealed type is 'builtins.int*'
+    reveal_type(some(x, 1, 'a'))  # N: Revealed type is "builtins.str*"
+    reveal_type(some({'a': 1}, 'a', 1))  # N: Revealed type is "builtins.int*"
 
 
 - case: supports_generic_wrong1

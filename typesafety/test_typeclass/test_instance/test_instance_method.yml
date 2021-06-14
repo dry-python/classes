@@ -230,4 +230,4 @@
     def some(instance, b: int) -> int:
         ...
 
-    alias = some.instance(str)  # E: Need type annotation for 'alias'
+    alias = some.instance(str)  # E: Need type annotation for "alias"

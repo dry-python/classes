@@ -1,0 +1,120 @@
+- case: typeclass_function_supports_typeguard
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union
+
+    @typeclass
+    def to_json(instance) -> str:
+        ...
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int) -> str:
+        ...
+
+    item: Union[int, str]
+    to_json(item)  # will fail
+
+    if to_json.supports(item):
+        reveal_type(item)
+        to_json(item)  # ok
+  out: |
+    main:13: error: Argument 1 to "to_json" has incompatible type "Union[int, str]"; expected "int"
+    main:16: note: Revealed type is "builtins.int*"
+
+
+- case: typeclass_object_supports_typeguard
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+    from typing import Union
+
+    class ToJson(AssociatedType):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance) -> str:
+        ...
+
+    @to_json.instance(int)
+    def _to_json_int(instance: int) -> str:
+        ...
+
+    @to_json.instance(dict)
+    def _to_json_dict(instance: dict) -> str:
+        ...
+
+    item: Union[int, str]
+    to_json(item)  # will fail
+
+    if to_json.supports(item):
+        reveal_type(item)
+        to_json(item)  # ok
+  out: |
+    main:20: error: Argument 1 to "to_json" has incompatible type "Union[int, str]"; expected "Union[Dict[Any, Any], int, Supports[ToJson]]"
+    main:23: note: Revealed type is "Union[builtins.dict[Any, Any], builtins.int]"
+
+
+- case: typeclass_function_supports_typeguard_generic1
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union, TypeVar
+
+    X = TypeVar('X')
+
+    @typeclass
+    def copy(instance: X) -> X:
+        ...
+
+    @copy.instance(int)
+    def _copy_int(instance: int) -> int:
+        ...
+
+    @copy.instance(dict)
+    def _copy_dict(instance: dict) -> dict:
+        ...
+
+    item: Union[int, str]
+    copy(item)  # will fail
+
+    if copy.supports(item):
+        reveal_type(item)
+        copy(item)  # ok
+  out: |
+    main:19: error: Argument 1 to "copy" has incompatible type "Union[builtins.int, builtins.str]"; expected "Union[builtins.dict[Any, Any], builtins.int]"
+    main:22: note: Revealed type is "Union[builtins.dict[Any, Any], builtins.int]"
+
+
+- case: typeclass_object_supports_typeguard_generic1
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+    from typing import Union, TypeVar
+
+    X = TypeVar('X')
+
+    class Copy(AssociatedType):
+        ...
+
+    @typeclass(Copy)
+    def copy(instance: X) -> X:
+        ...
+
+    @copy.instance(int)
+    def _copy_int(instance: int) -> int:
+        ...
+
+    @copy.instance(dict)
+    def _copy_dict(instance: dict) -> dict:
+        ...
+
+    item: Union[int, str]
+    copy(item)  # will fail
+
+    if copy.supports(item):
+        reveal_type(item)
+        copy(item)  # ok
+  out: |
+    main:22: error: Argument 1 to "copy" has incompatible type "Union[builtins.int, builtins.str]"; expected "Union[builtins.dict[Any, Any], builtins.int, classes._typeclass.Supports[main.Copy]]"
+    main:25: note: Revealed type is "Union[builtins.dict[Any, Any], builtins.int]"
