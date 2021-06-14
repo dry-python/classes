@@ -26,6 +26,9 @@ def check_type(
         _check_base_class(associated_type, ctx),
         # TODO: check_type_reuse
         # TODO: check_body
+        # TODO: check_generics_match_definition
+        # TODO: we also need to check type vars used on definition:
+        # no values, no bounds (?)
     ])
 
 

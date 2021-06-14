@@ -122,8 +122,8 @@ Example:
 
 .. code:: python
 
-  >>> assert json.supports(int) is True
-  >>> assert json.supports(dict) is False
+  >>> assert json.supports(1) is True
+  >>> assert json.supports({}) is False
 
 Typeclasses with associated types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

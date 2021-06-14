@@ -31,20 +31,28 @@ def check_typeclass(
 
     Please, see docs on each step.
     """
+    runtime_check = validate_runtime.check_instance_definition(
+        passed_types,
+        instance_signature,
+        fullname,
+        ctx,
+    )
+
+    infered_signature = inference.try_to_apply_generics(
+        typeclass_signature,
+        runtime_check.runtime_type,
+        ctx,
+    )
+
     return all([
+        runtime_check.check_result,
         _check_typeclass_signature(
-            typeclass_signature,
+            infered_signature,
             instance_signature,
             ctx,
         ),
-        _check_instance_type(typeclass_signature, instance_signature, ctx),
+        _check_instance_type(infered_signature, instance_signature, ctx),
         _check_same_typeclass(fullname, ctx),
-        validate_runtime.check_instance_definition(
-            passed_types,
-            instance_signature,
-            fullname,
-            ctx,
-        ),
     ])
 
 

@@ -1,0 +1,209 @@
+- case: typeclass_generic_definition1
+  disable_cache: false
+  main: |
+    from typing import TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def copy(instance: X) -> X:
+        ...
+
+    @copy.instance(int)
+    def _copy_ex(instance: int) -> int:
+        return instance + 0
+
+    reveal_type(copy(0))
+    reveal_type(copy(1.5))
+  out: |
+    main:14: note: Revealed type is "builtins.int*"
+    main:15: error: Argument 1 to "copy" has incompatible type "builtins.float"; expected "builtins.int"
+    main:15: note: Revealed type is "builtins.float*"
+
+
+- case: typeclass_generic_definition2
+  disable_cache: false
+  main: |
+    from typing import TypeVar
+    from classes import typeclass, AssociatedType, Supports
+
+    X = TypeVar('X')
+
+    class Copy(AssociatedType):
+        ...
+
+    @typeclass(Copy)
+    def copy(instance: X) -> X:
+        ...
+
+    @copy.instance(int)
+    def _copy_int(instance: int) -> int:
+        return instance + 0
+
+    @copy.instance(str)
+    def _copy_str(instance: str) -> str:
+        return instance + ''
+
+    a: Supports[Copy]
+    reveal_type(copy(0))
+    reveal_type(copy(a))
+    reveal_type(copy('a'))
+  out: |
+    main:22: note: Revealed type is "builtins.int*"
+    main:23: note: Revealed type is "classes._typeclass.Supports*[main.Copy]"
+    main:24: note: Revealed type is "builtins.str*"
+
+
+- case: typeclass_generic_definition3
+  disable_cache: false
+  main: |
+    from typing import TypeVar, Union
+    from classes import typeclass
+
+    X = TypeVar('X')
+    Y = TypeVar('Y')
+
+    @typeclass
+    def compare(instance: X, other: Y) -> Union[X, Y]:
+        ...
+
+    @compare.instance(int)
+    def _compare_ex(instance: int, other: Y) -> Union[int, Y]:
+        ...
+
+    reveal_type(compare(0, 'a'))
+    reveal_type(compare('a', 1))
+  out: |
+    main:15: note: Revealed type is "Union[builtins.int*, builtins.str*]"
+    main:16: error: Argument 1 to "compare" has incompatible type "Literal['a']?"; expected "builtins.int"
+    main:16: note: Revealed type is "Union[builtins.str*, builtins.int*]"
+
+
+- case: typeclass_generic_definition4
+  disable_cache: false
+  main: |
+    from typing import TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance: X) -> X:
+        ...
+
+    @some.instance(int)
+    def _some_ex(instance: X) -> X:
+        ...
+  out: |
+    main:10: error: Instance "X`-1" does not match original type "builtins.int*"
+    main:10: error: Instance "X`-1" does not match runtime type "builtins.int*"
+
+
+- case: typeclass_generic_definition_bound
+  disable_cache: false
+  main: |
+    from typing import TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X', bound='A')
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    @typeclass
+    def some(instance: X) -> X:
+        ...
+
+    @some.instance(B)
+    def _some_ex(instance: B) -> B:
+        ...
+
+    reveal_type(some(B()))
+    some(A())
+  out: |
+    main:20: note: Revealed type is "main.B*"
+    main:21: error: Argument 1 to "some" has incompatible type "main.A"; expected "main.B"
+
+
+- case: typeclass_generic_definition_values
+  disable_cache: false
+  main: |
+    from typing import TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X', 'A', 'B')
+
+    class A(object):
+        ...
+
+    class B(A):
+        ...
+
+    @typeclass
+    def some(instance: X) -> X:
+        ...
+
+    @some.instance(B)
+    def _some_ex(instance: B) -> B:
+        ...
+
+    reveal_type(some(B()))
+    some(A())
+  out: |
+    main:20: note: Revealed type is "main.B*"
+    main:21: error: Argument 1 to "some" has incompatible type "main.A"; expected "main.B"
+
+
+- case: typeclass_generic_definition_two_args
+  disable_cache: false
+  main: |
+    from typing import TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def compare(instance: X, other: X) -> X:
+        ...
+
+    @compare.instance(int)
+    def _compare_ex(instance: int, other: int) -> int:
+        ...
+
+    reveal_type(compare(0, 1))
+    compare(1.5, 1)
+    compare(1.5, 1.6)
+  out: |
+    main:14: note: Revealed type is "builtins.int*"
+    main:15: error: Argument 1 to "compare" has incompatible type "builtins.float"; expected "builtins.int"
+    main:16: error: Argument 1 to "compare" has incompatible type "builtins.float"; expected "builtins.int"
+
+
+- case: typeclass_generic_definition_union_call
+  disable_cache: false
+  main: |
+    from typing import TypeVar, Union
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def copy(instance: X) -> X:
+        ...
+
+    @copy.instance(int)
+    def _copy_int(instance: int) -> int:
+        return instance + 0
+
+    @copy.instance(str)
+    def _copy_str(instance: str) -> str:
+        return instance + ''
+
+    a: Union[str, int]
+    reveal_type(copy(a))
+  out: |
+    main:19: note: Revealed type is "Union[builtins.str, builtins.int]"
