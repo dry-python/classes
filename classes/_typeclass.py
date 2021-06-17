@@ -415,9 +415,10 @@ class _TypeClass(  # noqa: WPS214
         try:
             impl = self._dispatch_cache[instance_type]
         except KeyError:
-            impl = self._dispatch(instance, instance_type)  # type: ignore
-            if impl is None:
-                impl = self._default_implemntation  # type: ignore
+            impl = self._dispatch(
+                instance,
+                instance_type,
+            ) or self._default_implementation
             self._dispatch_cache[instance_type] = impl
         return impl(instance, *args, **kwargs)
 
@@ -549,7 +550,7 @@ class _TypeClass(  # noqa: WPS214
 
         return _find_impl(instance_type, self._instances)
 
-    def _default_implemntation(self, instance, *args, **kwargs) -> NoReturn:
+    def _default_implementation(self, instance, *args, **kwargs) -> NoReturn:
         """By default raises an exception."""
         raise NotImplementedError(
             'Missing matched typeclass instance for type: {0}'.format(

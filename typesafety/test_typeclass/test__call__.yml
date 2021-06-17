@@ -1,0 +1,228 @@
+- case: typeclass_call_all_arg_types
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(
+        instance, /, regular, default=1, *args, kw, kw_default=2, **kwargs,
+    ) -> str:
+        ...
+
+    @args.instance(int)
+    def _args_int(
+        instance: int, /, regular, default=1, *args, kw, kw_default=2, **kwargs,
+    ) -> str:
+        ...
+
+    args(1, 2, 3, 4, 5, kw=6, kw_default=7, other=8)
+    args(1, 2, kw=6)
+    args(1, regular=2, kw=6)
+
+
+- case: typeclass_call_instance_named
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance) -> str:
+        ...
+
+    @args.instance(int)
+    def _args_int(instance: int) -> str:
+        ...
+
+    args(instance=1)
+
+
+- case: typeclass_call_instance_variance
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class A:
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(B)
+    def _some_b(instance: B) -> str:
+        ...
+
+    some(A())
+    some(B())  # ok
+    some(C())  # ok
+  out: |
+    main:20: error: Argument 1 to "some" has incompatible type "A"; expected "B"
+
+
+- case: typeclass_call_generic_instance_variance
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import TypeVar, Generic
+
+    X = TypeVar('X')
+
+    class A(Generic[X]):
+        ...
+
+    class B(A[X]):
+        ...
+
+    class C(B[X]):
+        ...
+
+    @typeclass
+    def some(instance: B[X]) -> X:
+        ...
+
+    @some.instance(B)
+    def _some_b(instance: B[X]) -> X:
+        ...
+
+    a: A[int]
+    b: B[int]
+    c: C[int]
+    some(a)
+    some(b)  # ok
+    some(c)  # ok
+  out: |
+    main:26: error: Argument 1 to "some" has incompatible type "A[int]"; expected "B[<nothing>]"
+
+
+- case: typeclass_call_variance_union1
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union
+
+    class A:
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(B)
+    @some.instance(C)
+    def _some_b(instance: Union[B, C]) -> str:
+        ...
+
+    some(A())
+    some(B())  # ok
+    some(C())  # ok
+  out: |
+    main:22: error: Argument 1 to "some" has incompatible type "A"; expected "Union[B, C]"
+
+
+- case: typeclass_call_variance_union2
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union
+
+    class A:
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(A)
+    @some.instance(B)
+    def _some_b(instance: Union[A, B]) -> str:
+        ...
+
+    some(A())  # ok
+    some(B())  # ok
+    some(C())  # ok
+
+
+- case: typeclass_call_variance_union3
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union
+
+    class A:
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(A)
+    @some.instance(C)
+    def _some_b(instance: Union[A, C]) -> str:
+        ...
+
+    some(A())  # ok
+    some(B())  # ok
+    some(C())  # ok
+
+
+- case: typeclass_call_variance_union4
+  disable_cache: false
+  main: |
+    from classes import typeclass
+    from typing import Union
+
+    class A:
+        ...
+
+    class B(A):
+        ...
+
+    class C(B):
+        ...
+
+    @typeclass
+    def some(instance) -> str:
+        ...
+
+    @some.instance(A)
+    @some.instance(B)
+    @some.instance(C)
+    def _some_b(instance: Union[A, B, C]) -> str:
+        ...
+
+    some(A())  # ok
+    some(B())  # ok
+    some(C())  # ok
+
+    ab: Union[A, B]
+    ac: Union[A, C]
+    bc: Union[B, C]
+    abc: Union[A, B, C]
+    some(ab)  # ok
+    some(ac)  # ok
+    some(bc)  # ok
+    some(abc)  # ok
