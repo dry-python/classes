@@ -480,11 +480,20 @@ class _TypeClass(  # noqa: WPS214
 
         See also: https://www.python.org/dev/peps/pep-0647
         """
+        self._control_abc_cache()
+
         instance_type = type(instance)
-        return (
-            instance_type in self._dispatch_cache or
-            self._dispatch(instance, instance_type) is not None
-        )
+        if instance_type in self._dispatch_cache:
+            return True
+
+        # This only happens when we don't have a cache in place:
+        impl = self._dispatch(instance, instance_type)
+        if impl is None:
+            self._dispatch_cache[instance_type] = self._default_implementation
+            return False
+
+        self._dispatch_cache[instance_type] = impl
+        return True
 
     def instance(
         self,
