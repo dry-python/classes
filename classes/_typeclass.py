@@ -114,16 +114,21 @@ Now, let's build a class that match this protocol and test it:
 
 """
 
+from abc import get_cache_token
+from functools import _find_impl  # type: ignore  # noqa: WPS450
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
     Callable,
     Dict,
     Generic,
+    NoReturn,
+    Optional,
     Type,
     TypeVar,
     Union,
     overload,
 )
+from weakref import WeakKeyDictionary
 
 from typing_extensions import TypeGuard, final
 
@@ -158,7 +163,8 @@ def typeclass(
 def typeclass(signature):
     """General case function to create typeclasses."""
     if isinstance(signature, type):
-        return _TypeClass  # It means, that it has a associated type with it
+        # It means, that it has a associated type with it:
+        return lambda func: _TypeClass(func, associated_type=signature)
     return _TypeClass(signature)  # In this case it is a regular function
 
 
@@ -285,8 +291,8 @@ class Supports(Generic[_StrictAssociatedType]):
     __slots__ = ()
 
 
-@final
-class _TypeClass(
+@final  # noqa: WPS214
+class _TypeClass(  # noqa: WPS214
     Generic[_InstanceType, _SignatureType, _AssociatedType, _Fullname],
 ):
     """
@@ -321,9 +327,23 @@ class _TypeClass(
 
     """
 
-    __slots__ = ('_instances', '_protocols')
+    __slots__ = (
+        '_signature',
+        '_associated_type',
+        '_instances',
+        '_protocols',
+        '_dispatch_cache',
+        '_cache_token',
+    )
 
-    def __init__(self, signature: _SignatureType) -> None:
+    _dispatch_cache: Dict[type, Callable]
+    _cache_token: Optional[object]
+
+    def __init__(
+        self,
+        signature: _SignatureType,
+        associated_type=None,
+    ) -> None:
         """
         Protected constructor of the typeclass.
 
@@ -355,6 +375,14 @@ class _TypeClass(
         self._instances: Dict[type, Callable] = {}
         self._protocols: Dict[type, Callable] = {}
 
+        # We need this for `repr`:
+        self._signature = signature
+        self._associated_type = associated_type
+
+        # Cache parts:
+        self._dispatch_cache = WeakKeyDictionary()  # type: ignore
+        self._cache_token = None
+
     def __call__(
         self,
         instance: Union[  # type: ignore
@@ -380,21 +408,29 @@ class _TypeClass(
         Since, we define ``__call__`` method for this class,
         it can be used and typechecked everywhere,
         where a regular ``Callable`` is expected.
-
         """
+        self._control_abc_cache()
         instance_type = type(instance)
-        implementation = self._instances.get(instance_type, None)
-        if implementation is not None:
-            return implementation(instance, *args, **kwargs)
 
-        for protocol, callback in self._protocols.items():
-            if isinstance(instance, protocol):
-                return callback(instance, *args, **kwargs)
+        try:
+            impl = self._dispatch_cache[instance_type]
+        except KeyError:
+            impl = self._dispatch(instance, instance_type)  # type: ignore
+            if impl is None:
+                impl = self._default_implemntation  # type: ignore
+            self._dispatch_cache[instance_type] = impl
+        return impl(instance, *args, **kwargs)
 
-        raise NotImplementedError(
-            'Missing matched typeclass instance for type: {0}'.format(
-                instance_type.__qualname__,
-            ),
+    def __str__(self) -> str:
+        """Converts typeclass to a string."""
+        associated_type = (
+            ': "{0}"'.format(self._associated_type.__qualname__)
+            if self._associated_type
+            else ''
+        )
+        return '<typeclass "{0}"{1}>'.format(
+            self._signature.__name__,
+            associated_type,
         )
 
     def supports(
@@ -445,13 +481,13 @@ class _TypeClass(
         """
         instance_type = type(instance)
         return (
-            instance_type in self._instances or
-            any(isinstance(instance, protocol) for protocol in self._protocols)
+            instance_type in self._dispatch_cache or
+            self._dispatch(instance, instance_type) is not None
         )
 
     def instance(
         self,
-        type_argument: _NewInstanceType,
+        type_argument: Optional[_NewInstanceType],
         *,
         is_protocol: bool = False,
     ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
@@ -461,17 +497,65 @@ class _TypeClass(
         The only setting we provide is ``is_protocol`` which is required
         when passing protocols. See our ``mypy`` plugin for that.
         """
+        if type_argument is None:  # `None` is a special case
+            type_argument = type(None)  # type: ignore
+
         # That's how we check for generics,
         # generics that look like `List[int]` or `set[T]` will fail this check,
         # because they are `_GenericAlias` instance,
         # which raises an exception for `__isinstancecheck__`
-        isinstance(object(), type_argument)
+        isinstance(object(), type_argument)  # type: ignore
 
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
-            container[type_argument] = implementation
+            container[type_argument] = implementation  # type: ignore
+
+            if self._cache_token is None:  # pragma: no cover
+                if getattr(type_argument, '__abstractmethods__', None):
+                    self._cache_token = get_cache_token()
+
+            self._dispatch_cache.clear()
             return implementation
         return decorator
+
+    def _control_abc_cache(self) -> None:
+        """
+        Required to drop cache if ``abc`` type got new subtypes in runtime.
+
+        Copied from ``cpython``.
+        """
+        if self._cache_token is not None:
+            current_token = get_cache_token()
+            if self._cache_token != current_token:
+                self._dispatch_cache.clear()
+                self._cache_token = current_token
+
+    def _dispatch(self, instance, instance_type: type) -> Optional[Callable]:
+        """
+        Dispatches a function by its type.
+
+        How do we dispatch a function?
+        1. By direct ``instance`` types
+        2. By matching protocols
+        3. By its ``mro``
+        """
+        implementation = self._instances.get(instance_type, None)
+        if implementation is not None:
+            return implementation
+
+        for protocol, callback in self._protocols.items():
+            if isinstance(instance, protocol):
+                return callback
+
+        return _find_impl(instance_type, self._instances)
+
+    def _default_implemntation(self, instance, *args, **kwargs) -> NoReturn:
+        """By default raises an exception."""
+        raise NotImplementedError(
+            'Missing matched typeclass instance for type: {0}'.format(
+                type(instance).__qualname__,
+            ),
+        )
 
 
 if TYPE_CHECKING:

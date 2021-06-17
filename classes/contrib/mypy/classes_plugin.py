@@ -57,6 +57,7 @@ class _TypeClassPlugin(Plugin):
         self,
         fullname: str,
     ) -> Optional[Callable[[AnalyzeTypeContext], MypyType]]:
+        """Hook that works on type analyzer phase."""
         if fullname == 'classes._typeclass.AssociatedType':
             return associated_type.variadic_generic
         return None

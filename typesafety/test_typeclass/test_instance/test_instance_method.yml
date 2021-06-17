@@ -231,3 +231,19 @@
         ...
 
     alias = some.instance(str)  # E: Need type annotation for "alias"
+
+
+- case: typeclass_none_instance
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def a(instance) -> str:
+        ...
+
+    @a.instance(None)
+    def _a_none(instance: None) -> str:
+        ...
+
+    a(None)

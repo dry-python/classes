@@ -76,6 +76,7 @@ The first on is "Typeclass definition", where we create a new typeclass:
 .. code:: python
 
   >>> from classes import typeclass
+  >>> from typing import Union
 
   >>> @typeclass
   ... def json(instance) -> str:
@@ -93,8 +94,12 @@ Let's define some instances:
 
   >>> @json.instance(int)
   ... @json.instance(float)
-  ... def _json_int_float(instance) -> str:
+  ... def _json_int_float(instance: Union[float, int]) -> str:
   ...     return str(instance)
+
+  >>> @json.instance(None)
+  ... def _json_none(instance: None) -> str:
+  ...     return 'null'
 
 That's how we define instances for our typeclass.
 These instances will be executed when the corresponding type will be supplied.
@@ -107,6 +112,7 @@ with different value of different types:
   >>> assert json('text') == '"text"'
   >>> assert json(1) == '1'
   >>> assert json(1.5) == '1.5'
+  >>> assert json(None) == 'null'
 
 That's it. There's nothing extra about typeclasses. They can be:
 
