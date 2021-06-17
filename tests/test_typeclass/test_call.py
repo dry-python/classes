@@ -25,10 +25,10 @@ def _my_len_list(instance: list) -> int:
     return 1
 
 
-@pytest.mark.parameterized(('data_type', 'expected'), [
+@pytest.mark.parametrize(('data_type', 'expected'), [
     ([], 1),  # direct list call
     ('', 0),  # sized protocol
-    (None, -1),  # object fallback
+    (1, -1),  # object fallback
 ])
 def test_call_order(data_type, expected):
     """Ensures that call order is correct."""
