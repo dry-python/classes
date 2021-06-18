@@ -1,5 +1,6 @@
 - case: typeclass_call_all_arg_types
   disable_cache: false
+  skip: sys.version_info[:2] < (3, 8)
   main: |
     from classes import typeclass
 
