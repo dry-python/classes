@@ -1,6 +1,7 @@
 from typing import List, Union
 
 from mypy.plugin import FunctionContext, MethodContext
+from mypy.typeops import make_simplified_union
 from mypy.types import AnyType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, UninhabitedType
@@ -24,14 +25,14 @@ def add_unique(
 
     It is smart: filters our junk and uses unique and flat ``Union`` types.
     """
-    unified = list(set(filter(
+    unified = list(filter(
         # We filter our `NoReturn` and other things like `Any`
         # that can break our instances union.
         # TODO: maybe use `has_uninhabited_component`?
         lambda type_: not isinstance(type_, _TYPES_TO_FILTER_OUT),
         [new_instance_type, existing_instance_type],
-    )))
-    return UnionType.make_union(sorted(unified))
+    ))
+    return make_simplified_union(unified)
 
 
 def mutate_typeclass_def(
