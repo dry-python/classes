@@ -121,7 +121,7 @@
     def convert_to_json(instance: Supports[Other]) -> str:
         return to_json(instance)
   out: |
-    main:14: error: Argument 1 to "to_json" has incompatible type "Supports[Other]"; expected "Union[<nothing>, Supports[ToJson]]"
+    main:14: error: Argument 1 to "to_json" has incompatible type "Supports[Other]"; expected "Supports[ToJson]"
 
 
 - case: supports_annotation
