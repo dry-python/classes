@@ -1,7 +1,6 @@
 from typing import List, Union
 
 from mypy.plugin import FunctionContext, MethodContext
-from mypy.typeops import make_simplified_union
 from mypy.types import AnyType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, UninhabitedType
@@ -32,7 +31,7 @@ def add_unique(
         lambda type_: not isinstance(type_, _TYPES_TO_FILTER_OUT),
         [new_instance_type, existing_instance_type],
     )))
-    return make_simplified_union(unified)
+    return UnionType.make_union(sorted(unified))
 
 
 def mutate_typeclass_def(
