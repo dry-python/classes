@@ -1,0 +1,17 @@
+- case: associated_type_reuse
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class ToJson(AssociatedType):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance) -> str:
+        ...
+
+    @typeclass(ToJson)
+    def from_json(instance) -> str:
+        ...
+  out: |
+    main:10: error: AssociatedType "main.ToJson" must not be reused, originally associated with "main.from_json"

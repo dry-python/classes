@@ -105,17 +105,19 @@ def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
     assert isinstance(ctx.default_return_type, Instance)
     assert isinstance(ctx.context, Decorator)
 
-    if isinstance(ctx.default_return_type.args[2], Instance):
-        validate_associated_type.check_type(
-            associated_type=ctx.default_return_type.args[2],
-            ctx=ctx,
-        )
-
     instance_args.mutate_typeclass_def(
         ctx.default_return_type,
         ctx.context.func.fullname,
         ctx,
     )
+
+    if isinstance(ctx.default_return_type.args[2], Instance):
+        validate_associated_type.check_type(
+            associated_type=ctx.default_return_type.args[2],
+            typeclass=ctx.default_return_type,
+            ctx=ctx,
+        )
+
     return ctx.default_return_type
 
 

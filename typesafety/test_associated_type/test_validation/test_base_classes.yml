@@ -1,0 +1,31 @@
+- case: typeclass_definied_by_wrong_type
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class ToJson(object):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance, verbose: bool = False) -> str:
+        ...
+  out: |
+    main:6: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"
+
+
+- case: typeclass_definied_by_multiple_parents
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class A(object):
+        ...
+
+    class ToJson(AssociatedType, A):
+        ...
+
+    @typeclass(ToJson)
+    def to_json(instance, verbose: bool = False) -> str:
+        ...
+  out: |
+    main:9: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"
