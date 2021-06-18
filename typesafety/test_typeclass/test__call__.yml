@@ -128,7 +128,7 @@
     some(B())  # ok
     some(C())  # ok
   out: |
-    main:22: error: Argument 1 to "some" has incompatible type "A"; expected "Union[B, C]"
+    main:22: error: Argument 1 to "some" has incompatible type "A"; expected "B"
 
 
 - case: typeclass_call_variance_union2
