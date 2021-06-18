@@ -32,7 +32,7 @@
     to_json('a')
     to_json(None)
   out: |
-    main:20: error: Argument 1 to "to_json" has incompatible type "None"; expected "Union[str, int, Supports[ToJson]]"
+    main:20: error: Argument 1 to "to_json" has incompatible type "None"; expected "Union[int, str, Supports[ToJson]]"
 
 
 - case: typeclass_class_wrong_sig
