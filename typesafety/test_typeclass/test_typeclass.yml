@@ -66,3 +66,23 @@
     main:3: note:     def [_AssociatedType] typeclass(definition: Type[_AssociatedType]) -> _TypeClassDef[_AssociatedType]
     main:3: note:     def [_SignatureType, _InstanceType, _AssociatedType, _Fullname <: str] typeclass(signature: _SignatureType) -> _TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]
     main:3: note: Possible overload variants:
+
+
+- case: typeclass_non_global_declaration
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    def some():
+        @typeclass
+        def a(instance) -> str:
+            ...
+
+        @a.instance(int)
+        def _a_int(instance: int) -> str:
+            ...
+
+        reveal_type(_a_int)
+  out: |
+    main:8: error: Typeclass cannot be loaded, it must be a global declaration
+    main:12: note: Revealed type is "Any"
