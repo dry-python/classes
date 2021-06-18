@@ -188,8 +188,8 @@
     def _a_any(instance: Any) -> str:
         ...
   out: |
+    main:8: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "object"; expected "None"
     main:8: error: Instance "Any" does not match runtime type "builtins.object"
-    main:8: error: Value of type variable "_NewInstanceType" of "instance" of "_TypeClass" cannot be "object"
 
 
 - case: typeclass_instance_wrong_param
@@ -201,7 +201,7 @@
     def a(instance) -> str:
         ...
 
-    a.instance(1)  # E: Value of type variable "_NewInstanceType" of "instance" of "_TypeClass" cannot be "int"
+    a.instance(1)  # E: Argument 1 to "instance" of "_TypeClass" has incompatible type "int"; expected "None"
 
 
 - case: typeclass_instance_callback_def
