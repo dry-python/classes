@@ -3,16 +3,10 @@ from typing import Optional
 from mypy.messages import callable_name
 from mypy.plugin import MethodSigContext
 from mypy.subtypes import is_subtype
-from mypy.typeops import get_type_vars
+from mypy.typeops import get_type_vars, make_simplified_union
 from mypy.types import CallableType, Instance, ProperType
 from mypy.types import Type as MypyType
-from mypy.types import (
-    TypeVarDef,
-    TypeVarId,
-    TypeVarType,
-    UnionType,
-    union_items,
-)
+from mypy.types import TypeVarDef, TypeVarId, TypeVarType, union_items
 from typing_extensions import Final, final
 
 from classes.contrib.mypy.typeops import type_loader
@@ -75,10 +69,7 @@ class SmartCallSignature(object):
                 self._ctx,
             ))
 
-        # We use `make_union` instead of `make_simplified_union`
-        # to show all instance items in the output,
-        # for example `Union[int, float]` won't be converted into `float`.
-        instance_type = UnionType.make_union(instance_types)
+        instance_type = make_simplified_union(instance_types)
         if not is_subtype(passed_type, instance_type):
             # Let's explain: what happens here?
             # We need to enforce
@@ -101,7 +92,7 @@ class SmartCallSignature(object):
                 self._ctx,
                 should_replace_typevars=True,
             )
-        self._signature.arg_types[0] = UnionType.make_union(
+        self._signature.arg_types[0] = make_simplified_union(
             list(filter(None, [self._instance_type, supports_type])),
         )
         return self._signature
