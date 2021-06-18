@@ -1,9 +1,10 @@
 from typing import List, Union
 
 from mypy.plugin import FunctionContext, MethodContext
+from mypy.typeops import make_simplified_union
 from mypy.types import AnyType, Instance, LiteralType, TupleType
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, UnboundType, UninhabitedType, UnionType
+from mypy.types import TypeVarType, UnboundType, UninhabitedType
 from typing_extensions import Final
 
 #: Types that pollute instance args.
@@ -31,7 +32,7 @@ def add_unique(
         lambda type_: not isinstance(type_, _TYPES_TO_FILTER_OUT),
         [new_instance_type, existing_instance_type],
     )))
-    return UnionType.make_union(unified)
+    return make_simplified_union(unified)
 
 
 def mutate_typeclass_def(
