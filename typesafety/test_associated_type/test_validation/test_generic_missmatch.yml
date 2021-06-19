@@ -1,0 +1,17 @@
+- case: typeclass_definied_by_wrong_type
+  disable_cache: false
+  main: |
+    from typing import List, TypeVar
+
+    from classes import AssociatedType, Supports, typeclass
+
+    X = TypeVar('X')
+
+    class Compare(AssociatedType):
+        ...
+
+    @typeclass(Compare)
+    def compare(instance: List[X]) -> X:
+        ...
+  out: |
+    main:10: error: Generic type "main.Compare" with "0" type arguments does not match generic instance declaration "builtins.list[X`-1]" with "1" type arguments

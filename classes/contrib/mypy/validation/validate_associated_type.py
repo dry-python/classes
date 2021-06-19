@@ -1,5 +1,5 @@
 from mypy.plugin import MethodContext
-from mypy.types import Instance
+from mypy.types import CallableType, Instance
 from typing_extensions import Final
 
 #: Fullname of the `AssociatedType` class.
@@ -12,6 +12,11 @@ _WRONG_SUBCLASS_MSG: Final = (
 
 _TYPE_REUSE_MSG: Final = (
     'AssociatedType "{0}" must not be reused, originally associated with "{1}"'
+)
+
+_GENERIC_MISSMATCH_MSG: Final = (
+    'Generic type "{0}" with "{1}" type arguments does not match ' +
+    'generic instance declaration "{2}" with "{3}" type arguments'
 )
 
 
@@ -30,8 +35,8 @@ def check_type(
     return all([
         _check_base_class(associated_type, ctx),
         _check_type_reuse(associated_type, typeclass, ctx),
+        _check_generics(associated_type, typeclass, ctx),
         # TODO: check_body
-        # TODO: check_generics_match_definition
         # TODO: we also need to check type vars used on definition:
         # no values, no bounds (?)
     ])
@@ -78,3 +83,27 @@ def _check_type_reuse(
 
     metadata['typeclass'] = fullname
     return has_reuse
+
+
+def _check_generics(
+    associated_type: Instance,
+    typeclass: Instance,
+    ctx: MethodContext,
+) -> bool:
+    assert isinstance(typeclass.args[1], CallableType)
+    instance_decl = typeclass.args[1].arg_types[0]
+    if not isinstance(instance_decl, Instance):
+        return True
+
+    if len(instance_decl.args) != len(associated_type.type.type_vars):
+        ctx.api.fail(
+            _GENERIC_MISSMATCH_MSG.format(
+                associated_type.type.fullname,
+                len(associated_type.type.type_vars),
+                instance_decl,
+                len(instance_decl.args),
+            ),
+            ctx.context,
+        )
+        return False
+    return True
