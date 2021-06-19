@@ -34,6 +34,10 @@ _UNBOUND_TYPE_MSG: Final = (
     'Runtime type "{0}" has unbound type, use implicit any'
 )
 
+_TUPLE_LENGTH_MSG: Final = (
+    'Expected variadic tuple "Tuple[{0}, ...]", got "{1}"'
+)
+
 
 class _RuntimeValidationContext(NamedTuple):
     runtime_type: MypyType
@@ -85,7 +89,8 @@ def check_instance_definition(
 
     return _RuntimeValidationContext(runtime_type, is_protocol, all([
         _check_runtime_protocol(runtime_type, ctx, is_protocol=is_protocol),
-        _check_concrete_generics(instance_type, runtime_type, ctx),
+        _check_concrete_generics(runtime_type, instance_type, ctx),
+        _check_tuple_size(instance_type, ctx),
         protocol_arg_check,
         instance_check,
     ]))
@@ -128,8 +133,8 @@ def _check_runtime_protocol(
 
 
 def _check_concrete_generics(
-    instance_type: MypyType,
     runtime_type: MypyType,
+    instance_type: MypyType,
     ctx: MethodContext,
 ) -> bool:
     has_concrete_type = False
@@ -152,3 +157,16 @@ def _check_concrete_generics(
         ctx.api.fail(_UNBOUND_TYPE_MSG.format(runtime_type), ctx.context)
         return False
     return not has_concrete_type
+
+
+def _check_tuple_size(
+    instance_type: MypyType,
+    ctx: MethodContext,
+) -> bool:
+    if isinstance(instance_type, TupleType):
+        ctx.api.fail(
+            _TUPLE_LENGTH_MSG.format(instance_type.items[0], instance_type),
+            ctx.context,
+        )
+        return False
+    return True

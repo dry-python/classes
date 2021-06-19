@@ -9,6 +9,8 @@ We follow Semantic Versions since the `0.1.0` release.
 
 - **Breaking**: drops `python3.6` support
 - **Breaking**: now requires `typing_extensions>=3.10` and `mypy>=0.902`
+- **Breaking**: now `classes` traverses `mro` of registered types
+  and fallbacks to super-types if some type is not registered
 - Adds generic typeclasses
 - Adds better typeclass validation during `mypy` typechecking
 - Adds `.supports()` method to typeclass to check

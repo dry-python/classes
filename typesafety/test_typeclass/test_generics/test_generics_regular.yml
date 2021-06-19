@@ -253,3 +253,22 @@
   out: |
     main:9: error: Generic type "main.Copy" with "0" type arguments does not match generic instance declaration "typing.Iterable[X`-1]" with "1" type arguments
     main:23: note: Revealed type is "<nothing>"
+
+
+- case: typeclass_generic_tuple
+  disable_cache: false
+  main: |
+    from typing import Iterable, Tuple, TypeVar
+    from classes import typeclass
+
+    X = TypeVar('X')
+
+    @typeclass
+    def some(instance: Iterable[X]) -> X:
+        ...
+
+    @some.instance(tuple)
+    def _some_tuple(instance: Tuple[X, X]) -> X:
+        ...
+  out: |
+    main:10: error: Expected variadic tuple "Tuple[X`-1, ...]", got "Tuple[X`-1, X`-1]"
