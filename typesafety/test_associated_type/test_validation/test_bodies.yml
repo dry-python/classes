@@ -1,0 +1,29 @@
+- case: associated_type_with_method
+  disable_cache: false
+  main: |
+    from classes import AssociatedType, typeclass
+
+    class Compare(AssociatedType):
+        def some(self):
+            ...
+
+    @typeclass(Compare)
+    def compare(instance) -> int:
+        ...
+  out: |
+    main:7: error: Associated types must not have bodies
+
+
+- case: associated_type_with_attr
+  disable_cache: false
+  main: |
+    from classes import AssociatedType, typeclass
+
+    class Compare(AssociatedType):
+        x = 1
+
+    @typeclass(Compare)
+    def compare(instance) -> int:
+        ...
+  out: |
+    main:6: error: Associated types must not have bodies

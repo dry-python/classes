@@ -7,6 +7,7 @@ from typing_extensions import Final
 _ASSOCIATED_TYPE_FULLNAME: Final = 'classes._typeclass.AssociatedType'
 
 # Messages:
+
 _WRONG_SUBCLASS_MSG: Final = (
     'Single direct subclass of "{0}" required; got "{1}"'
 )
@@ -19,6 +20,8 @@ _GENERIC_MISSMATCH_MSG: Final = (
     'Generic type "{0}" with "{1}" type arguments does not match ' +
     'generic instance declaration "{2}" with "{3}" type arguments'
 )
+
+_REDUNDANT_BODY_MSG: Final = 'Associated types must not have bodies'
 
 
 def check_type(
@@ -35,9 +38,9 @@ def check_type(
     """
     return all([
         _check_base_class(associated_type, ctx),
+        _check_body(associated_type, ctx),
         _check_type_reuse(associated_type, typeclass, ctx),
         _check_generics(associated_type, typeclass, ctx),
-        # TODO: check_body
         # TODO: we also need to check type vars used on definition:
         # no values, no bounds (?)
     ])
@@ -61,6 +64,16 @@ def _check_base_class(
             ctx.context,
         )
     return has_correct_base
+
+
+def _check_body(
+    associated_type: Instance,
+    ctx: MethodContext,
+) -> bool:
+    if associated_type.type.names:
+        ctx.api.fail(_REDUNDANT_BODY_MSG, ctx.context)
+        return False
+    return True
 
 
 def _check_type_reuse(
