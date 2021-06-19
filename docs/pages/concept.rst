@@ -1,55 +1,11 @@
-The concept
-===========
+.. _concept:
 
-Typeclasses are another form of polymorphism
-that is widely used in some functional languages.
-
-What's the point?
-
-Well, we need to do different logic based on input type.
-
-Like ``len()`` function which
-works differently for ``"string"`` and ``[1, 2]``.
-Or ``+`` operator that works for numbers like "add"
-and for strings it works like "concatenate".
-
-Existing approaches
--------------------
-
-Classes and interfaces
-~~~~~~~~~~~~~~~~~~~~~~
-
-Traditionally, object oriented languages solve it via classes.
-
-And classes are hard.
-They have internal state, inheritance, methods (including static ones),
-strong type, structure, class-level constants, life-cycle, and etc.
-
-Magic methods
-~~~~~~~~~~~~~
-
-That's why Python is not purely built around this idea.
-It also has protocols: ``__len__``, ``__iter__``, ``__add__``, etc.
-Which are called "magic mathods" most of the time.
-
-This really helps and keeps the language easy.
-But, have some serious problem:
-we cannot add new protocols / magic methods to the existing data types.
-
-You cannot add new methods to the ``list`` type (and that's a good thing!),
-you cannot also change how ``__len__`` for example work there.
-
-But, sometimes we really need this!
-One of the most simple example is ``json`` serialisation and deserialisation.
-Each type should be covered, each one works differently, they can nest.
-And moreover, it is 100% fine and expected
-to add your own types to this process.
-
-So, how does it work?
+Concept
+=======
 
 
-Typeclasses
------------
+Typeclass
+---------
 
 So, typeclasses help us to build new abstractions near the existing types,
 not inside them.
@@ -79,8 +35,8 @@ The first on is "Typeclass definition", where we create a new typeclass:
   >>> from typing import Union
 
   >>> @typeclass
-  ... def json(instance) -> str:
-  ...     """That's definition!"""
+  ... def to_json(instance) -> str:
+  ...     """That's a definition!"""
 
 When typeclass is defined it only has a name and a signature
 that all instances will share.
@@ -88,17 +44,17 @@ Let's define some instances:
 
 .. code:: python
 
-  >>> @json.instance(str)
-  ... def _json_str(instance: str) -> str:
+  >>> @to_json.instance(str)
+  ... def _to_json_str(instance: str) -> str:
   ...     return '"{0}"'.format(instance)
 
-  >>> @json.instance(int)
-  ... @json.instance(float)
-  ... def _json_int_float(instance: Union[float, int]) -> str:
+  >>> @to_json.instance(int)
+  ... @to_json.instance(float)
+  ... def _to_json_int_float(instance: Union[float, int]) -> str:
   ...     return str(instance)
 
-  >>> @json.instance(None)
-  ... def _json_none(instance: None) -> str:
+  >>> @to_json.instance(None)
+  ... def _to_json_none(instance: None) -> str:
   ...     return 'null'
 
 That's how we define instances for our typeclass.
@@ -109,10 +65,10 @@ with different value of different types:
 
 .. code:: python
 
-  >>> assert json('text') == '"text"'
-  >>> assert json(1) == '1'
-  >>> assert json(1.5) == '1.5'
-  >>> assert json(None) == 'null'
+  >>> assert to_json('text') == '"text"'
+  >>> assert to_json(1) == '1'
+  >>> assert to_json(1.5) == '1.5'
+  >>> assert to_json(None) == 'null'
 
 That's it. There's nothing extra about typeclasses. They can be:
 
@@ -120,19 +76,149 @@ That's it. There's nothing extra about typeclasses. They can be:
 - extended by new instances
 - and called
 
-supports method
-~~~~~~~~~~~~~~~
+
+Protocols
+---------
+
+We also support ``Protocol`` items to be registered,
+the only difference is that they do require ``is_protocol=True``
+to be specified on ``.instance()`` call:
+
+.. code:: python
+
+  >>> from typing import Sequence
+
+  >>> @to_json.instance(Sequence, is_protocol=True)
+  ... def _to_json_sequence(instance: Sequence) -> str:
+  ...     return '[{0}]'.format(', '.join(to_json(i) for i in instance))
+
+  >>> assert to_json([1, 'a', None]) == '[1, "a", null]'
+
+
+Type resolution order
+---------------------
+
+Here's how typeclass resolve types:
+
+1. We try to resolve exact match by a passed type
+2. Then we try to match passed type a given protocols, first match wins
+3. Then we traverse ``mro`` entries of a given type, first match wins
+
+We use cache, so calling typeclasses with same object types is fast.
+
+In other words, it can fallback to more common types:
+
+.. code:: python
+
+  >>> from classes import typeclass
+
+  >>> @typeclass
+  ... def example(instance) -> str:
+  ...     ...
+
+  >>> class A(object):
+  ...     ...
+
+  >>> class B(A):
+  ...     ...
+
+  >>> @example.instance(A)
+  ... def _example_a(instance: A) -> str:
+  ...     return 'a'
+
+Now, let's test that the fallback to more common types work:
+
+  >>> assert example(A()) == 'a'
+  >>> assert example(B()) == 'a'
+
+And now, let's specify a special case for ``B``:
+
+.. code:: python
+
+  >>> @example.instance(B)
+  ... def _example_b(instance: B) -> str:
+  ...     return 'b'
+
+  >>> assert example(A()) == 'a'
+  >>> assert example(B()) == 'b'
+
+How it fallback works?
+We traverse the ``mro`` of a given type and find the closest supported type.
+This helps us to still treat first typeclass argument as covariant.
+
+There's even a pattern to allow all objects in:
+
+.. code:: python
+
+  >>> @example.instance(object)
+  ... def _example_all_in(instance: object) -> str:
+  ...     return 'obj'
+
+  >>> assert example(A()) == 'a'
+  >>> assert example(B()) == 'b'
+
+  >>> assert example(1) == 'obj'
+  >>> assert example(None) == 'obj'
+  >>> assert example('a') == 'obj'
+
+
+supports typeguard
+------------------
 
 You can check if a typeclass is supported via ``.supports()`` method.
 Example:
 
 .. code:: python
 
-  >>> assert json.supports(1) is True
-  >>> assert json.supports({}) is False
+  >>> from classes import typeclass
+
+  >>> @typeclass
+  ... def convert_to_number(instance) -> int:
+  ...     ...
+
+  >>> @convert_to_number.instance(int)
+  ... def _convert_int(instance: int) -> int:
+  ...     return instance
+
+  >>> @convert_to_number.instance(float)
+  ... def _convert_float(instance: float) -> int:
+  ...     return int(instance)
+
+  >>> assert convert_to_number.supports(1) is True
+  >>> assert convert_to_number.supports(1.5) is True
+  >>> assert convert_to_number.supports({}) is False
+
+It uses the same runtime dispatching mechanism as calling a typeclass directly,
+but returns a boolean.
+
+It also uses `TypeGuard <https://www.python.org/dev/peps/pep-0647/>`_ type
+to narrow types inside ``if convert_to_number.supports(item)`` blocks:
+
+.. code:: python
+
+  >>> from typing import Union
+  >>> from random import randint
+
+  >>> def get_random_item() -> Union[int, dict]:
+  ...    return {'example': 1} if randint(0, 1) else 1
+
+  >>> item: Union[int, dict] = get_random_item()
+
+So, if you try to call ``convert_to_number(item)`` right now,
+it won't pass ``mypy`` typecheck and will possibly throw runtime exception,
+because ``dict`` is not supported by ``convert_to_number`` typeclass.
+
+So, you can narrow the type with our ``TypeGuard``:
+
+  >>> if convert_to_number.supports(item):
+  ...    # `reveal_type(item)` will produce `Union[int, float]`,
+  ...    # or basically all the types that are supported by `to_json`,
+  ...    # now you can safely call `to_json`, `mypy` will be happy:
+  ...    assert convert_to_number(1.5) == 1
+
 
 Typeclasses with associated types
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 You can also define typeclasses with associated types.
 It will allow you to use ``Supports`` type later on.
@@ -161,120 +247,56 @@ The instance definition syntax is the same:
    >>> assert can_be_trimmed('abcde', 3) == 'abc'
 
 Defining typeclasses as Python classes
-will be the only option if you need to use ``Supports`` type.
+will be the only option if you need to use :ref:`Supports <supports>` type.
 
 
-Supports
---------
+.. _type-restrictions:
 
-We also have a special type to help you specifying
-that you want to work with only types that are a part of a specific typeclass.
+Type restrictions
+-----------------
 
-For example, you might want to work with only types
-that are able to be converted to JSON:
-
-.. code:: python
-
-    >>> from classes import AssociatedType, Supports, typeclass
-
-    >>> class ToJson(AssociatedType):
-    ...     ...
-
-    >>> @typeclass(ToJson)
-    ... def to_json(instance) -> str:
-    ...    ...
-
-    >>> @to_json.instance(int)
-    ... def _to_json_int(instance: int) -> str:
-    ...     return str(instance)
-
-    >>> @to_json.instance(str)
-    ... def _to_json_str(instance: str) -> str:
-    ...     return '"{0}"'.format(instance)
-
-    >>> def convert_to_json(
-    ...     instance: Supports[ToJson],
-    ... ) -> str:
-    ...     return to_json(instance)
-
-    >>> assert convert_to_json(1) == '1'
-    >>> assert convert_to_json('a') == '"a"'
-
-And this will fail (both in runtime and during type checking):
-
-    >>> # This will produce a mypy issue:
-    >>> # error: Argument 1 to "convert_to_json" has incompatible type "None";
-    >>> # expected "Supports[ToJson]"
-
-    >>> convert_to_json(None)
-    Traceback (most recent call last):
-      ...
-    NotImplementedError: Missing matched typeclass instance for type: NoneType
-
-You can also use ``Supports`` as a type annotation for defining typeclasses:
+You can restrict typeclasses
+to have only subtypes of some specific types during typechecking
+(we will still accept all types in runtime).
 
 .. code:: python
 
-    >>> class MyFeature(AssociatedType):
-    ...     ...
+  >>> from classes import typeclass
 
-    >>> @typeclass(MyFeature)
-    ... def my_feature(instance: 'Supports[MyFeature]') -> str:
-    ...     ...
+  >>> class A(object):
+  ...     ...
 
-It might be helpful, when you have ``no-untyped-def`` rule enabled.
+  >>> class B(A):
+  ...     ...
 
-One more tip: our team would recommend this style:
+  >>> @typeclass
+  ... def example(instance: A) -> str:
+  ...     ...
 
-.. code:: python
-
-    >>> from typing_extensions import Protocol, final
-
-    >>> @final  # This type cannot have sub-types
-    ... class MyTypeclass(AssociatedType):
-    ...     """Tell us, what this typeclass is about."""
-
-.. warning::
-  ``Supports`` only works with typeclasses defined with associated types.
-
-
-Related concepts
-----------------
-
-singledispatch
-~~~~~~~~~~~~~~
-
-One may ask, what is the difference
-with `singledispatch <https://docs.python.org/3/library/functools.html#functools.singledispatch>`_
-function from the standard library?
-
-The thing about ``singledispatch`` is that it allows almost the same features.
-But, it lacks type-safety.
-For example, it does not check for the same
-function signatures and return types in all cases:
+With this setup, this will typecheck:
 
 .. code:: python
 
-  >>> from functools import singledispatch
+  >>> @example.instance(A)
+  ... def _example_a(instance: A) -> str:
+  ...     return 'a'
 
-  >>> @singledispatch
-  ... def example(instance) -> str:
-  ...     return 'default'
+  >>> @example.instance(B)
+  ... def _example_b(instance: B) -> str:
+  ...     return 'b'
 
-  >>> @example.register(int)
-  ... def _example_int(instance: int, other: int) -> int:
-  ...     return instance + other
+  >>> assert example(A()) == 'a'
+  >>> assert example(B()) == 'b'
 
-  >>> @example.register(str)
-  ... def _example_str(instance: str) -> bool:
-  ...     return bool(instance)
+But, this won't typecheck:
 
-  >>> assert bool(example(1, 0)) == example('a')
+.. code:: python
 
-As you can see: you are able to create
-instances with different return types and number of parameters.
+  >>> @example.instance(int)
+  ... def _example_int(instance: int) -> str:
+  ...    return 'int'
 
-Good luck working with that!
+  # error: Instance "builtins.int" does not match original type "ex.A"
 
 
 Further reading

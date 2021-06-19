@@ -47,7 +47,7 @@ jobs:
         poetry run flake8 .
         poetry run mypy classes ./tests/**/*.py
         poetry run codespell classes tests docs typesafety README.md CONTRIBUTING.md CHANGELOG.md
-        poetry run pytest classes tests docs/pages
+        poetry run pytest classes tests docs/pages README.md
         poetry run doc8 -q docs
         poetry run poetry check
         poetry run pip check

@@ -14,10 +14,22 @@ Contents
   :maxdepth: 2
   :caption: Userguide
 
+  pages/why.rst
   pages/concept.rst
-  pages/typeclass.rst
-  pages/typesafety.rst
+  pages/supports.rst
+  pages/generics.rst
+
+.. toctree::
+  :maxdepth: 1
+  :caption: Tooling
+
   pages/dry-python.rst
+
+.. toctree::
+  :maxdepth: 1
+  :caption: API
+
+  pages/api-docs.rst
 
 .. toctree::
   :maxdepth: 1
