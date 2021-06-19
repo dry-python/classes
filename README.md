@@ -87,25 +87,26 @@ How would new API look like with this concept?
 ```python
 >>> from typing import Union
 >>> from classes import typeclass
+
 >>> @typeclass
 ... def to_json(instance) -> str:
 ...     """This is a typeclass definition to convert things to json."""
-...
+
 >>> @to_json.instance(int)
 ... @to_json.instance(float)
 ... def _to_json_int(instance: Union[int, float]) -> str:
 ...     return str(instance)
-...
+
 >>> @to_json.instance(bool)
 ... def _to_json_bool(instance: bool) -> str:
 ...     return 'true' if instance else 'false'
-...
+
 >>> @to_json.instance(list)
 ... def _to_json_list(instance: list) -> str:
 ...     return '[{0}]'.format(
 ...         ', '.join(to_json(list_item) for list_item in instance),
 ...     )
-...
+
 
 ```
 
@@ -126,9 +127,11 @@ Typeclass is represented as a regular function, so you can use it like one:
 And it easy to extend this typeclass with your own classes as well:
 
 ```python
->>> # Pretending to import the existing library from somewhere:
->>> # from to_json import to_json
+# Pretending to import the existing library from somewhere:
+# from to_json import to_json
+
 >>> import datetime as dt
+
 >>> @to_json.instance(dt.datetime)
 ... def _to_json_datetime(instance: dt.datetime) -> str:
 ...     return instance.isoformat()
@@ -142,6 +145,12 @@ That's how simple, safe, and powerful typeclasses are!
 Make sure to [check out our full docs](https://github.com/dry-python/classes) to learn more.
 
 
-## License
+## More!
 
-BSD 2-Clause
+Want more?
+[Go to the docs!](https://classes.readthedocs.io)
+
+
+<p align="center">&mdash; ⭐️ &mdash;</p>
+<p align="center"><i>Drylabs maintains dry-python and helps those who want to use it inside their organizations.</i></p>
+<p align="center"><i>Read more at <a href="https://drylabs.io">drylabs.io</a></i></p>

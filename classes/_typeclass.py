@@ -112,6 +112,7 @@ Now, let's build a class that match this protocol and test it:
 
     >>> assert example(WithField()) == 'with field'
 
+See our `official docs <https://classes.readthedocs.io>`_ to learn more!
 """
 
 from abc import get_cache_token
@@ -298,33 +299,8 @@ class _TypeClass(  # noqa: WPS214
     """
     That's how we represent typeclasses.
 
-    You should also use this type to annotate places
-    where you expect some specific typeclass to be used.
-
-    .. code:: python
-
-        >>> from typing import Callable
-        >>> from classes import typeclass
-
-        >>> @typeclass
-        ... def used(instance, other: int) -> int:
-        ...     '''Example typeclass to be used later.'''
-
-        >>> @used.instance(int)
-        ... def _used_int(instance: int, other: int) -> int:
-        ...     return instance + other
-
-        >>> def accepts_typeclass(
-        ...     callback: Callable[[int, int], int],
-        ... ) -> int:
-        ...     return callback(1, 3)
-
-        >>> assert accepts_typeclass(used) == 4
-
-    Take a note, that we structural subtyping here.
-    And all typeclasses that match ``Callable[[int, int], int]`` signature
-    will typecheck.
-
+    You probably don't need to use this type directly,
+    use its public methods and public :func:`~typeclass` constructor.
     """
 
     __slots__ = (
@@ -408,6 +384,30 @@ class _TypeClass(  # noqa: WPS214
         Since, we define ``__call__`` method for this class,
         it can be used and typechecked everywhere,
         where a regular ``Callable`` is expected.
+
+        .. code:: python
+
+          >>> from typing import Callable
+          >>> from classes import typeclass
+
+          >>> @typeclass
+          ... def used(instance, other: int) -> int:
+          ...     '''Example typeclass to be used later.'''
+
+          >>> @used.instance(int)
+          ... def _used_int(instance: int, other: int) -> int:
+          ...     return instance + other
+
+          >>> def accepts_typeclass(
+          ...     callback: Callable[[int, int], int],
+          ... ) -> int:
+          ...     return callback(1, 3)
+
+          >>> assert accepts_typeclass(used) == 4
+
+        Take a note, that we use structural subtyping here.
+        And all typeclasses that match ``Callable[[int, int], int]`` signature
+        will typecheck.
         """
         self._control_abc_cache()
         instance_type = type(instance)
