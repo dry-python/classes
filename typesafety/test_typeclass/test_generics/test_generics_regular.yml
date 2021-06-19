@@ -251,4 +251,5 @@
 
     reveal_type(copy(a))
   out: |
+    main:9: error: Generic type "main.Copy" with "0" type arguments does not match generic instance declaration "typing.Iterable[X`-1]" with "1" type arguments
     main:23: note: Revealed type is "<nothing>"

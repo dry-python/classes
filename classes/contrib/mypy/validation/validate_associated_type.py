@@ -1,4 +1,5 @@
 from mypy.plugin import MethodContext
+from mypy.typeops import get_type_vars
 from mypy.types import CallableType, Instance
 from typing_extensions import Final
 
@@ -95,13 +96,16 @@ def _check_generics(
     if not isinstance(instance_decl, Instance):
         return True
 
-    if len(instance_decl.args) != len(associated_type.type.type_vars):
+    # We use `get_type_vars` here to exclude cases like `Supports[ToJson]`
+    # and `List[int]` from validation:
+    instance_args = get_type_vars(instance_decl)
+    if len(instance_args) != len(associated_type.type.type_vars):
         ctx.api.fail(
             _GENERIC_MISSMATCH_MSG.format(
                 associated_type.type.fullname,
                 len(associated_type.type.type_vars),
                 instance_decl,
-                len(instance_decl.args),
+                len(instance_args),
             ),
             ctx.context,
         )
