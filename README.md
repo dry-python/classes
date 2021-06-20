@@ -119,8 +119,8 @@ Typeclass is represented as a regular function, so you can use it like one:
 'true'
 >>> to_json(1)
 '1'
->>> to_json([False, 1, 2])
-'[false, 1, 2]'
+>>> to_json([False, 1, 2.5])
+'[false, 1, 2.5]'
 
 ```
 
