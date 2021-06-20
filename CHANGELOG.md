@@ -3,7 +3,7 @@
 We follow Semantic Versions since the `0.1.0` release.
 
 
-## Version 0.3.0 WIP
+## Version 0.3.0
 
 ### Features
 
@@ -12,6 +12,8 @@ We follow Semantic Versions since the `0.1.0` release.
 - **Breaking**: now `classes` traverses `mro` of registered types
   and fallbacks to super-types if some type is not registered
 - Adds generic typeclasses
+- Adds caching to runtime type dispatch,
+  it allows to call already resolved instances way faster
 - Adds better typeclass validation during `mypy` typechecking
 - Adds `.supports()` method to typeclass to check
   if some instance is supported in runtime

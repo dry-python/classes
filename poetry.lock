@@ -385,19 +385,6 @@ python-versions = "*"
 flake8 = "*"
 
 [[package]]
-name = "flake8-pyi"
-version = "20.10.0"
-description = "A plugin for flake8 to enable linting .pyi files."
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-attrs = "*"
-flake8 = ">=3.2.1"
-pyflakes = ">=2.1.1"
-
-[[package]]
 name = "flake8-pytest-style"
 version = "1.4.4"
 description = "A flake8 plugin checking common style issues or inconsistencies with pytest-based tests."
@@ -1281,7 +1268,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "4a6923ffcb3a09e504db754cfa74a5547a3c5af43a25453dbe39803bdf77f36b"
+content-hash = "3a79928259336082fb4f6710ebf73124a1aaef889d34edf284388893e004829b"
 
 [metadata.files]
 alabaster = [
@@ -1468,10 +1455,6 @@ flake8-plugin-utils = [
 flake8-polyfill = [
     {file = "flake8-polyfill-1.0.2.tar.gz", hash = "sha256:e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda"},
     {file = "flake8_polyfill-1.0.2-py2.py3-none-any.whl", hash = "sha256:12be6a34ee3ab795b19ca73505e7b55826d5f6ad7230d31b18e106400169b9e9"},
-]
-flake8-pyi = [
-    {file = "flake8-pyi-20.10.0.tar.gz", hash = "sha256:cee3b20a5123152c697870e7e800b60e3c95eb89e272a2b63d8cf55cafb0472c"},
-    {file = "flake8_pyi-20.10.0-py2.py3-none-any.whl", hash = "sha256:ff5dfc40bffa878f6ce95bcfd9a6ad14c44b85cbe99c4864e729301bf54267f0"},
 ]
 flake8-pytest-style = [
     {file = "flake8-pytest-style-1.4.4.tar.gz", hash = "sha256:3e4452be131ed040b5ffa131d53f0b28f3d062916485974c48d73572cae60c41"},
