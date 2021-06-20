@@ -171,7 +171,7 @@ because we would need to definie a new subclass
 and chances are that it won't be used in some situations.
 
 With ``@typeclass`` overriding something is as easy.
-Let's define a typeclass with an instance to be overriden later:
+Let's define a typeclass with an instance to be overridden later:
 
 .. code:: python
 
