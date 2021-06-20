@@ -74,10 +74,11 @@ class IntField(Field):
 
 It literally has a lot of problems:
 
-- It is hard to type this code. How can I be sure that my `json` will be parsed by the given schema?
-- It contains a lot of boilerplate
-- It has complex API: there are usually several methods to override, some fields to adjust. Moreover, we use a class, not a callable
+- It is hard to type this code. How can I be sure that my `json` is parseable by the given schema?
+- It produces a lot of boilerplate
+- It has complex API: there are usually several methods to override, some fields to adjust. Moreover, we use a class, not a simple function
 - It is hard to extend the default library for new custom types you will have in your own project
+- It is hard to override
 
 There should be a better way of solving this problem!
 And typeclasses are a better way!
@@ -106,7 +107,6 @@ How would new API look like with this concept?
 ...     return '[{0}]'.format(
 ...         ', '.join(to_json(list_item) for list_item in instance),
 ...     )
-
 
 ```
 

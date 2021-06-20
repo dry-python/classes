@@ -162,6 +162,54 @@ There's even a pattern to allow all objects in:
   >>> assert example('a') == 'obj'
 
 
+Overriding and extending existing instances
+-------------------------------------------
+
+Sometimes we really need to override how things work.
+With objects and classes this can be problematic,
+because we would need to definie a new subclass
+and chances are that it won't be used in some situations.
+
+With ``@typeclass`` overriding something is as easy.
+Let's define a typeclass with an instance to be overriden later:
+
+.. code:: python
+
+  >>> from classes import typeclass
+
+  >>> @typeclass
+  ... def example(instance) -> str:
+  ...    ...
+
+  >>> @example.instance(str)
+  ... def _example_str(instance: str) -> str:
+  ...      return instance.lower()
+
+  >>> assert example('Hello') == 'hello'
+
+Now, let's change how ``example`` behaves for ``str``.
+The only thing we need to do is to define ``.instance(str)`` once again:
+
+.. code:: python
+
+  >>> @example.instance(str)
+  ... def _example_str_new(instance: str) -> str:
+  ...      return instance.upper()
+
+  >>> assert example('Hello') == 'HELLO'
+
+Note, that we can reuse the original implementation
+by calling the instance case directly:
+
+.. code:: python
+
+  >>> @example.instance(str)
+  ... def _example_str_new(instance: str) -> str:
+  ...      return _example_str(instance) + '!'
+
+  >>> assert example('Hello') == 'hello!'
+
+
 supports typeguard
 ------------------
 

@@ -247,3 +247,23 @@
         ...
 
     a(None)
+
+
+- case: typeclass_instance_override
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def example(instance) -> str:
+        ...
+
+    @example.instance(str)
+    def _example_str(instance: str) -> str:
+        return instance.lower()
+
+    @example.instance(str)
+    def _example_str_new(instance: str) -> str:
+        return _example_str(instance) + '!'
+
+    reveal_type(example('a'))  # N: Revealed type is "builtins.str"
