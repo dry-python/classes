@@ -234,6 +234,7 @@ Typeclasses
 
 That's why we are creating this library.
 It allows to:
+
 1. Have functions that behave differently on different types
 2. Express it with types using special :ref:`Supports <supports>` annotation
 3. Be sure that your typings are always correct
