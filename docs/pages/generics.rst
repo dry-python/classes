@@ -27,23 +27,23 @@ match the shape of the typeclass itself:
   >>> X = TypeVar('X')
 
   >>> @typeclass
-  ... def is_equal(first: X, second: X) -> bool:
+  ... def copy(instance: X) -> X:
   ...     ...
 
 This one will typecheck correctly:
 
 .. code:: python
 
-  >>> @is_equal.instance(int)
-  ... def _is_equal_int(first: int, second: int) -> bool:
+  >>> @copy.instance(int)
+  ... def _copy_int(instance: int) -> int:
   ...     ...
 
 But, this won't:
 
 .. code:: python
 
-  @is_equal.instance(str)
-  def _is_equal_str(first: str, second: float) -> bool:
+  @copy.instance(str)
+  def _copy_str(instance: str) -> bool:
       ...
 
   # error: Instance callback is incompatible "def (first: builtins.str, second: builtins.float) -> builtins.bool"; expected "def (first: builtins.str, second: builtins.str*) -> builtins.bool"
