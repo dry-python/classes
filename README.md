@@ -147,8 +147,8 @@ Make sure to [check out our full docs](https://github.com/dry-python/classes) to
 
 ## More!
 
-Want more?
-[Go to the docs!](https://classes.readthedocs.io)
+Want more? [Go to the docs!](https://classes.readthedocs.io) Or read these articles:
+- [Typeclasses in Python](https://sobolevn.me/2021/06/typeclasses-in-python)
 
 
 <p align="center">&mdash; ⭐️ &mdash;</p>
