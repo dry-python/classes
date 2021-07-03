@@ -31,6 +31,21 @@
     main:3: error: First argument in typeclass definition must be positional
 
 
+- case: typeclass_first_arg_opt_with_associated
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class Some(AssociatedType):
+        ...
+
+    @typeclass(Some)
+    def args(instance: int = 1) -> str:
+        ...
+  out: |
+    main:6: error: First argument in typeclass definition must be positional
+
+
 - case: typeclass_first_arg_star
   disable_cache: false
   main: |

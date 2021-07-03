@@ -10,6 +10,21 @@
      main:3: error: Typeclass definitions must not have bodies
 
 
+- case: typeclass_with_body_and_associated_type
+  disable_cache: false
+  main: |
+    from classes import typeclass, AssociatedType
+
+    class Some(AssociatedType):
+        ...
+
+    @typeclass(Some)
+    def args(instance) -> str:
+        return 'a'
+  out: |
+     main:6: error: Typeclass definitions must not have bodies
+
+
 - case: typeclass_with_two_ellipsises
   disable_cache: false
   main: |
