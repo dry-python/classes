@@ -1,3 +1,23 @@
+- case: typeclass_with_ellipsis
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance) -> str:
+        ...
+
+
+- case: typeclass_with_docstring
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance) -> str:
+        """Some."""
+
+
 - case: typeclass_with_body
   disable_cache: false
   main: |
