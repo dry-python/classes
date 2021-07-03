@@ -1,0 +1,24 @@
+- case: typeclass_with_body
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance) -> str:
+        return 'a'
+  out: |
+     main:3: error: Typeclass definitions must not have bodies
+
+
+- case: typeclass_with_two_ellipsises
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance) -> str:
+        ...
+        ...
+  out: |
+     main:3: error: Typeclass definitions must not have bodies
+     main:4: error: Missing return statement

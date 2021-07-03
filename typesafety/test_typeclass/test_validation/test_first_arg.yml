@@ -1,0 +1,79 @@
+- case: typeclass_first_arg_pos
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance) -> str:
+        ...
+
+
+- case: typeclass_first_arg_pos_only
+  disable_cache: false
+  skip: sys.version_info[:2] < (3, 8)
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance, /) -> str:
+        ...
+
+
+- case: typeclass_first_arg_opt
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(instance: int = 1) -> str:
+        ...
+  out: |
+    main:3: error: First argument in typeclass definition must be positional
+
+
+- case: typeclass_first_arg_star
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(*instance: str) -> str:
+        ...
+  out: |
+    main:3: error: First argument in typeclass definition must be positional
+
+
+- case: typeclass_first_arg_star2
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(**instance) -> str:
+        ...
+  out: |
+    main:3: error: First argument in typeclass definition must be positional
+
+
+- case: typeclass_first_kw
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(*instance) -> str:
+        ...
+  out: |
+    main:3: error: First argument in typeclass definition must be positional
+
+
+- case: typeclass_first_kw_opt
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def args(*, instance: int = 1) -> str:
+        ...
+  out: |
+    main:3: error: First argument in typeclass definition must be positional

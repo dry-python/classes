@@ -24,6 +24,7 @@ from classes.contrib.mypy.typeops import (
 from classes.contrib.mypy.validation import (
     validate_associated_type,
     validate_typeclass,
+    validate_typeclass_def,
 )
 
 
@@ -75,11 +76,18 @@ class TypeClassReturnType(object):
             assert isinstance(ctx.default_return_type, Instance)
             assert isinstance(defn, CallableType)
             assert defn.definition
+
             instance_args.mutate_typeclass_def(
-                ctx.default_return_type,
-                defn.definition.fullname,
-                ctx,
+                typeclass=ctx.default_return_type,
+                definition_fullname=defn.definition.fullname,
+                ctx=ctx,
             )
+
+            validate_typeclass_def.check_type(
+                typeclass=ctx.default_return_type,
+                ctx=ctx,
+            )
+
             return ctx.default_return_type
         return AnyType(TypeOfAny.from_error)
 
@@ -107,11 +115,15 @@ def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
     assert isinstance(ctx.context, Decorator)
 
     instance_args.mutate_typeclass_def(
-        ctx.default_return_type,
-        ctx.context.func.fullname,
-        ctx,
+        typeclass=ctx.default_return_type,
+        definition_fullname=ctx.context.func.fullname,
+        ctx=ctx,
     )
 
+    validate_typeclass_def.check_type(
+        typeclass=ctx.default_return_type,
+        ctx=ctx,
+    )
     if isinstance(ctx.default_return_type.args[2], Instance):
         validate_associated_type.check_type(
             associated_type=ctx.default_return_type.args[2],
