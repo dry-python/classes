@@ -3,6 +3,18 @@
 We follow Semantic Versions since the `0.1.0` release.
 
 
+## Version 0.4.0 WIP
+
+### Features
+
+- Adds support for multiple type arguments in `Supports` type
+
+### Bugfixes
+
+- Fixes that types referenced in multiple typeclasses
+  were not handling `Supports` properly #249
+
+
 ## Version 0.3.0
 
 ### Features

@@ -103,7 +103,8 @@ class TypeClassReturnType(object):
         return typeclass_intermediate_def
 
 
-def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
+@final
+class TypeClassDefReturnType(object):
     """
     Callback for cases like ``@typeclass(SomeType)``.
 
@@ -111,27 +112,37 @@ def typeclass_def_return_type(ctx: MethodContext) -> MypyType:
     It checks that ``SomeType`` is correct, modifies the current typeclass.
     And returns it back.
     """
-    assert isinstance(ctx.default_return_type, Instance)
-    assert isinstance(ctx.context, Decorator)
 
-    instance_args.mutate_typeclass_def(
-        typeclass=ctx.default_return_type,
-        definition_fullname=ctx.context.func.fullname,
-        ctx=ctx,
-    )
+    __slots__ = ('_associated_type',)
 
-    validate_typeclass_def.check_type(
-        typeclass=ctx.default_return_type,
-        ctx=ctx,
-    )
-    if isinstance(ctx.default_return_type.args[2], Instance):
-        validate_associated_type.check_type(
-            associated_type=ctx.default_return_type.args[2],
+    def __init__(self, associated_type: str) -> None:
+        """We need ``AssociatedType`` fullname here."""
+        self._associated_type = associated_type
+
+    def __call__(self, ctx: MethodContext) -> MypyType:
+        """Main entry point."""
+        assert isinstance(ctx.default_return_type, Instance)
+        assert isinstance(ctx.context, Decorator)
+
+        instance_args.mutate_typeclass_def(
             typeclass=ctx.default_return_type,
+            definition_fullname=ctx.context.func.fullname,
             ctx=ctx,
         )
 
-    return ctx.default_return_type
+        validate_typeclass_def.check_type(
+            typeclass=ctx.default_return_type,
+            ctx=ctx,
+        )
+        if isinstance(ctx.default_return_type.args[2], Instance):
+            validate_associated_type.check_type(
+                associated_type=ctx.default_return_type.args[2],
+                associated_type_fullname=self._associated_type,
+                typeclass=ctx.default_return_type,
+                ctx=ctx,
+            )
+
+        return ctx.default_return_type
 
 
 def instance_return_type(ctx: MethodContext) -> MypyType:
