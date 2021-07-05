@@ -110,3 +110,72 @@
     main:22: error: Incompatible types in assignment (expression has type "List[int]", variable has type "Supports[Some[int]]")
     main:23: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")
     main:24: error: Incompatible types in assignment (expression has type "int", variable has type "Supports[Some[int]]")
+
+
+- case: supports_multiple_one_generic_one_regular
+  disable_cache: false
+  main: |
+    from classes import AssociatedType, Supports, typeclass
+    from typing import TypeVar, Iterable, List
+
+    T = TypeVar('T')
+
+    class Some(AssociatedType[T]):
+        ...
+
+    class FromJson(AssociatedType):
+        ...
+
+    @typeclass(Some)
+    def some(instance: Iterable[T]) -> T:
+        ...
+
+    @typeclass(FromJson)
+    def from_json(instance) -> str:
+        ...
+
+    @some.instance(list)
+    def _some_str(instance: List[T]) -> T:
+        ...
+
+    @from_json.instance(str)
+    def _from_json_str(instance: str) -> str:
+        ...
+
+    a: Supports[Some[str], FromJson]
+    reveal_type(some(a))  # N: Revealed type is "builtins.str*"
+
+
+    - case: supports_multiple_two_generics
+  disable_cache: false
+  main: |
+    from classes import AssociatedType, Supports, typeclass
+    from typing import TypeVar, Iterable, List
+
+    T = TypeVar('T')
+
+    class Some(AssociatedType[T]):
+        ...
+
+    class Other(AssociatedType[T]):
+        ...
+
+    @typeclass(Some)
+    def some(instance: Iterable[T]) -> T:
+        ...
+
+    @typeclass(Other)
+    def other(instance: Iterable[T]) -> T:
+        ...
+
+    @some.instance(list)
+    def _some_list(instance: List[T]) -> T:
+        ...
+
+    @other.instance(list)
+    def _other_list(instance: List[T]) -> T:
+        ...
+
+    a: Supports[Some[str], Other[int]]
+    reveal_type(some(a))  # N: Revealed type is "builtins.str*"
+    reveal_type(other(a))  # N: Revealed type is "builtins.int*"

@@ -140,7 +140,7 @@ _Fullname = TypeVar('_Fullname', bound=str)  # Literal value
 
 _NewInstanceType = TypeVar('_NewInstanceType', bound=Type)
 
-_StrictAssociatedType = TypeVar('_StrictAssociatedType', bound='AssociatedType')
+_AssociatedTypeDef = TypeVar('_AssociatedTypeDef', contravariant=True)
 _TypeClassType = TypeVar('_TypeClassType', bound='_TypeClass')
 _ReturnType = TypeVar('_ReturnType')
 
@@ -240,7 +240,7 @@ class AssociatedType(Generic[_InstanceType]):
 
 
 @final
-class Supports(Generic[_StrictAssociatedType]):
+class Supports(Generic[_AssociatedTypeDef]):
     """
     Used to specify that some value is a part of a typeclass.
 

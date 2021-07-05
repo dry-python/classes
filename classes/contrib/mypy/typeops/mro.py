@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Optional
 
 from mypy.plugin import MethodContext
+from mypy.subtypes import is_equivalent
 from mypy.types import Instance
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, union_items
+from mypy.types import TypeVarType, UnionType, union_items
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import type_loader
@@ -96,10 +97,21 @@ class MetadataInjector(object):
                 self._ctx,
             )
 
-            if supports_spec not in instance_type.type.bases:
+            index = self._find_supports_index(instance_type, supports_spec)
+            if index is not None:
+                # We already have `Supports` base class inserted,
+                # it means that we need to unify them:
+                # `Supports[A] + Supports[B] == Supports[Union[A, B]]`
+                self._add_unified_type(instance_type, supports_spec, index)
+            else:
+                # This is the first time this type is referenced in
+                # a typeclass'es instance defintinion.
+                # Just inject `Supports` with no extra steps:
                 instance_type.type.bases.append(supports_spec)
+
             if supports_spec.type not in instance_type.type.mro:
-                instance_type.type.mro.insert(0, supports_spec.type)
+                # We only need to add `Supports` type to `mro` once:
+                instance_type.type.mro.append(supports_spec.type)
 
             self._added_types.append(supports_spec)
 
@@ -110,11 +122,66 @@ class MetadataInjector(object):
 
         for instance_type in self._instance_types:
             assert isinstance(instance_type, Instance)
-
-            for added_type in self._added_types:
-                if added_type in instance_type.type.bases:
-                    instance_type.type.bases.remove(added_type)
-                if added_type.type in instance_type.type.mro:
-                    instance_type.type.mro.remove(added_type.type)
-
+            self._clean_instance_type(instance_type)
         self._added_types = []
+
+    def _clean_instance_type(self, instance_type: Instance) -> None:
+        remove_mro = True
+        for added_type in self._added_types:
+            index = self._find_supports_index(instance_type, added_type)
+            if index is not None:
+                remove_mro = self._remove_unified_type(
+                    instance_type,
+                    added_type,
+                    index,
+                )
+
+            if remove_mro and added_type.type in instance_type.type.mro:
+                # We remove `Supports` type from `mro` only if
+                # there are not associated types left.
+                # For example, `Supports[A, B] - Supports[B] == Supports[A]`
+                # then `Supports[A]` stays.
+                # `Supports[A] - Supports[A] == None`
+                # then `Supports` is removed from `mro` as well.
+                instance_type.type.mro.remove(added_type.type)
+
+    def _find_supports_index(
+        self,
+        instance_type: Instance,
+        supports_spec: Instance,
+    ) -> Optional[int]:
+        for index, base in enumerate(instance_type.type.bases):
+            if is_equivalent(base, supports_spec, ignore_type_params=True):
+                return index
+        return None
+
+    def _add_unified_type(
+        self,
+        instance_type: Instance,
+        supports_spec: Instance,
+        index: int,
+    ) -> None:
+        unified_arg = UnionType.make_union([
+            *supports_spec.args,
+            *instance_type.type.bases[index].args,
+        ])
+        instance_type.type.bases[index] = supports_spec.copy_modified(
+            args=[unified_arg],
+        )
+
+    def _remove_unified_type(
+        self,
+        instance_type: Instance,
+        supports_spec: Instance,
+        index: int,
+    ) -> bool:
+        base = instance_type.type.bases[index]
+        union_types = [
+            type_arg
+            for type_arg in union_items(base.args[0])
+            if type_arg not in supports_spec.args
+        ]
+        instance_type.type.bases[index] = supports_spec.copy_modified(
+            args=[UnionType.make_union(union_types)],
+        )
+        return not bool(union_types)

@@ -30,8 +30,9 @@ from mypy.types import CallableType
 from mypy.types import Type as MypyType
 from typing_extensions import Final, final
 
-from classes.contrib.mypy.features import associated_type, typeclass
+from classes.contrib.mypy.features import associated_type, supports, typeclass
 
+_ASSOCIATED_TYPE_FULLNAME: Final = 'classes._typeclass.AssociatedType'
 _TYPECLASS_FULLNAME: Final = 'classes._typeclass._TypeClass'
 _TYPECLASS_DEF_FULLNAME: Final = 'classes._typeclass._TypeClassDef'
 _TYPECLASS_INSTANCE_DEF_FULLNAME: Final = (
@@ -58,8 +59,14 @@ class _TypeClassPlugin(Plugin):
         fullname: str,
     ) -> Optional[Callable[[AnalyzeTypeContext], MypyType]]:
         """Hook that works on type analyzer phase."""
-        if fullname == 'classes._typeclass.AssociatedType':
+        if fullname == _ASSOCIATED_TYPE_FULLNAME:
             return associated_type.variadic_generic
+        if fullname == 'classes._typeclass.Supports':
+            associated_type_node = self.lookup_fully_qualified(
+                _ASSOCIATED_TYPE_FULLNAME,
+            )
+            assert associated_type_node
+            return supports.VariadicGeneric(associated_type_node)
         return None
 
     def get_function_hook(
@@ -80,7 +87,7 @@ class _TypeClassPlugin(Plugin):
     ) -> Optional[Callable[[MethodContext], MypyType]]:
         """Here we adjust the typeclass with new allowed types."""
         if fullname == '{0}.__call__'.format(_TYPECLASS_DEF_FULLNAME):
-            return typeclass.typeclass_def_return_type
+            return typeclass.TypeClassDefReturnType(_ASSOCIATED_TYPE_FULLNAME)
         if fullname == '{0}.__call__'.format(_TYPECLASS_INSTANCE_DEF_FULLNAME):
             return typeclass.InstanceDefReturnType()
         if fullname == '{0}.instance'.format(_TYPECLASS_FULLNAME):
