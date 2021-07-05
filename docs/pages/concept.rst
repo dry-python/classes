@@ -95,6 +95,47 @@ to be specified on ``.instance()`` call:
   >>> assert to_json([1, 'a', None]) == '[1, "a", null]'
 
 
+``__instancecheck__`` magic method
+----------------------------------
+
+We also support types that have ``__instancecheck__`` magic method defined,
+like `phantom-types <https://github.com/antonagestam/phantom-types>`_.
+
+We treat them similar to ``Protocol`` types, by checking passed values
+with ``isinstance`` for each type with ``__instancecheck__`` defined.
+First match wins.
+
+Example:
+
+.. code:: python
+
+  >>> from classes import typeclass
+
+  >>> class Meta(type):
+  ...     def __instancecheck__(self, other) -> bool:
+  ...         return other == 1
+
+  >>> class Some(object, metaclass=Meta):
+  ...     ...
+
+  >>> @typeclass
+  ... def some(instance) -> int:
+  ...     ...
+
+  >>> @some.instance(Some)
+  ... def _some_some(instance: Some) -> int:
+  ...     return 2
+
+  >>> assert some(1) == 2
+
+.. note::
+
+  It is impossible for ``mypy`` to understand that ``1`` has ``Some``
+  type in this example. Be careful, it might break your code!
+
+  Consider that this feature is limited to ``phantom-types``.
+
+
 Type resolution order
 ---------------------
 

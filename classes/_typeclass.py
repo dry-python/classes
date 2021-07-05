@@ -520,6 +520,12 @@ class _TypeClass(  # noqa: WPS214
             container = self._protocols if is_protocol else self._instances
             container[type_argument] = implementation  # type: ignore
 
+            if getattr(type_argument, '__instancecheck__', None):
+                # This means that this type has `__instancecheck__` defined,
+                # which allows dynamic checks of what `isinstance` of this type.
+                # That's why we also treat this type as a protocol.
+                self._protocols[type_argument] = implementation
+
             if self._cache_token is None:  # pragma: no cover
                 if getattr(type_argument, '__abstractmethods__', None):
                     self._cache_token = get_cache_token()

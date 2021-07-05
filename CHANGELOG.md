@@ -7,7 +7,8 @@ We follow Semantic Versions since the `0.1.0` release.
 
 ### Features
 
-- Adds support for multiple type arguments in `Supports` type
+- Adds support for multiple type arguments in `Supports` type #244
+- Adds support for types that have `__instancecheck__` defined #248
 
 ### Bugfixes
 
