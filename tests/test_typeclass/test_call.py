@@ -32,5 +32,4 @@ def _my_len_list(instance: list) -> int:
 ])
 def test_call_order(data_type, expected):
     """Ensures that call order is correct."""
-    print(my_len._protocols)
     assert my_len(data_type) == expected
