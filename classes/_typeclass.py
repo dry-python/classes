@@ -117,6 +117,7 @@ See our `official docs <https://classes.readthedocs.io>`_ to learn more!
 
 from abc import get_cache_token
 from functools import _find_impl  # type: ignore  # noqa: WPS450
+from types import MethodType
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
     Callable,
@@ -499,6 +500,8 @@ class _TypeClass(  # noqa: WPS214
         self,
         type_argument: Optional[_NewInstanceType],
         *,
+        # TODO: at one point I would like to remove `is_protocol`
+        # and make this function decide whether this type is protocol or not.
         is_protocol: bool = False,
     ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
         """
@@ -520,7 +523,7 @@ class _TypeClass(  # noqa: WPS214
             container = self._protocols if is_protocol else self._instances
             container[type_argument] = implementation  # type: ignore
 
-            if getattr(type_argument, '__instancecheck__', None):
+            if isinstance(type_argument.__instancecheck__, MethodType):
                 # This means that this type has `__instancecheck__` defined,
                 # which allows dynamic checks of what `isinstance` of this type.
                 # That's why we also treat this type as a protocol.
