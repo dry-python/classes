@@ -498,7 +498,7 @@ class _TypeClass(  # noqa: WPS214
 
     def instance(
         self,
-        type_argument: Optional[_NewInstanceType],
+        type_: Optional[_NewInstanceType],
         *,
         # TODO: at one point I would like to remove `is_protocol`
         # and make this function decide whether this type is protocol or not.
@@ -510,27 +510,27 @@ class _TypeClass(  # noqa: WPS214
         The only setting we provide is ``is_protocol`` which is required
         when passing protocols. See our ``mypy`` plugin for that.
         """
-        if type_argument is None:  # `None` is a special case
-            type_argument = type(None)  # type: ignore
+        if type_ is None:  # `None` is a special case
+            type_ = type(None)  # type: ignore
 
         # That's how we check for generics,
         # generics that look like `List[int]` or `set[T]` will fail this check,
         # because they are `_GenericAlias` instance,
         # which raises an exception for `__isinstancecheck__`
-        isinstance(object(), type_argument)  # type: ignore
+        isinstance(object(), type_)  # type: ignore
 
         def decorator(implementation):
             container = self._protocols if is_protocol else self._instances
-            container[type_argument] = implementation  # type: ignore
+            container[type_] = implementation  # type: ignore
 
-            if isinstance(type_argument.__instancecheck__, MethodType):
+            if isinstance(type_.__instancecheck__, MethodType):  # noqa: WPS609
                 # This means that this type has `__instancecheck__` defined,
                 # which allows dynamic checks of what `isinstance` of this type.
                 # That's why we also treat this type as a protocol.
-                self._protocols[type_argument] = implementation  # type: ignore
+                self._protocols[type_] = implementation  # type: ignore
 
             if self._cache_token is None:  # pragma: no cover
-                if getattr(type_argument, '__abstractmethods__', None):
+                if getattr(type_, '__abstractmethods__', None):
                     self._cache_token = get_cache_token()
 
             self._dispatch_cache.clear()
