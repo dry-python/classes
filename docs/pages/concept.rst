@@ -126,14 +126,14 @@ Example:
   ... def _some_some(instance: Some) -> int:
   ...     return 2
 
-  >>> assert some(1) == 2
+  >>> argument = 1
+  >>> assert isinstance(argument, Some)
+  >>> assert some(argument) == 2
 
 .. note::
 
   It is impossible for ``mypy`` to understand that ``1`` has ``Some``
   type in this example. Be careful, it might break your code!
-
-  Consider that this feature is limited to ``phantom-types``.
 
 
 Type resolution order
