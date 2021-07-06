@@ -7,6 +7,7 @@ We follow Semantic Versions since the `0.1.0` release.
 
 ### Features
 
+- Adds support for concrete generic types like `List[str]` and `Set[int]` #24
 - Adds support for multiple type arguments in `Supports` type #244
 - Adds support for types that have `__instancecheck__` defined #248
 

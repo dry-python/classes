@@ -19,7 +19,7 @@ _PROTOCOL_AND_DELEGATE_PASSED_MSG: Final = (
 
 @final
 class _ArgValidationContext(NamedTuple):
-    """"""
+    """Context for instance arg validation."""
 
     is_protocol: bool
     delegate: Optional[MypyType]
@@ -30,6 +30,14 @@ def check_type(
     passed_types: TupleType,
     ctx: MethodContext,
 ) -> _ArgValidationContext:
+    """
+    Checks that args to ``.instance`` method are correct.
+
+    We cannot use ``@overload`` on ``.instance`` because ``mypy``
+    does not correctly handle ``ctx.api.fail`` on ``@overload`` items:
+    it then tries new ones, which produce incorrect results.
+    So, that's why we need this custom checker.
+    """
     passed_args = passed_types.items
 
     is_protocol, protocol_check = _check_protocol_arg(passed_args[1], ctx)
@@ -72,10 +80,6 @@ def _check_delegate_arg(
     delegate: MypyType,
     ctx: MethodContext,
 ) -> Tuple[Optional[MypyType], bool]:
-    # TODO: maybe we need to inforce that `delegate` should be
-    # similar to `runtime_type`?
-    # For example, we can ask for subtypes of `runtime_type`.
-    # However, motivation is not clear for now.
     if isinstance(delegate, FunctionLike) and delegate.is_type_obj():
         return delegate.items()[-1].ret_type, True
     return None, True

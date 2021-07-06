@@ -85,22 +85,18 @@ def check_instance_definition(
             ctx.context,
         )
 
-    return _RuntimeValidationContext(
-        runtime_type=runtime_type,
-        is_protocol=args_check.is_protocol,
-        check_result=all([
-            args_check.check_result,
-            instance_check,
+    return _RuntimeValidationContext(runtime_type, args_check.is_protocol, all([
+        args_check.check_result,
+        instance_check,
 
-            _check_runtime_protocol(
-                runtime_type, ctx, is_protocol=args_check.is_protocol,
-            ),
-            _check_concrete_generics(
-                runtime_type, instance_type, args_check.delegate, ctx,
-            ),
-            _check_tuple_size(instance_type, ctx),
-        ],
-    ))
+        _check_runtime_protocol(
+            runtime_type, ctx, is_protocol=args_check.is_protocol,
+        ),
+        _check_concrete_generics(
+            runtime_type, instance_type, args_check.delegate, ctx,
+        ),
+        _check_tuple_size(instance_type, ctx),
+    ]))
 
 
 def _check_runtime_protocol(
