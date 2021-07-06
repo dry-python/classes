@@ -11,7 +11,7 @@ from mypy.types import (
     TupleType,
 )
 from mypy.types import Type as MypyType
-from mypy.types import TypeOfAny
+from mypy.types import TypeOfAny, UninhabitedType
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import (
@@ -150,15 +150,21 @@ def instance_return_type(ctx: MethodContext) -> MypyType:
     assert isinstance(ctx.default_return_type, Instance)
     assert isinstance(ctx.type, Instance)
 
+    # We need to unify how we represent passed arguments to our internals.
+    # We use this convention: passed args are added as-is,
+    # missing ones are passed as `NoReturn` (because we cannot pass `None`).
+    passed_types = []
+    for arg_pos in ctx.arg_types:
+        if arg_pos:
+            passed_types.extend(arg_pos)
+        else:
+            passed_types.append(UninhabitedType())
+
     instance_args.mutate_typeclass_instance_def(
         ctx.default_return_type,
         ctx=ctx,
         typeclass=ctx.type,
-        passed_types=[
-            type_
-            for args in ctx.arg_types
-            for type_ in args
-        ],
+        passed_types=passed_types,
     )
     return ctx.default_return_type
 

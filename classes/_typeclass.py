@@ -503,14 +503,36 @@ class _TypeClass(  # noqa: WPS214
         # TODO: at one point I would like to remove `is_protocol`
         # and make this function decide whether this type is protocol or not.
         is_protocol: bool = False,
+        delegate: Optional[type] = None,
     ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
         """
         We use this method to store implementation for each specific type.
 
-        The only setting we provide is ``is_protocol`` which is required
-        when passing protocols. See our ``mypy`` plugin for that.
+        Args:
+            is_protocol - required when passing protocols.
+            delegate - required when using concrete generics like ``List[str]``.
+
+        Returns:
+            Decorator for instance handler.
+
+        .. note::
+
+            ``is_protocol`` and ``delegate`` are mutually exclusive.
+
+        We don't use ``@overload`` decorator here
+        (which makes our ``mypy`` plugin even more complex)
+        because ``@overload`` functions do not
+        work well with ``ctx.api.fail`` inside the plugin.
+        They start to try other overloads, which produces wrong results.
         """
-        typ = type_argument or type(None)  # `None` is a special case
+        # This might seem like a strange line at first, let's dig into it:
+        #
+        # First, if `delegate` is passed, then we use delegate, not a real type.
+        # We use delegates for concrete generics.
+        # Then, we have a regular `type_argument`. It is used for most types.
+        # Lastly, we have `type(None)` to handle cases
+        # when we want to register `None` as a type / singleton value.
+        typ = delegate or type_argument or type(None)
 
         # That's how we check for generics,
         # generics that look like `List[int]` or `set[T]` will fail this check,
@@ -531,9 +553,9 @@ class _TypeClass(  # noqa: WPS214
             if self._cache_token is None:  # pragma: no cover
                 if getattr(typ, '__abstractmethods__', None):
                     self._cache_token = get_cache_token()
-
             self._dispatch_cache.clear()
             return implementation
+
         return decorator
 
     def _control_abc_cache(self) -> None:
