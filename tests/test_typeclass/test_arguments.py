@@ -12,7 +12,7 @@ def _example_str(instance: str) -> int:
     return len(instance)
 
 
-def test_invalid_argumnets() -> None:
+def test_invalid_arguments() -> None:
     """Tests that invalid arguments do raise."""
     with pytest.raises(ValueError, match='Both .* passed'):
         example.instance(  # type: ignore
