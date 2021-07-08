@@ -15,6 +15,7 @@ We follow Semantic Versions since the `0.1.0` release.
 
 - Fixes that types referenced in multiple typeclasses
   were not handling `Supports` properly #249
+- Fixes typing bug with `ABC` and mutable typeclass signature #259
 
 
 ## Version 0.3.0
