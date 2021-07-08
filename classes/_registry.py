@@ -20,6 +20,9 @@ def choose_registry(  # noqa: WPS211
 
     It depends on how ``instance`` method is used and also on the type itself.
     """
+    if is_protocol and delegate is not None:
+        raise ValueError('Both `is_protocol` and `delegated` are passed')
+
     if is_protocol:
         return protocols
 
