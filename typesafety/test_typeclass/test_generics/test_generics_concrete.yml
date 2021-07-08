@@ -1,0 +1,60 @@
+- case: typeclass_concrete_generic
+  disable_cache: false
+  main: |
+    from typing import List
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(List[int], delegate=SomeDelegate)
+    def _some_list_int(instance: List[int]) -> int:
+        ...
+
+    some([1, 2, 3])
+    some([])
+    some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"
+
+
+- case: typeclass_concrete_generic_delegate_and_protocol
+  disable_cache: false
+  main: |
+    from typing import List
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(List[int], delegate=SomeDelegate, is_protocol=True)
+    def _some_list_int(instance: List[int]) -> int:
+        ...
+  out: |
+    main:11: error: Both "is_protocol" and "delegate" arguments passed, they are exclusive
+    main:11: error: Regular types must be passed with "is_protocol=False"
+
+
+- case: typeclass_delegate_with_regular_type
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(int, delegate=SomeDelegate)
+    def _some_int(instance: int) -> int:
+        ...
+
+    some(1)
