@@ -272,3 +272,30 @@
         ...
   out: |
     main:10: error: Expected variadic tuple "Tuple[X`-1, ...]", got "Tuple[X`-1, X`-1]"
+
+
+- case: typeclass_regression259_mutated_signature
+  disable_cache: false
+  main: |
+    from abc import ABCMeta, abstractmethod
+    from classes import typeclass
+
+    @typeclass
+    def my_typeclass(instance) -> int:
+        ...
+
+    class _MyABC(object, metaclass=ABCMeta):
+        ...
+
+    class _MyConcrete(_MyABC):
+        ...
+
+    @my_typeclass.instance(_MyABC)
+    def _my_abc(instance: _MyABC) -> int:
+        ...
+
+    my_typeclass(_MyConcrete())
+
+    @my_typeclass.instance(int)
+    def _my_int(instance: int) -> int:
+        ...

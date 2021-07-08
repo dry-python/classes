@@ -5,7 +5,7 @@ TypeRegistry = Dict[type, Callable]
 
 
 def choose_registry(  # noqa: WPS211
-    # It has multiple argumnets, but I don't see an easy and performant way
+    # It has multiple arguments, but I don't see an easy and performant way
     # to refactor it: I don't want to create extra structures
     # and I don't want to create a class with methods.
     typ: type,
@@ -30,7 +30,7 @@ def choose_registry(  # noqa: WPS211
     if is_concrete:
         # This means that this type has `__instancecheck__` defined,
         # which allows dynamic checks of what `isinstance` of this type.
-        # That's why we also treat this type as a conrete.
+        # That's why we also treat this type as a concrete.
         return concretes
     return instances
 

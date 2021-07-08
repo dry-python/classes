@@ -9,7 +9,7 @@ class _ListOfStrMeta(type):
     def __instancecheck__(cls, other) -> bool:
         return (
             isinstance(other, list) and
-            len(other) and
+            bool(other) and
             all(isinstance(list_item, str) for list_item in other)
         )
 
@@ -47,7 +47,7 @@ def _my_len_object(instance: object) -> int:
 @pytest.mark.parametrize('check_supports', [True, False])
 @pytest.mark.parametrize('clear_supports_cache', [True, False])
 @pytest.mark.parametrize(('data_type', 'expected'), [
-    (['a', 'b'], 0),  # conrete type
+    (['a', 'b'], 0),  # concrete type
     ([], 1),  # direct list call
     ([1, 2, 3], 1),  # direct list call
     ('', 2),  # sized protocol

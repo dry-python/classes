@@ -15,7 +15,7 @@ def my_typeclass(instance) -> str:
     """Docs."""
 
 
-def test_str():
+def test_str() -> None:
     """Ensures that ``str`` is correct."""
     assert str(my_typeclass) == '<typeclass "my_typeclass">'
     assert str(

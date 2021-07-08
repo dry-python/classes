@@ -418,7 +418,7 @@ class _TypeClass(  # noqa: WPS214
         And all typeclasses that match ``Callable[[int, int], int]`` signature
         will typecheck.
         """
-        # At first, we try all our conrete types,
+        # At first, we try all our concrete types,
         # we don't cache it, because we cannot.
         # We only have runtime type info: `type([1]) == type(['a'])`.
         # It might be slow!

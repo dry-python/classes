@@ -34,7 +34,7 @@ def _my_abc(instance: _MyABC) -> int:
     return instance.get_number()
 
 
-def test_cache_concrete(clear_cache):  # noqa: WPS218
+def test_cache_concrete(clear_cache) -> None:  # noqa: WPS218
     """Ensures that cache invalidation for ABC types work correctly."""
     with clear_cache(my_typeclass):
         assert not my_typeclass._dispatch_cache  # noqa: WPS437
@@ -50,7 +50,7 @@ def test_cache_concrete(clear_cache):  # noqa: WPS218
         assert not my_typeclass._dispatch_cache  # noqa: WPS437
 
 
-def test_cached_calls(clear_cache):
+def test_cached_calls(clear_cache) -> None:
     """Ensures that regular types trigger cache."""
     with clear_cache(my_typeclass):
         my_typeclass.instance(int)(_my_int)

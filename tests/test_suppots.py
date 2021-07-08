@@ -9,7 +9,7 @@ class _ListOfStrMeta(type):
     def __instancecheck__(cls, other) -> bool:
         return (
             isinstance(other, list) and
-            len(other) and
+            bool(other) and
             all(isinstance(list_item, str) for list_item in other)
         )
 
@@ -48,7 +48,7 @@ def _my_len_list_str(instance: List[str]) -> int:
     (1, False),  # default impl
     (_MyList(), True),  # mro fallback
     (_ListOfStr(), True),  # mro fallback
-    (_ListOfStr([1, 2, 3]), True),  # mro fallback
+    (_ListOfStr(['a']), True),  # mro fallback
 ])
 def test_supports(data_type, expected: bool, clear_cache) -> None:
     """Ensures that ``.supports`` works correctly."""

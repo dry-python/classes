@@ -18,7 +18,7 @@ def _example_int(instance: int) -> str:
     return 'a' * instance
 
 
-def test_regular_type():
+def test_regular_type() -> None:
     """Ensures that types correctly work."""
     assert example([1, 2, 3]) == '123'
     assert example(['a', 'b', 'c']) == 'abc'
