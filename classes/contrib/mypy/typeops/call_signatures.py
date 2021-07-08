@@ -43,7 +43,7 @@ class SmartCallSignature(object):
         ctx: MethodSigContext,
     ) -> None:
         """Context that we need."""
-        self._signature = signature
+        self._signature = signature.copy_modified()
         self._instance_type = instance_type
         self._associated_type = associated_type
         self._ctx = ctx

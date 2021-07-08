@@ -69,3 +69,6 @@ doc8 = "^0.8"
 m2r2 = "^0.2"
 tomlkit = "^0.7"
 codespell = "^2.1"
+
+# Test deps:
+phantom-types = { version = "^0.9", python = ">=3.8" }

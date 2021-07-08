@@ -130,10 +130,164 @@ Example:
   >>> assert isinstance(argument, Some)
   >>> assert some(argument) == 2
 
-.. note::
+.. warning::
 
   It is impossible for ``mypy`` to understand that ``1`` has ``Some``
   type in this example. Be careful, it might break your code!
+
+This example is not really useful on its own,
+because as it was said, it can break things.
+
+Instead, we are going to learn about
+how this feature can be used to model
+your domain model precisely with delegates.
+
+Performance considerations
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Types that are matched via ``__instancecheck__`` are the first one we try.
+So, the worst case complexity of this is ``O(n)``
+where ``n`` is the number of types to try.
+
+We also always try them first and do not cache the result.
+This feature is here because we need to handle concrete generics.
+But, we recommend to think at least
+twice about the performance side of this feature.
+Maybe you can just write a function?
+
+
+Delegates
+---------
+
+Let's say that you want to handle types like ``List[int]`` with ``classes``.
+The simple approach won't work, because Python cannot tell
+that some ``list`` is ``List[int]`` or ``List[str]``:
+
+.. code:: python
+
+  >>> from typing import List
+
+  >>> isinstance([1, 2, 3], List[int])
+  Traceback (most recent call last):
+    ...
+  TypeError: Subscripted generics cannot be used with class and instance checks
+
+We need some custom type inference mechanism:
+
+.. code:: python
+
+  >>> from typing import List
+
+  >>> class _ListOfIntMeta(type):
+  ...     def __instancecheck__(self, arg) -> bool:
+  ...         return (
+  ...             isinstance(arg, list) and
+  ...             bool(arg) and  # we need to have at least one `int` element
+  ...             all(isinstance(item, int) for item in arg)
+  ...         )
+
+  >>> class ListOfInt(List[int], metaclass=_ListOfIntMeta):
+  ...     ...
+
+Now we can be sure that our ``List[int]`` can be checked in runtime:
+
+.. code:: python
+
+  >>> assert isinstance([1, 2, 3], ListOfInt) is True
+  >>> assert isinstance([1, 'a'], ListOfInt) is False
+
+And now we can use it with ``classes``:
+
+.. code:: python
+
+  >>> from classes import typeclass
+
+  >>> @typeclass
+  ... def sum_all(instance) -> int:
+  ...     ...
+
+  >>> @sum_all.instance(ListOfInt)
+  ... def _sum_all_list_int(instance: ListOfInt) -> int:
+  ...     return sum(instance)
+
+  >>> your_list = [1, 2, 3]
+  >>> if isinstance(your_list, ListOfInt):
+  ...     assert sum_all(your_list) == 6
+
+This solution still has several problems:
+
+1. Notice, that you have to use ``if isinstance`` or ``assert isinstance`` here.
+   Because otherwise ``mypy`` won't be happy without it,
+   type won't be narrowed to ``ListOfInt`` from ``List[int]``.
+   This does not feel right.
+2. ``ListOfInt`` is very verbose, it even has a metaclass!
+3. There's a typing mismatch: in runtime ``your_list`` would be ``List[int]``
+   and ``mypy`` thinks that it is ``ListOfInt``
+   (a fake type that we are not ever using directly)
+
+To solve all these problems we recommend to use ``phantom-types`` package.
+
+First, you need to define a "phantom" type
+(it is called "phantom" because it does not exist in runtime):
+
+.. code:: python
+
+  >>> from phantom import Phantom
+  >>> from phantom.predicates import boolean, collection, generic, numeric
+
+  >>> class ListOfInt(
+  ...    List[int],
+  ...    Phantom,
+  ...    predicate=boolean.both(
+  ...       collection.count(numeric.greater(0)),
+  ...       collection.every(generic.of_type(int)),
+  ...    ),
+  ... ):
+  ...     ...
+
+  >>> assert isinstance([1, 2, 3], ListOfInt)
+  >>> assert type([1, 2, 3]) is list
+
+Short, easy, and readable:
+
+- By defining ``predicate`` we ensure
+  that all non-empty lists with ``int`` elements
+  will be treated as ``ListOfInt``
+- In runtime ``ListOfInt`` does not exist, because it is phantom!
+  In reality it is just ``List[int]``
+
+Now, we can define our typeclass with ``phantom`` type support:
+
+.. code:: python
+
+  >>> from classes import typeclass
+
+  >>> @typeclass
+  ... def sum_all(instance) -> int:
+  ...     ...
+
+  >>> @sum_all.instance(List[int], delegate=ListOfInt)
+  ... def _sum_all_list_int(instance: List[int]) -> int:
+  ...     return sum(instance)
+
+  >>> assert sum_all([1, 2, 3]) == 6
+
+That's why we need a ``delegate=`` argument here:
+we don't really work with ``List[int]``,
+we delegate all the runtime type checking to ``ListOfInt`` phantom type.
+
+Performance considerations
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Traversing the whole list to check that all elements
+are of the given type can be really slow.
+
+You might need a different algorithm.
+Take a look at `beartype <https://github.com/beartype/beartype>`_.
+It promises runtime type checking with ``O(1)`` non-amortized worst-case time
+with negligible constant factors.
+
+Take a look at their docs to learn more.
 
 
 Type resolution order
@@ -141,11 +295,18 @@ Type resolution order
 
 Here's how typeclass resolve types:
 
-1. We try to resolve exact match by a passed type
-2. Then we try to match passed type a given protocols, first match wins
-3. Then we traverse ``mro`` entries of a given type, first match wins
+1. At first we try to resolve types via delegates and ``isinstance`` checks
+2. We try to resolve exact match by a passed type
+3. Then we try to match passed type with ``isinstance``
+   against protocol types,
+   first match wins
+4. Then we traverse ``mro`` entries of a given type,
+   looking for ones we can handle,
+   first match wins
 
-We use cache, so calling typeclasses with same object types is fast.
+We use cache for all parts of algorithm except the first step
+(it is never cached),
+so calling typeclasses with same object types is fast.
 
 In other words, it can fallback to more common types:
 

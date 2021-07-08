@@ -114,16 +114,12 @@ Now, let's build a class that match this protocol and test it:
 
 See our `official docs <https://classes.readthedocs.io>`_ to learn more!
 """
-
-from abc import get_cache_token
 from functools import _find_impl  # type: ignore  # noqa: WPS450
-from types import MethodType
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
     Callable,
     Dict,
     Generic,
-    NoReturn,
     Optional,
     Type,
     TypeVar,
@@ -133,6 +129,12 @@ from typing import (  # noqa: WPS235
 from weakref import WeakKeyDictionary
 
 from typing_extensions import TypeGuard, final
+
+from classes._registry import (
+    TypeRegistry,
+    choose_registry,
+    default_implementation,
+)
 
 _InstanceType = TypeVar('_InstanceType')
 _SignatureType = TypeVar('_SignatureType', bound=Callable)
@@ -305,12 +307,17 @@ class _TypeClass(  # noqa: WPS214
     """
 
     __slots__ = (
+        # Str:
         '_signature',
         '_associated_type',
+
+        # Registry:
+        '_concretes',
         '_instances',
         '_protocols',
+
+        # Cache:
         '_dispatch_cache',
-        '_cache_token',
     )
 
     _dispatch_cache: Dict[type, Callable]
@@ -349,16 +356,17 @@ class _TypeClass(  # noqa: WPS214
           The only exception is the first argument: it is polymorfic.
 
         """
-        self._instances: Dict[type, Callable] = {}
-        self._protocols: Dict[type, Callable] = {}
-
         # We need this for `repr`:
         self._signature = signature
         self._associated_type = associated_type
 
+        # Registries:
+        self._concretes: TypeRegistry = {}
+        self._instances: TypeRegistry = {}
+        self._protocols: TypeRegistry = {}
+
         # Cache parts:
         self._dispatch_cache = WeakKeyDictionary()  # type: ignore
-        self._cache_token = None
 
     def __call__(
         self,
@@ -410,7 +418,16 @@ class _TypeClass(  # noqa: WPS214
         And all typeclasses that match ``Callable[[int, int], int]`` signature
         will typecheck.
         """
-        self._control_abc_cache()
+        # At first, we try all our concrete types,
+        # we don't cache it, because we cannot.
+        # We only have runtime type info: `type([1]) == type(['a'])`.
+        # It might be slow!
+        # Don't add concrete types unless
+        # you are absolutely know what you are doing.
+        impl = self._dispatch_concrete(instance)
+        if impl is not None:
+            return impl(instance, *args, **kwargs)
+
         instance_type = type(instance)
 
         try:
@@ -419,7 +436,7 @@ class _TypeClass(  # noqa: WPS214
             impl = self._dispatch(
                 instance,
                 instance_type,
-            ) or self._default_implementation
+            ) or default_implementation
             self._dispatch_cache[instance_type] = impl
         return impl(instance, *args, **kwargs)
 
@@ -481,16 +498,24 @@ class _TypeClass(  # noqa: WPS214
 
         See also: https://www.python.org/dev/peps/pep-0647
         """
-        self._control_abc_cache()
-
+        # Here we first check that instance is already in the cache
+        # and only then we check concrete types.
+        # Why?
+        # Because if some type is already in the cache,
+        # it means that it is not concrete.
+        # So, this is simply faster.
         instance_type = type(instance)
         if instance_type in self._dispatch_cache:
             return True
 
-        # This only happens when we don't have a cache in place:
+        # We never cache concrete types.
+        if self._dispatch_concrete(instance) is not None:
+            return True
+
+        # This only happens when we don't have a cache in place
+        # and this is not a concrete generic:
         impl = self._dispatch(instance, instance_type)
         if impl is None:
-            self._dispatch_cache[instance_type] = self._default_implementation
             return False
 
         self._dispatch_cache[instance_type] = impl
@@ -503,14 +528,36 @@ class _TypeClass(  # noqa: WPS214
         # TODO: at one point I would like to remove `is_protocol`
         # and make this function decide whether this type is protocol or not.
         is_protocol: bool = False,
+        delegate: Optional[type] = None,
     ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
         """
         We use this method to store implementation for each specific type.
 
-        The only setting we provide is ``is_protocol`` which is required
-        when passing protocols. See our ``mypy`` plugin for that.
+        Args:
+            is_protocol - required when passing protocols.
+            delegate - required when using concrete generics like ``List[str]``.
+
+        Returns:
+            Decorator for instance handler.
+
+        .. note::
+
+            ``is_protocol`` and ``delegate`` are mutually exclusive.
+
+        We don't use ``@overload`` decorator here
+        (which makes our ``mypy`` plugin even more complex)
+        because ``@overload`` functions do not
+        work well with ``ctx.api.fail`` inside the plugin.
+        They start to try other overloads, which produces wrong results.
         """
-        typ = type_argument or type(None)  # `None` is a special case
+        # This might seem like a strange line at first, let's dig into it:
+        #
+        # First, if `delegate` is passed, then we use delegate, not a real type.
+        # We use delegates for concrete generics.
+        # Then, we have a regular `type_argument`. It is used for most types.
+        # Lastly, we have `type(None)` to handle cases
+        # when we want to register `None` as a type / singleton value.
+        typ = delegate or type_argument or type(None)
 
         # That's how we check for generics,
         # generics that look like `List[int]` or `set[T]` will fail this check,
@@ -519,34 +566,20 @@ class _TypeClass(  # noqa: WPS214
         isinstance(object(), typ)
 
         def decorator(implementation):
-            container = self._protocols if is_protocol else self._instances
+            container = choose_registry(
+                typ=typ,
+                is_protocol=is_protocol,
+                delegate=delegate,
+                concretes=self._concretes,
+                instances=self._instances,
+                protocols=self._protocols,
+            )
             container[typ] = implementation
-
-            if isinstance(getattr(typ, '__instancecheck__', None), MethodType):
-                # This means that this type has `__instancecheck__` defined,
-                # which allows dynamic checks of what `isinstance` of this type.
-                # That's why we also treat this type as a protocol.
-                self._protocols[typ] = implementation
-
-            if self._cache_token is None:  # pragma: no cover
-                if getattr(typ, '__abstractmethods__', None):
-                    self._cache_token = get_cache_token()
 
             self._dispatch_cache.clear()
             return implementation
+
         return decorator
-
-    def _control_abc_cache(self) -> None:
-        """
-        Required to drop cache if ``abc`` type got new subtypes in runtime.
-
-        Copied from ``cpython``.
-        """
-        if self._cache_token is not None:
-            current_token = get_cache_token()
-            if self._cache_token != current_token:
-                self._dispatch_cache.clear()
-                self._cache_token = current_token
 
     def _dispatch(self, instance, instance_type: type) -> Optional[Callable]:
         """
@@ -567,13 +600,11 @@ class _TypeClass(  # noqa: WPS214
 
         return _find_impl(instance_type, self._instances)
 
-    def _default_implementation(self, instance, *args, **kwargs) -> NoReturn:
-        """By default raises an exception."""
-        raise NotImplementedError(
-            'Missing matched typeclass instance for type: {0}'.format(
-                type(instance).__qualname__,
-            ),
-        )
+    def _dispatch_concrete(self, instance) -> Optional[Callable]:
+        for concrete, callback in self._concretes.items():
+            if isinstance(instance, concrete):
+                return callback
+        return None
 
 
 if TYPE_CHECKING:

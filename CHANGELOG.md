@@ -7,6 +7,7 @@ We follow Semantic Versions since the `0.1.0` release.
 
 ### Features
 
+- Adds support for concrete generic types like `List[str]` and `Set[int]` #24
 - Adds support for multiple type arguments in `Supports` type #244
 - Adds support for types that have `__instancecheck__` defined #248
 
@@ -14,6 +15,7 @@ We follow Semantic Versions since the `0.1.0` release.
 
 - Fixes that types referenced in multiple typeclasses
   were not handling `Supports` properly #249
+- Fixes typing bug with `ABC` and mutable typeclass signature #259
 
 
 ## Version 0.3.0

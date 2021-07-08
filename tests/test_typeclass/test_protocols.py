@@ -23,12 +23,12 @@ class _CustomSized(object):
         return 2
 
 
-def test_sized_protocol():
+def test_sized_protocol() -> None:
     """Ensure that sized protocol works."""
     assert protocols(_CustomSized(), '1') == '21'
     assert protocols([1, 2, 3], '0') == '30'
 
 
-def test_type_takes_over():
+def test_type_takes_over() -> None:
     """Ensure that int protocol works."""
     assert protocols('a', 'b') == 'ab'

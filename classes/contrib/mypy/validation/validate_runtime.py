@@ -1,20 +1,19 @@
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional
 
 from mypy.erasetype import erase_type
 from mypy.plugin import MethodContext
 from mypy.sametypes import is_same_type
-from mypy.types import CallableType, Instance, LiteralType, TupleType
+from mypy.types import CallableType, Instance, TupleType
 from mypy.types import Type as MypyType
-from typing_extensions import Final
+from typing_extensions import Final, final
 
 from classes.contrib.mypy.typeops import inference, type_queries
+from classes.contrib.mypy.validation import validate_instance_args
+
+# Messages:
 
 _INSTANCE_RUNTIME_MISMATCH_MSG: Final = (
     'Instance "{0}" does not match runtime type "{1}"'
-)
-
-_IS_PROTOCOL_LITERAL_BOOL_MSG: Final = (
-    'Use literal bool for "is_protocol" argument, got: "{0}"'
 )
 
 _IS_PROTOCOL_MISSING_MSG: Final = (
@@ -39,7 +38,10 @@ _TUPLE_LENGTH_MSG: Final = (
 )
 
 
+@final
 class _RuntimeValidationContext(NamedTuple):
+    """Structure to return required things into other validations."""
+
     runtime_type: MypyType
     is_protocol: bool
     check_result: bool
@@ -70,11 +72,7 @@ def check_instance_definition(
         ctx=ctx,
     )
 
-    if len(passed_types.items) == 2:
-        is_protocol, protocol_arg_check = _check_protocol_arg(passed_types, ctx)
-    else:
-        is_protocol = False
-        protocol_arg_check = True
+    args_check = validate_instance_args.check_type(passed_types, ctx)
 
     instance_type = instance_signature.arg_types[0]
     instance_check = is_same_type(
@@ -87,33 +85,18 @@ def check_instance_definition(
             ctx.context,
         )
 
-    return _RuntimeValidationContext(runtime_type, is_protocol, all([
-        _check_runtime_protocol(runtime_type, ctx, is_protocol=is_protocol),
-        _check_concrete_generics(runtime_type, instance_type, ctx),
-        _check_tuple_size(instance_type, ctx),
-        protocol_arg_check,
+    return _RuntimeValidationContext(runtime_type, args_check.is_protocol, all([
+        args_check.check_result,
         instance_check,
+
+        _check_runtime_protocol(
+            runtime_type, ctx, is_protocol=args_check.is_protocol,
+        ),
+        _check_concrete_generics(
+            runtime_type, instance_type, args_check.delegate, ctx,
+        ),
+        _check_tuple_size(instance_type, ctx),
     ]))
-
-
-def _check_protocol_arg(
-    passed_types: TupleType,
-    ctx: MethodContext,
-) -> Tuple[bool, bool]:
-    passed_arg = passed_types.items[1]
-    is_literal_bool = (
-        isinstance(passed_arg, Instance) and
-        isinstance(passed_arg.last_known_value, LiteralType) and
-        isinstance(passed_arg.last_known_value.value, bool)
-    )
-    if is_literal_bool:
-        return passed_arg.last_known_value.value, True  # type: ignore
-
-    ctx.api.fail(
-        _IS_PROTOCOL_LITERAL_BOOL_MSG.format(passed_types.items[1]),
-        ctx.context,
-    )
-    return False, False
 
 
 def _check_runtime_protocol(
@@ -135,6 +118,7 @@ def _check_runtime_protocol(
 def _check_concrete_generics(
     runtime_type: MypyType,
     instance_type: MypyType,
+    delegate: Optional[MypyType],
     ctx: MethodContext,
 ) -> bool:
     has_concrete_type = False
@@ -143,15 +127,16 @@ def _check_concrete_generics(
         (runtime_type, True),
     )
 
-    for type_, forbid_explicit_any in type_settings:
-        local_check = type_queries.has_concrete_type(
-            type_,
-            ctx,
-            forbid_explicit_any=forbid_explicit_any,
-        )
-        if local_check:
-            ctx.api.fail(_CONCRETE_GENERIC_MSG.format(type_), ctx.context)
-        has_concrete_type = has_concrete_type or local_check
+    if delegate is None:
+        for type_, forbid_explicit_any in type_settings:
+            local_check = type_queries.has_concrete_type(
+                type_,
+                ctx,
+                forbid_explicit_any=forbid_explicit_any,
+            )
+            if local_check:
+                ctx.api.fail(_CONCRETE_GENERIC_MSG.format(type_), ctx.context)
+            has_concrete_type = has_concrete_type or local_check
 
     if type_queries.has_unbound_type(runtime_type, ctx):
         ctx.api.fail(_UNBOUND_TYPE_MSG.format(runtime_type), ctx.context)
