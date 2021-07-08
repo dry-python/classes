@@ -195,6 +195,7 @@ Now we can be sure that our ``List[int]`` can be checked in runtime:
 
   >>> assert isinstance([1, 2, 3], ListOfInt) is True
   >>> assert isinstance([1, 'a'], ListOfInt) is False
+  >>> assert isinstance([], ListOfInt) is False  # empty
 
 And now we can use it with ``classes``:
 
@@ -225,7 +226,52 @@ This solution still has several problems:
    and ``mypy`` thinks that it is ``ListOfInt``
    (a fake type that we are not ever using directly)
 
-To solve all these problems we recommend to use ``phantom-types`` package.
+delegate argument
+~~~~~~~~~~~~~~~~~
+
+To solve the first problem,
+we can use ``delegate=`` argument to ``.instance`` call:
+
+.. code:: python
+
+  >>> from classes import typeclass
+  >>> from typing import List
+
+  >>> @typeclass
+  ... def sum_all(instance) -> int:
+  ...     ...
+
+  >>> @sum_all.instance(List[int], delegate=ListOfInt)
+  ... def _sum_all_list_int(instance: List[int]) -> int:
+  ...     return sum(instance)
+
+  >>> your_list = [1, 2, 3]
+  >>> assert sum_all(your_list) == 6
+
+What happens here? When defining an instance with ``delegate`` argument,
+what we really do is: we add our ``delegate``
+into a special registry inside ``sum_all`` typeclass.
+
+This registry is using ``isinstance``
+to find handler that fit the defined predicate.
+It has the highest priority among other dispatch methods.
+
+This allows to sync both runtime and ``mypy`` behavior:
+
+.. code:: python
+
+  >>> # Mypy will raise a type error:
+  >>> # Argument 1 to "sum_all" has incompatible type "List[str]"; expected "List[int]"
+
+  >>> sum_all(['a', 'b'])
+  Traceback (most recent call last):
+    ...
+  NotImplementedError: Missing matched typeclass instance for type: list
+
+Phantom types
+~~~~~~~~~~~~~
+
+To solve problems ``2`` and ``3`` we recommend to use ``phantom-types`` package.
 
 First, you need to define a "phantom" type
 (it is called "phantom" because it does not exist in runtime):
