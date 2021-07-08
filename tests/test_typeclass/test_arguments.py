@@ -15,6 +15,6 @@ def _example_str(instance: str) -> int:
 def test_invalid_argumnets() -> None:
     """Tests that invalid arguments do raise."""
     with pytest.raises(ValueError, match='Both .* passed'):
-        example.instance(
+        example.instance(  # type: ignore
             str, is_protocol=True, delegate=str,
-        )(_example_str)  # type: ignore
+        )(_example_str)
