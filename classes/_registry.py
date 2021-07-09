@@ -25,15 +25,7 @@ def choose_registry(  # noqa: WPS211
 
     if is_protocol:
         return protocols
-
-    is_concrete = (
-        delegate is not None or
-        isinstance(getattr(typ, '__instancecheck__', None), MethodType)
-    )
-    if is_concrete:
-        # This means that this type has `__instancecheck__` defined,
-        # which allows dynamic checks of what `isinstance` of this type.
-        # That's why we also treat this type as a concrete.
+    elif delegate is not None:
         return concretes
     return instances
 

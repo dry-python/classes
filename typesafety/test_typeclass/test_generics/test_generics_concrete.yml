@@ -20,6 +20,106 @@
     some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"
 
 
+- case: typeclass_concrete_generic_annotated_as_delegate
+  disable_cache: false
+  main: |
+    from typing import List
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(List[int], delegate=SomeDelegate)
+    def _some_list_int(instance: SomeDelegate) -> int:
+        ...
+
+    some([1, 2, 3])
+    some([])
+    some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"
+
+
+- case: typeclass_concrete_generic_supports_delegate
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports, AssociatedType
+    from typing import List
+
+    class ListOfIntMeta(type):
+        def __instancecheck__(cls, arg) -> bool:
+            return (
+                isinstance(cls, list) and
+                bool(arg) and
+                all(isinstance(list_item, int) for list_item in arg)
+            )
+
+    class ListOfInt(List[int], metaclass=ListOfIntMeta):
+        ...
+
+    class A(AssociatedType):
+        ...
+
+    @typeclass(A)
+    def sum_all(instance) -> int:
+        ...
+
+    @sum_all.instance(List[int], delegate=ListOfInt)
+    def _sum_all_list_int(instance: ListOfInt) -> int:
+        return sum(instance)
+
+    def test(a: Supports[A]):
+        ...
+
+    a: List[int]
+    b: ListOfInt
+    c: List[str]
+    test(a)
+    test(b)
+    test(c)
+
+
+- case: typeclass_concrete_generic_supports_instance
+  disable_cache: false
+  main: |
+    from classes import typeclass, Supports, AssociatedType
+    from typing import List
+
+    class ListOfIntMeta(type):
+        def __instancecheck__(cls, arg) -> bool:
+            return (
+                isinstance(cls, list) and
+                bool(arg) and
+                all(isinstance(list_item, int) for list_item in arg)
+            )
+
+    class ListOfInt(List[int], metaclass=ListOfIntMeta):
+        ...
+
+    class A(AssociatedType):
+        ...
+
+    @typeclass(A)
+    def sum_all(instance) -> int:
+        ...
+
+    @sum_all.instance(List[int], delegate=ListOfInt)
+    def _sum_all_list_int(instance: List[int]) -> int:
+        return sum(instance)
+
+    def test(a: Supports[A]):
+        ...
+
+    a: List[int]
+    b: ListOfInt
+    c: List[str]
+    test(a)
+    test(b)
+    test(c)
+
+
 - case: typeclass_concrete_generic_delegate_and_protocol
   disable_cache: false
   main: |

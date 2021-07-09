@@ -5,6 +5,7 @@ from mypy.subtypes import is_equivalent
 from mypy.types import Instance
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnionType, union_items
+from mypy.sametypes import is_same_type
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import type_loader
@@ -57,12 +58,19 @@ class MetadataInjector(object):
     But, ``convert_to_string(None)`` will raise a type error.
     """
 
-    __slots__ = ('_associated_type', '_instance_types', '_ctx', '_added_types')
+    __slots__ = (
+        '_associated_type',
+        '_instance_types',
+        '_delegate',
+        '_ctx',
+        '_added_types',
+    )
 
     def __init__(
         self,
-        associated_type: MypyType,
+        associated_type: Instance,
         instance_type: MypyType,
+        delegate: Optional[MypyType],
         ctx: MethodContext,
     ) -> None:
         """
@@ -73,7 +81,11 @@ class MetadataInjector(object):
         """
         self._associated_type = associated_type
         self._instance_types = union_items(instance_type)
+        self._delegate = delegate
         self._ctx = ctx
+
+        if delegate is not None:
+            self._instance_types.append(delegate)
 
         # Why do we store added types in a mutable global state?
         # Because, these types are hard to replicate without the proper context.
@@ -88,32 +100,31 @@ class MetadataInjector(object):
         for instance_type in self._instance_types:
             assert isinstance(instance_type, Instance)
 
-            supports_spec = self._associated_type.copy_modified(args=[
-                TypeVarType(var_def)
-                for var_def in instance_type.type.defn.type_vars
-            ])
-            supports_spec = type_loader.load_supports_type(
-                supports_spec,
-                self._ctx,
+            supports_type = _load_supports_type(
+                associated_type=self._associated_type,
+                instance_type=instance_type,
+                delegate=self._delegate,
+                ctx=self._ctx,
             )
 
-            index = self._find_supports_index(instance_type, supports_spec)
+            index = self._find_supports_index(instance_type, supports_type)
             if index is not None:
                 # We already have `Supports` base class inserted,
                 # it means that we need to unify them:
                 # `Supports[A] + Supports[B] == Supports[Union[A, B]]`
-                self._add_unified_type(instance_type, supports_spec, index)
+                self._add_unified_type(instance_type, supports_type, index)
             else:
                 # This is the first time this type is referenced in
                 # a typeclass'es instance defintinion.
                 # Just inject `Supports` with no extra steps:
-                instance_type.type.bases.append(supports_spec)
+                print(instance_type, supports_type)
+                instance_type.type.bases.append(supports_type)
 
-            if supports_spec.type not in instance_type.type.mro:
+            if supports_type.type not in instance_type.type.mro:
                 # We only need to add `Supports` type to `mro` once:
-                instance_type.type.mro.append(supports_spec.type)
+                instance_type.type.mro.append(supports_type.type)
 
-            self._added_types.append(supports_spec)
+            self._added_types.append(supports_type)
 
     def remove_supports_metadata(self) -> None:
         """Removes ``Supports`` metadata from instance types' mro."""
@@ -148,40 +159,57 @@ class MetadataInjector(object):
     def _find_supports_index(
         self,
         instance_type: Instance,
-        supports_spec: Instance,
+        supports_type: Instance,
     ) -> Optional[int]:
         for index, base in enumerate(instance_type.type.bases):
-            if is_equivalent(base, supports_spec, ignore_type_params=True):
+            if is_equivalent(base, supports_type, ignore_type_params=True):
                 return index
         return None
 
     def _add_unified_type(
         self,
         instance_type: Instance,
-        supports_spec: Instance,
+        supports_type: Instance,
         index: int,
     ) -> None:
         unified_arg = UnionType.make_union([
-            *supports_spec.args,
+            *supports_type.args,
             *instance_type.type.bases[index].args,
         ])
-        instance_type.type.bases[index] = supports_spec.copy_modified(
+        instance_type.type.bases[index] = supports_type.copy_modified(
             args=[unified_arg],
         )
 
     def _remove_unified_type(
         self,
         instance_type: Instance,
-        supports_spec: Instance,
+        supports_type: Instance,
         index: int,
     ) -> bool:
         base = instance_type.type.bases[index]
         union_types = [
             type_arg
             for type_arg in union_items(base.args[0])
-            if type_arg not in supports_spec.args
+            if type_arg not in supports_type.args
         ]
-        instance_type.type.bases[index] = supports_spec.copy_modified(
+        instance_type.type.bases[index] = supports_type.copy_modified(
             args=[UnionType.make_union(union_types)],
         )
         return not bool(union_types)
+
+
+def _load_supports_type(
+    associated_type: Instance,
+    instance_type: Instance,
+    delegate: Optional[MypyType],
+    ctx: MethodContext,
+) -> Instance:
+    supports_spec = associated_type.copy_modified(args=[
+        TypeVarType(var_def)
+        for var_def in instance_type.type.defn.type_vars
+    ])
+
+    return type_loader.load_supports_type(
+        supports_spec,
+        ctx,
+    )
