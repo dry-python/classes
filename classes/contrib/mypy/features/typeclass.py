@@ -21,9 +21,10 @@ from classes.contrib.mypy.typeops import (
     mro,
     type_loader,
 )
+from classes.contrib.mypy.typeops.instance_context import InstanceContext
 from classes.contrib.mypy.validation import (
     validate_associated_type,
-    validate_typeclass,
+    validate_instance,
     validate_typeclass_def,
 )
 
@@ -201,33 +202,21 @@ class InstanceDefReturnType(object):
         if not isinstance(instance_signature, CallableType):
             return ctx.default_return_type
 
-        # We need to add `Supports` metadata before typechecking,
-        # because it will affect type hierarchies.
-        metadata = mro.MetadataInjector(
-            typeclass.args[2],
-            instance_signature.arg_types[0],
-            ctx,
-        )
-        metadata.add_supports_metadata()
-
-        is_proper_typeclass = validate_typeclass.check_typeclass(
+        instance_context = InstanceContext.build(
             typeclass_signature=typeclass.args[1],
             instance_signature=instance_signature,
+            passed_args=ctx.type.args[0],
+            associated_type=typeclass.args[2],
             fullname=fullname,
-            passed_types=ctx.type.args[0],
             ctx=ctx,
         )
-        if not is_proper_typeclass:
-            # Since the typeclass is not valid,
-            # we undo the metadata manipulation,
-            # otherwise we would spam with invalid `Supports[]` base types:
-            metadata.remove_supports_metadata()
+        if not self._run_validation(instance_context):
             return AnyType(TypeOfAny.from_error)
 
         # If typeclass is checked, than it is safe to add new instance types:
         self._add_new_instance_type(
             typeclass=typeclass,
-            new_type=instance_signature.arg_types[0],
+            new_type=instance_context.instance_type,
             ctx=ctx,
         )
         return ctx.default_return_type
@@ -246,6 +235,25 @@ class InstanceDefReturnType(object):
         )
         assert isinstance(typeclass, Instance)
         return typeclass, typeclass_ref.args[3].value
+
+    def _run_validation(self, instance_context: InstanceContext) -> bool:
+        # We need to add `Supports` metadata before typechecking,
+        # because it will affect type hierarchies.
+        metadata = mro.MetadataInjector(
+            associated_type=instance_context.associated_type,
+            instance_type=instance_context.instance_type,
+            delegate=instance_context.delegate,
+            ctx=instance_context.ctx,
+        )
+        metadata.add_supports_metadata()
+
+        is_proper_instance = validate_instance.check_type(instance_context)
+        if not is_proper_instance:
+            # Since the typeclass is not valid,
+            # we undo the metadata manipulation,
+            # otherwise we would spam with invalid `Supports[]` base types:
+            metadata.remove_supports_metadata()
+        return is_proper_instance
 
     def _add_new_instance_type(
         self,

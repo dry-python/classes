@@ -1,14 +1,15 @@
-from typing import NamedTuple, Optional
+from typing import Optional
 
 from mypy.erasetype import erase_type
 from mypy.plugin import MethodContext
 from mypy.sametypes import is_same_type
+from mypy.subtypes import is_subtype
 from mypy.types import CallableType, Instance, TupleType
 from mypy.types import Type as MypyType
-from typing_extensions import Final, final
+from typing_extensions import Final
 
-from classes.contrib.mypy.typeops import inference, type_queries
-from classes.contrib.mypy.validation import validate_instance_args
+from classes.contrib.mypy.typeops import type_queries
+from classes.contrib.mypy.typeops.instance_context import InstanceContext
 
 # Messages:
 
@@ -22,6 +23,11 @@ _IS_PROTOCOL_MISSING_MSG: Final = (
 
 _IS_PROTOCOL_UNWANTED_MSG: Final = (
     'Regular types must be passed with "is_protocol=False"'
+)
+
+_DELEGATE_STRICT_SUBTYPE_MSG: Final = (
+    'Delegate types used for instance annotation "{0}" ' +
+    'must be a direct subtype of runtime type "{1}"'
 )
 
 _CONCRETE_GENERIC_MSG: Final = (
@@ -38,21 +44,9 @@ _TUPLE_LENGTH_MSG: Final = (
 )
 
 
-@final
-class _RuntimeValidationContext(NamedTuple):
-    """Structure to return required things into other validations."""
-
-    runtime_type: MypyType
-    is_protocol: bool
-    check_result: bool
-
-
-def check_instance_definition(
-    passed_types: TupleType,
-    instance_signature: CallableType,
-    fullname: str,
-    ctx: MethodContext,
-) -> _RuntimeValidationContext:
+def check_type(
+    instance_context: InstanceContext,
+) -> bool:
     """
     Checks runtime type.
 
@@ -66,52 +60,102 @@ def check_instance_definition(
     4. We check that ``is_protocol`` is passed correctly
 
     """
-    runtime_type = inference.infer_runtime_type_from_context(
-        fallback=passed_types.items[0],
-        fullname=fullname,
-        ctx=ctx,
-    )
+    return all([
+        _check_matching_types(
+            instance_context.runtime_type,
+            instance_context.instance_type,
+            instance_context.delegate,
+            instance_context.ctx,
+        ),
+        _check_runtime_protocol(
+            instance_context.runtime_type,
+            is_protocol=instance_context.is_protocol,
+            ctx=instance_context.ctx,
+        ),
+        _check_delegate_type(
+            instance_context.runtime_type,
+            instance_context.instance_signature,
+            instance_context.delegate,
+            instance_context.ctx,
+        ),
+        _check_concrete_generics(
+            instance_context.runtime_type,
+            instance_context.instance_type,
+            instance_context.delegate,
+            instance_context.ctx,
+        ),
+        _check_tuple_size(
+            instance_context.instance_type,
+            instance_context.delegate,
+            instance_context.ctx,
+        ),
+    ])
 
-    args_check = validate_instance_args.check_type(passed_types, ctx)
 
-    instance_type = instance_signature.arg_types[0]
+def _check_matching_types(
+    runtime_type: MypyType,
+    instance_type: MypyType,
+    delegate: Optional[MypyType],
+    ctx: MethodContext,
+) -> bool:
     instance_check = is_same_type(
         erase_type(instance_type),
         erase_type(runtime_type),
     )
+
+    if not instance_check and delegate is not None:
+        instance_check = is_same_type(
+            instance_type,
+            delegate,
+        )
+
     if not instance_check:
         ctx.api.fail(
             _INSTANCE_RUNTIME_MISMATCH_MSG.format(instance_type, runtime_type),
             ctx.context,
         )
-
-    return _RuntimeValidationContext(runtime_type, args_check.is_protocol, all([
-        args_check.check_result,
-        instance_check,
-
-        _check_runtime_protocol(
-            runtime_type, ctx, is_protocol=args_check.is_protocol,
-        ),
-        _check_concrete_generics(
-            runtime_type, instance_type, args_check.delegate, ctx,
-        ),
-        _check_tuple_size(instance_type, ctx),
-    ]))
+        return False
+    return True
 
 
 def _check_runtime_protocol(
     runtime_type: MypyType,
     ctx: MethodContext,
     *,
-    is_protocol: bool,
+    is_protocol: Optional[bool],
 ) -> bool:
     if isinstance(runtime_type, Instance) and runtime_type.type:
-        if not is_protocol and runtime_type.type.is_protocol:
+        if is_protocol is False and runtime_type.type.is_protocol:
             ctx.api.fail(_IS_PROTOCOL_MISSING_MSG, ctx.context)
             return False
         elif is_protocol and not runtime_type.type.is_protocol:
             ctx.api.fail(_IS_PROTOCOL_UNWANTED_MSG, ctx.context)
             return False
+    return True
+
+
+def _check_delegate_type(
+    runtime_type: MypyType,
+    instance_signature: CallableType,
+    delegate: Optional[MypyType],
+    ctx: MethodContext,
+) -> bool:
+    if delegate is None:
+        return True
+
+    # We use direct `instance_signature` type here,
+    # because `instance_context.instance_type` is a complicated beast.
+    instance_type = instance_signature.arg_types[0]
+    if not is_same_type(instance_type, delegate):
+        return True
+
+    is_runtime_subtype = is_subtype(delegate, runtime_type)
+    if not is_runtime_subtype:
+        ctx.api.fail(
+            _DELEGATE_STRICT_SUBTYPE_MSG.format(delegate, runtime_type),
+            ctx.context,
+        )
+        return False
     return True
 
 
@@ -146,6 +190,7 @@ def _check_concrete_generics(
 
 def _check_tuple_size(
     instance_type: MypyType,
+    delegate: Optional[MypyType],
     ctx: MethodContext,
 ) -> bool:
     if isinstance(instance_type, TupleType):

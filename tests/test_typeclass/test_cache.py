@@ -43,11 +43,11 @@ def test_cache_concrete(clear_cache) -> None:  # noqa: WPS218
         assert not my_typeclass._dispatch_cache  # noqa: WPS437
 
         assert my_typeclass(_MyConcrete()) == 1
-        assert not my_typeclass._dispatch_cache  # noqa: WPS437
+        assert _MyConcrete in my_typeclass._dispatch_cache  # noqa: WPS437
 
         _MyABC.register(_MyRegistered)
         assert my_typeclass(_MyRegistered()) == 2  # type: ignore
-        assert not my_typeclass._dispatch_cache  # noqa: WPS437
+        assert _MyRegistered in my_typeclass._dispatch_cache  # noqa: WPS437
 
 
 def test_cached_calls(clear_cache) -> None:

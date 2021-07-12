@@ -1,4 +1,3 @@
-from types import MethodType
 from typing import Callable, Dict, NoReturn, Optional
 
 TypeRegistry = Dict[type, Callable]
@@ -11,7 +10,7 @@ def choose_registry(  # noqa: WPS211
     typ: type,
     is_protocol: bool,
     delegate: Optional[type],
-    concretes: TypeRegistry,
+    delegates: TypeRegistry,
     instances: TypeRegistry,
     protocols: TypeRegistry,
 ) -> TypeRegistry:
@@ -21,20 +20,12 @@ def choose_registry(  # noqa: WPS211
     It depends on how ``instance`` method is used and also on the type itself.
     """
     if is_protocol and delegate is not None:
-        raise ValueError('Both `is_protocol` and `delegated` are passed')
+        raise ValueError('Both `is_protocol` and `delegate` are passed')
 
     if is_protocol:
         return protocols
-
-    is_concrete = (
-        delegate is not None or
-        isinstance(getattr(typ, '__instancecheck__', None), MethodType)
-    )
-    if is_concrete:
-        # This means that this type has `__instancecheck__` defined,
-        # which allows dynamic checks of what `isinstance` of this type.
-        # That's why we also treat this type as a concrete.
-        return concretes
+    elif delegate is not None:
+        return delegates
     return instances
 
 

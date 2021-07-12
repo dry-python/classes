@@ -1,10 +1,11 @@
+
 from mypy.plugin import MethodContext
 from mypy.subtypes import is_subtype
-from mypy.types import AnyType, CallableType, TupleType, TypeOfAny
+from mypy.types import AnyType, CallableType, TypeOfAny
 from typing_extensions import Final
 
 from classes.contrib.mypy.typeops import inference
-from classes.contrib.mypy.validation import validate_runtime
+from classes.contrib.mypy.typeops.instance_context import InstanceContext
 
 _INCOMPATIBLE_INSTANCE_SIGNATURE_MSG: Final = (
     'Instance callback is incompatible "{0}"; expected "{1}"'
@@ -19,40 +20,26 @@ _DIFFERENT_INSTANCE_CALLS_MSG: Final = (
 )
 
 
-def check_typeclass(
-    typeclass_signature: CallableType,
-    instance_signature: CallableType,
-    fullname: str,
-    passed_types: TupleType,
-    ctx: MethodContext,
+def check_type(
+    instance_context: InstanceContext,
 ) -> bool:
     """
     We need to typecheck passed functions in order to build correct typeclasses.
 
     Please, see docs on each step.
     """
-    runtime_check = validate_runtime.check_instance_definition(
-        passed_types,
-        instance_signature,
-        fullname,
-        ctx,
-    )
-
-    infered_signature = inference.try_to_apply_generics(
-        typeclass_signature,
-        runtime_check.runtime_type,
-        ctx,
-    )
-
     return all([
-        runtime_check.check_result,
         _check_typeclass_signature(
-            infered_signature,
-            instance_signature,
-            ctx,
+            instance_context.infered_signature,
+            instance_context.instance_signature,
+            instance_context.ctx,
         ),
-        _check_instance_type(infered_signature, instance_signature, ctx),
-        _check_same_typeclass(fullname, ctx),
+        _check_instance_type(
+            instance_context.infered_signature,
+            instance_context.instance_signature,
+            instance_context.ctx,
+        ),
+        _check_same_typeclass(instance_context.fullname, instance_context.ctx),
     ])
 
 
@@ -147,10 +134,15 @@ def _check_instance_type(
 
     .. code:: python
 
-      (instance: B)
-      (instance: C)
+      @some.instance(B)
+      def _some_b(instance: B):
+          ...
 
-    Any other cases will raise an error.
+      @some.instance(C)
+      def _some_c(instance: C):
+          ...
+
+    Any types that are not subtypes of ``B`` will raise a type error.
     """
     instance_check = is_subtype(
         instance_signature.arg_types[0],
@@ -183,7 +175,7 @@ def _check_same_typeclass(
 
       @some.instance(str)
       @other.instance(int)
-      def some(instance: Union[str, int]) ->
+      def some(instance: Union[str, int]) -> None:
           ...
 
     We don't allow this way of instance definition.
