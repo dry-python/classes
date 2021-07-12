@@ -29,18 +29,23 @@ def check_type(
     So, that's why we need this custom checker.
     """
     return all([
-        _check_protocol_arg(instance_context.is_protocol, instance_context.ctx),
+        _check_protocol_arg(
+            instance_context.is_protocol,
+            instance_context.passed_args,
+            instance_context.ctx,
+        ),
         _check_all_args(instance_context.passed_args, instance_context.ctx),
     ])
 
 
 def _check_protocol_arg(
     is_protocol: Optional[bool],
+    passed_args: TupleType,
     ctx: MethodContext,
 ) -> bool:
     if is_protocol is None:
         ctx.api.fail(
-            _IS_PROTOCOL_LITERAL_BOOL_MSG.format(is_protocol),
+            _IS_PROTOCOL_LITERAL_BOOL_MSG.format(passed_args.items[1]),
             ctx.context,
         )
         return False
