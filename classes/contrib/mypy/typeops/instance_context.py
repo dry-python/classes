@@ -156,7 +156,7 @@ def _infer_instance_type(
         def _some_list(instance: list) -> int:
             ...
 
-    Then, infered instance type is just ``list``.
+    Then, inferred instance type is just ``list``.
 
     Second, we have a delegate of its own:
 
@@ -166,7 +166,7 @@ def _infer_instance_type(
         def _some_list(instance: list) -> int:
             ...
 
-    Then, infered instance type is ``list`` as well.
+    Then, inferred instance type is ``list`` as well.
 
     Lastly, we can have this case,
     when ``delegate`` type is used for instance annotation:

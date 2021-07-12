@@ -95,67 +95,6 @@ to be specified on ``.instance()`` call:
   >>> assert to_json([1, 'a', None]) == '[1, "a", null]'
 
 
-``__instancecheck__`` magic method
-----------------------------------
-
-We also support types that have ``__instancecheck__`` magic method defined,
-like `phantom-types <https://github.com/antonagestam/phantom-types>`_.
-
-We treat them similar to ``Protocol`` types, by checking passed values
-with ``isinstance`` for each type with ``__instancecheck__`` defined.
-First match wins.
-
-Example:
-
-.. code:: python
-
-  >>> from classes import typeclass
-
-  >>> class Meta(type):
-  ...     def __instancecheck__(self, other) -> bool:
-  ...         return other == 1
-
-  >>> class Some(object, metaclass=Meta):
-  ...     ...
-
-  >>> @typeclass
-  ... def some(instance) -> int:
-  ...     ...
-
-  >>> @some.instance(Some)
-  ... def _some_some(instance: Some) -> int:
-  ...     return 2
-
-  >>> argument = 1
-  >>> assert isinstance(argument, Some)
-  >>> assert some(argument) == 2
-
-.. warning::
-
-  It is impossible for ``mypy`` to understand that ``1`` has ``Some``
-  type in this example. Be careful, it might break your code!
-
-This example is not really useful on its own,
-because as it was said, it can break things.
-
-Instead, we are going to learn about
-how this feature can be used to model
-your domain model precisely with delegates.
-
-Performance considerations
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Types that are matched via ``__instancecheck__`` are the first one we try.
-So, the worst case complexity of this is ``O(n)``
-where ``n`` is the number of types to try.
-
-We also always try them first and do not cache the result.
-This feature is here because we need to handle concrete generics.
-But, we recommend to think at least
-twice about the performance side of this feature.
-Maybe you can just write a function?
-
-
 Delegates
 ---------
 
@@ -171,6 +110,9 @@ that some ``list`` is ``List[int]`` or ``List[str]``:
   Traceback (most recent call last):
     ...
   TypeError: Subscripted generics cannot be used with class and instance checks
+
+``__instancecheck__`` magic method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We need some custom type inference mechanism:
 
@@ -197,40 +139,10 @@ Now we can be sure that our ``List[int]`` can be checked in runtime:
   >>> assert isinstance([1, 'a'], ListOfInt) is False
   >>> assert isinstance([], ListOfInt) is False  # empty
 
+``delegate`` argument
+~~~~~~~~~~~~~~~~~~~~~
+
 And now we can use it with ``classes``:
-
-.. code:: python
-
-  >>> from classes import typeclass
-
-  >>> @typeclass
-  ... def sum_all(instance) -> int:
-  ...     ...
-
-  >>> @sum_all.instance(ListOfInt)
-  ... def _sum_all_list_int(instance: ListOfInt) -> int:
-  ...     return sum(instance)
-
-  >>> your_list = [1, 2, 3]
-  >>> if isinstance(your_list, ListOfInt):
-  ...     assert sum_all(your_list) == 6
-
-This solution still has several problems:
-
-1. Notice, that you have to use ``if isinstance`` or ``assert isinstance`` here.
-   Because otherwise ``mypy`` won't be happy without it,
-   type won't be narrowed to ``ListOfInt`` from ``List[int]``.
-   This does not feel right.
-2. ``ListOfInt`` is very verbose, it even has a metaclass!
-3. There's a typing mismatch: in runtime ``your_list`` would be ``List[int]``
-   and ``mypy`` thinks that it is ``ListOfInt``
-   (a fake type that we are not ever using directly)
-
-delegate argument
-~~~~~~~~~~~~~~~~~
-
-To solve the first problem,
-we can use ``delegate=`` argument to ``.instance`` call:
 
 .. code:: python
 
@@ -252,8 +164,8 @@ What happens here? When defining an instance with ``delegate`` argument,
 what we really do is: we add our ``delegate``
 into a special registry inside ``sum_all`` typeclass.
 
-This registry is using ``isinstance``
-to find handler that fit the defined predicate.
+This registry is using ``isinstance`` function
+to find handler that fits the defined predicate.
 It has the highest priority among other dispatch methods.
 
 This allows to sync both runtime and ``mypy`` behavior:
@@ -271,9 +183,9 @@ This allows to sync both runtime and ``mypy`` behavior:
 Phantom types
 ~~~~~~~~~~~~~
 
-To solve problems ``2`` and ``3`` we recommend to use ``phantom-types`` package.
+Notice, that ``ListOfInt`` is very verbose, it even has an explicit metaclass!
 
-First, you need to define a "phantom" type
+There's a better way, you need to define a "phantom" type
 (it is called "phantom" because it does not exist in runtime):
 
 .. code:: python
@@ -306,6 +218,19 @@ Now, we can define our typeclass with ``phantom`` type support:
 
 .. code:: python
 
+  >>> from phantom import Phantom
+  >>> from phantom.predicates import boolean, collection, generic, numeric
+
+  >>> class ListOfInt(
+  ...    List[int],
+  ...    Phantom,
+  ...    predicate=boolean.both(
+  ...       collection.count(numeric.greater(0)),
+  ...       collection.every(generic.of_type(int)),
+  ...    ),
+  ... ):
+  ...     ...
+
   >>> from classes import typeclass
 
   >>> @typeclass
@@ -325,8 +250,12 @@ we delegate all the runtime type checking to ``ListOfInt`` phantom type.
 Performance considerations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Types that are matched via ``__instancecheck__`` are the first one we try.
 Traversing the whole list to check that all elements
 are of the given type can be really slow.
+The worst case complexity of this is ``O(n)``
+where ``n`` is the number of types to try.
+We also always try them first and do not cache the result.
 
 You might need a different algorithm.
 Take a look at `beartype <https://github.com/beartype/beartype>`_.
@@ -335,13 +264,17 @@ with negligible constant factors.
 
 Take a look at their docs to learn more.
 
+We recommend to think at least
+twice about the performance side of this feature.
+Maybe you can just write a function?
+
 
 Type resolution order
 ---------------------
 
 Here's how typeclass resolve types:
 
-1. At first we try to resolve types via delegates and ``isinstance`` checks
+1. At first we try to resolve types via delegates and ``isinstance`` check
 2. We try to resolve exact match by a passed type
 3. Then we try to match passed type with ``isinstance``
    against protocol types,

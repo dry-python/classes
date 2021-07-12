@@ -89,7 +89,7 @@
     class ListOfIntMeta(type):
         def __instancecheck__(cls, arg) -> bool:
             return (
-                isinstance(cls, list) and
+                isinstance(arg, list) and
                 bool(arg) and
                 all(isinstance(list_item, int) for list_item in arg)
             )
@@ -131,7 +131,7 @@
     class ListOfIntMeta(type):
         def __instancecheck__(cls, arg) -> bool:
             return (
-                isinstance(cls, list) and
+                isinstance(arg, list) and
                 bool(arg) and
                 all(isinstance(list_item, int) for list_item in arg)
             )

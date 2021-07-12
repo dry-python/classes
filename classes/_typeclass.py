@@ -534,9 +534,9 @@ class _TypeClass(  # noqa: WPS214
         We use this method to store implementation for each specific type.
 
         Args:
-            is_protocol - required when passing protocols.
-            delegate - required when using delegate types, for example,
-                when working with concrete generics like ``List[str]``.
+            is_protocol: required when passing protocols.
+            delegate: required when using delegate types, for example,
+            when working with concrete generics like ``List[str]``.
 
         Returns:
             Decorator for instance handler.
