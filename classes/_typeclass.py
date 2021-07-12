@@ -312,7 +312,7 @@ class _TypeClass(  # noqa: WPS214
         '_associated_type',
 
         # Registry:
-        '_concretes',
+        '_delegates',
         '_instances',
         '_protocols',
 
@@ -361,7 +361,7 @@ class _TypeClass(  # noqa: WPS214
         self._associated_type = associated_type
 
         # Registries:
-        self._concretes: TypeRegistry = {}
+        self._delegates: TypeRegistry = {}
         self._instances: TypeRegistry = {}
         self._protocols: TypeRegistry = {}
 
@@ -418,13 +418,13 @@ class _TypeClass(  # noqa: WPS214
         And all typeclasses that match ``Callable[[int, int], int]`` signature
         will typecheck.
         """
-        # At first, we try all our concrete types,
-        # we don't cache it, because we cannot.
+        # At first, we try all our delegate types,
+        # we don't cache it, because it is impossible.
         # We only have runtime type info: `type([1]) == type(['a'])`.
         # It might be slow!
-        # Don't add concrete types unless
+        # Don't add any delegate types unless
         # you are absolutely know what you are doing.
-        impl = self._dispatch_concrete(instance)
+        impl = self._dispatch_delegate(instance)
         if impl is not None:
             return impl(instance, *args, **kwargs)
 
@@ -499,21 +499,21 @@ class _TypeClass(  # noqa: WPS214
         See also: https://www.python.org/dev/peps/pep-0647
         """
         # Here we first check that instance is already in the cache
-        # and only then we check concrete types.
+        # and only then we check delegate types.
         # Why?
         # Because if some type is already in the cache,
-        # it means that it is not concrete.
+        # it means that it is not a delegate.
         # So, this is simply faster.
         instance_type = type(instance)
         if instance_type in self._dispatch_cache:
             return True
 
-        # We never cache concrete types.
-        if self._dispatch_concrete(instance) is not None:
+        # We never cache delegate types.
+        if self._dispatch_delegate(instance) is not None:
             return True
 
         # This only happens when we don't have a cache in place
-        # and this is not a concrete generic:
+        # and this is not a delegate type:
         impl = self._dispatch(instance, instance_type)
         if impl is None:
             return False
@@ -535,7 +535,8 @@ class _TypeClass(  # noqa: WPS214
 
         Args:
             is_protocol - required when passing protocols.
-            delegate - required when using concrete generics like ``List[str]``.
+            delegate - required when using delegate types, for example,
+                when working with concrete generics like ``List[str]``.
 
         Returns:
             Decorator for instance handler.
@@ -570,7 +571,7 @@ class _TypeClass(  # noqa: WPS214
                 typ=typ,
                 is_protocol=is_protocol,
                 delegate=delegate,
-                concretes=self._concretes,
+                delegates=self._delegates,
                 instances=self._instances,
                 protocols=self._protocols,
             )
@@ -600,9 +601,9 @@ class _TypeClass(  # noqa: WPS214
 
         return _find_impl(instance_type, self._instances)
 
-    def _dispatch_concrete(self, instance) -> Optional[Callable]:
-        for concrete, callback in self._concretes.items():
-            if isinstance(instance, concrete):
+    def _dispatch_delegate(self, instance) -> Optional[Callable]:
+        for delegate, callback in self._delegates.items():
+            if isinstance(instance, delegate):
                 return callback
         return None
 

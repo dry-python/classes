@@ -18,7 +18,12 @@ from classes.contrib.mypy.typeops import inference
 
 @final
 class InstanceContext(NamedTuple):
-    """"""
+    """
+    Instance definition context.
+
+    We use it to store all important types and data in one place
+    to help with validation and type manipulations.
+    """
 
     # Signatures:
     typeclass_signature: CallableType
@@ -41,8 +46,12 @@ class InstanceContext(NamedTuple):
     # Mypy context:
     ctx: MethodContext
 
-    @classmethod
-    def build(
+    @classmethod  # noqa: WPS211
+    def build(  # noqa: WPS211
+        # It has a lot of arguments, but I don't see how I can simply it.
+        # I don't want to add steps or intermediate types.
+        # It is okay for this method to have a lot arguments,
+        # because it store a lot of data.
         cls,
         typeclass_signature: CallableType,
         instance_signature: CallableType,
@@ -51,6 +60,12 @@ class InstanceContext(NamedTuple):
         fullname: str,
         ctx: MethodContext,
     ) -> 'InstanceContext':
+        """
+        Builds instance context.
+
+        It also infers several missing parts from the present data.
+        Like real ``instance_type`` and arg types.
+        """
         runtime_type = inference.infer_runtime_type_from_context(
             fallback=passed_args.items[0],
             fullname=fullname,
@@ -129,7 +144,41 @@ def _infer_instance_type(
     runtime_type: MypyType,
     delegate: Optional[MypyType],
 ) -> MypyType:
-    # TODO: document
+    """
+    Infers real instance type.
+
+    We have three options here.
+    First one, ``delegate`` is not set at all:
+
+    .. code:: python
+
+        @some.instance(list)
+        def _some_list(instance: list) -> int:
+            ...
+
+    Then, infered instance type is just ``list``.
+
+    Second, we have a delegate of its own:
+
+    .. code:: python
+
+        @some.instance(list, delegate=SomeDelegate)
+        def _some_list(instance: list) -> int:
+            ...
+
+    Then, infered instance type is ``list`` as well.
+
+    Lastly, we can have this case,
+    when ``delegate`` type is used for instance annotation:
+
+    .. code:: python
+
+        @some.instance(list, delegate=SomeDelegate)
+        def _some_list(instance: SomeDelegate) -> int:
+            ...
+
+    In this case, we will use runtime type ``list`` for instance type.
+    """
     if delegate is not None and is_same_type(instance_type, delegate):
         return runtime_type
     return instance_type

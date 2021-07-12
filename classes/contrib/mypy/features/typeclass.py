@@ -16,6 +16,7 @@ from typing_extensions import final
 
 from classes.contrib.mypy.typeops import (
     call_signatures,
+    fallback,
     instance_args,
     mro,
     type_loader,
@@ -184,10 +185,10 @@ class InstanceDefReturnType(object):
 
     """
 
-    # @fallback.error_to_any({
-    #     # TODO: later we can use a custom exception type for this:
-    #     KeyError: 'Typeclass cannot be loaded, it must be a global declaration',
-    # })
+    @fallback.error_to_any({
+        # TODO: later we can use a custom exception type for this:
+        KeyError: 'Typeclass cannot be loaded, it must be a global declaration',
+    })
     def __call__(self, ctx: MethodContext) -> MypyType:
         """Main entry point."""
         assert isinstance(ctx.type, Instance)

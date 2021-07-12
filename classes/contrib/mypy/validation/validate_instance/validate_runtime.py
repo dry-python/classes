@@ -45,7 +45,7 @@ _TUPLE_LENGTH_MSG: Final = (
 
 
 def check_type(
-    instance_context: InstanceContext
+    instance_context: InstanceContext,
 ) -> bool:
     """
     Checks runtime type.
@@ -122,10 +122,10 @@ def _check_runtime_protocol(
     runtime_type: MypyType,
     ctx: MethodContext,
     *,
-    is_protocol: bool,
+    is_protocol: Optional[bool],
 ) -> bool:
     if isinstance(runtime_type, Instance) and runtime_type.type:
-        if not is_protocol and runtime_type.type.is_protocol:
+        if is_protocol is False and runtime_type.type.is_protocol:
             ctx.api.fail(_IS_PROTOCOL_MISSING_MSG, ctx.context)
             return False
         elif is_protocol and not runtime_type.type.is_protocol:
@@ -193,7 +193,7 @@ def _check_tuple_size(
     delegate: Optional[MypyType],
     ctx: MethodContext,
 ) -> bool:
-    if delegate is None and isinstance(instance_type, TupleType):
+    if isinstance(instance_type, TupleType):
         ctx.api.fail(
             _TUPLE_LENGTH_MSG.format(instance_type.items[0], instance_type),
             ctx.context,

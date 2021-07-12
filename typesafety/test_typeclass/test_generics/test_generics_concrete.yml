@@ -26,7 +26,7 @@
     from typing import List
     from classes import typeclass
 
-    class SomeDelegate(object):
+    class SomeDelegate(List[int]):
         ...
 
     @typeclass
@@ -40,6 +40,44 @@
     some([1, 2, 3])
     some([])
     some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"
+
+
+- case: typeclass_delegate_not_subtype_wrong
+  disable_cache: false
+  main: |
+    from typing import List
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(List[int], delegate=SomeDelegate)
+    def _some_list_int(instance: SomeDelegate) -> int:
+        ...
+  out: |
+    main:11: error: Delegate types used for instance annotation "main.SomeDelegate" must be a direct subtype of runtime type "builtins.list[builtins.int*]"
+
+
+- case: typeclass_delegate_not_subtype_correct
+  disable_cache: false
+  main: |
+    from typing import List
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(List[int], delegate=SomeDelegate)
+    def _some_list_int(instance: List[int]) -> int:
+        ...
 
 
 - case: typeclass_concrete_generic_supports_delegate
@@ -73,12 +111,15 @@
     def test(a: Supports[A]):
         ...
 
-    a: List[int]
-    b: ListOfInt
+    a: ListOfInt
+    b: List[int]
     c: List[str]
     test(a)
     test(b)
     test(c)
+  out: |
+    main:33: error: Argument 1 to "test" has incompatible type "List[int]"; expected "Supports[A]"
+    main:34: error: Argument 1 to "test" has incompatible type "List[str]"; expected "Supports[A]"
 
 
 - case: typeclass_concrete_generic_supports_instance
@@ -112,12 +153,15 @@
     def test(a: Supports[A]):
         ...
 
-    a: List[int]
-    b: ListOfInt
+    a: ListOfInt
+    b: List[int]
     c: List[str]
     test(a)
     test(b)
     test(c)
+  out: |
+    main:33: error: Argument 1 to "test" has incompatible type "List[int]"; expected "Supports[A]"
+    main:34: error: Argument 1 to "test" has incompatible type "List[str]"; expected "Supports[A]"
 
 
 - case: typeclass_concrete_generic_delegate_and_protocol

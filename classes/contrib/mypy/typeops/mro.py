@@ -2,10 +2,9 @@ from typing import List, Optional
 
 from mypy.plugin import MethodContext
 from mypy.subtypes import is_equivalent
-from mypy.types import Instance
+from mypy.types import Instance, ProperType
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnionType, union_items
-from mypy.sametypes import is_same_type
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import type_loader
@@ -68,7 +67,7 @@ class MetadataInjector(object):
 
     def __init__(
         self,
-        associated_type: Instance,
+        associated_type: MypyType,
         instance_type: MypyType,
         delegate: Optional[MypyType],
         ctx: MethodContext,
@@ -80,12 +79,16 @@ class MetadataInjector(object):
         It supports ``Instance`` and ``Union`` types.
         """
         self._associated_type = associated_type
-        self._instance_types = union_items(instance_type)
         self._delegate = delegate
         self._ctx = ctx
 
-        if delegate is not None:
-            self._instance_types.append(delegate)
+        # If delegate is passed, we don't add any types to `instance`'s mro.
+        # Why? See our `Delegate` docs.
+        if delegate is None:
+            self._instance_types = union_items(instance_type)
+        else:
+            assert isinstance(delegate, ProperType)
+            self._instance_types = [delegate]
 
         # Why do we store added types in a mutable global state?
         # Because, these types are hard to replicate without the proper context.
@@ -98,7 +101,8 @@ class MetadataInjector(object):
             return
 
         for instance_type in self._instance_types:
-            assert isinstance(instance_type, Instance)
+            if not isinstance(instance_type, Instance):
+                continue
 
             supports_type = _load_supports_type(
                 associated_type=self._associated_type,
@@ -117,7 +121,6 @@ class MetadataInjector(object):
                 # This is the first time this type is referenced in
                 # a typeclass'es instance defintinion.
                 # Just inject `Supports` with no extra steps:
-                print(instance_type, supports_type)
                 instance_type.type.bases.append(supports_type)
 
             if supports_type.type not in instance_type.type.mro:
@@ -132,8 +135,8 @@ class MetadataInjector(object):
             return
 
         for instance_type in self._instance_types:
-            assert isinstance(instance_type, Instance)
-            self._clean_instance_type(instance_type)
+            if isinstance(instance_type, Instance):
+                self._clean_instance_type(instance_type)
         self._added_types = []
 
     def _clean_instance_type(self, instance_type: Instance) -> None:
@@ -204,6 +207,10 @@ def _load_supports_type(
     delegate: Optional[MypyType],
     ctx: MethodContext,
 ) -> Instance:
+    # Why do have to modify args of `associated_type`?
+    # Because `mypy` requires `type_var.id` to match,
+    # otherwise, they would be treated as different variables.
+    # That's why we copy the typevar definition from instance itself.
     supports_spec = associated_type.copy_modified(args=[
         TypeVarType(var_def)
         for var_def in instance_type.type.defn.type_vars
