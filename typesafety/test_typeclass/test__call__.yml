@@ -227,3 +227,15 @@
     some(ac)  # ok
     some(bc)  # ok
     some(abc)  # ok
+
+
+- case: typeclass_call_zero_args_regression270
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    some()  # E: Missing positional argument "instance" in call to "__call__" of "_TypeClass"
