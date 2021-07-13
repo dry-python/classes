@@ -66,7 +66,7 @@ sphinx-autodoc-typehints = "^1.12"
 sphinxcontrib-mermaid = "^0.7"
 sphinx-typlog-theme = "^0.8"
 doc8 = "^0.8"
-m2r2 = "^0.2"
+m2r2 = "^0.3"
 tomlkit = "^0.7"
 codespell = "^2.1"
 
