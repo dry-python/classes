@@ -272,7 +272,7 @@ def call_signature(ctx: MethodSigContext) -> CallableType:
     assert isinstance(ctx.type, Instance)
 
     real_signature = ctx.type.args[1]
-    if not isinstance(real_signature, CallableType):
+    if not isinstance(real_signature, CallableType) or not ctx.args[0]:
         return ctx.default_signature
 
     passed_type = ctx.api.expr_checker.accept(ctx.args[0][0])  # type: ignore
