@@ -719,14 +719,15 @@ flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 name = "phantom-types"
-version = "0.9.1"
+version = "0.10.0"
 description = "Phantom types for Python"
 category = "dev"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 
 [package.dependencies]
 typeguard = ">=2.10"
+typing-extensions = ">=3.10"
 
 [package.extras]
 iso3166 = ["iso3166 (>=1.0.1)"]
@@ -1300,7 +1301,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "fa1aadd818e1a6351f3e308486d6d3624bdf2cd4e2cc460a076848cb24e425c1"
+content-hash = "c503133fb145512dc52a65e4b578af90a5cea85e8a967694d0d4d8ee251079ce"
 
 [metadata.files]
 alabaster = [
@@ -1653,8 +1654,8 @@ pep8-naming = [
     {file = "pep8_naming-0.11.1-py2.py3-none-any.whl", hash = "sha256:f43bfe3eea7e0d73e8b5d07d6407ab47f2476ccaeff6937c84275cd30b016738"},
 ]
 phantom-types = [
-    {file = "phantom-types-0.9.1.tar.gz", hash = "sha256:83834b29d0b0ed18ce2b69830fad204b9479ebadc75e7ac4c7d33011e3b8d768"},
-    {file = "phantom_types-0.9.1-py3-none-any.whl", hash = "sha256:9cc01385d8b027cac6df84f328dab84eea82f265f6e598f04fe3e9ff29d364da"},
+    {file = "phantom-types-0.10.0.tar.gz", hash = "sha256:54f60fc1f35635fce4c7c145db2cedee17daeb6b1ac1fe15b21319c65c58150a"},
+    {file = "phantom_types-0.10.0-py3-none-any.whl", hash = "sha256:f0dc22abb8b083dea0a5968b681899bcc14ac7d514818422aec538e4fce284a7"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
