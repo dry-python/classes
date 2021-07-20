@@ -70,5 +70,4 @@ m2r2 = "^0.3"
 tomlkit = "^0.7"
 codespell = "^2.1"
 
-# Test deps:
-phantom-types = { version = "^0.10", python = ">=3.8" }
+phantom-types = "^0.10"
