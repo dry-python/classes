@@ -21,13 +21,13 @@ def test_invalid_arguments_empty() -> None:
 def test_invalid_arguments_delegate() -> None:
     """Tests that invalid arguments do raise."""
     with pytest.raises(ValueError, match='Only a single argument can .*'):
-        example.instance(str, delegate=str)  # type: ignore
+        example.instance(str, delegate=str)
 
 
 def test_invalid_arguments_protocol() -> None:
     """Tests that invalid arguments do raise."""
     with pytest.raises(ValueError, match='Only a single argument can .*'):
-        example.instance(str, protocol=str)  # type: ignore
+        example.instance(str, protocol=str)
 
 
 def test_invalid_arguments_all() -> None:
