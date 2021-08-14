@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from mypy.plugin import MethodContext
 from mypy.subtypes import is_equivalent
-from mypy.types import Instance, ProperType
+from mypy.types import Instance
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnionType, union_items
 from typing_extensions import final
@@ -60,7 +60,6 @@ class MetadataInjector(object):
     __slots__ = (
         '_associated_type',
         '_instance_types',
-        '_delegate',
         '_ctx',
         '_added_types',
     )
@@ -69,7 +68,6 @@ class MetadataInjector(object):
         self,
         associated_type: MypyType,
         instance_type: MypyType,
-        delegate: Optional[MypyType],
         ctx: MethodContext,
     ) -> None:
         """
@@ -79,16 +77,8 @@ class MetadataInjector(object):
         It supports ``Instance`` and ``Union`` types.
         """
         self._associated_type = associated_type
-        self._delegate = delegate
         self._ctx = ctx
-
-        # If delegate is passed, we don't add any types to `instance`'s mro.
-        # Why? See our `Delegate` docs.
-        if delegate is None:
-            self._instance_types = union_items(instance_type)
-        else:
-            assert isinstance(delegate, ProperType)
-            self._instance_types = [delegate]
+        self._instance_types = union_items(instance_type)
 
         # Why do we store added types in a mutable global state?
         # Because, these types are hard to replicate without the proper context.
@@ -107,7 +97,6 @@ class MetadataInjector(object):
             supports_type = _load_supports_type(
                 associated_type=self._associated_type,
                 instance_type=instance_type,
-                delegate=self._delegate,
                 ctx=self._ctx,
             )
 
@@ -204,7 +193,6 @@ class MetadataInjector(object):
 def _load_supports_type(
     associated_type: Instance,
     instance_type: Instance,
-    delegate: Optional[MypyType],
     ctx: MethodContext,
 ) -> Instance:
     # Why do have to modify args of `associated_type`?

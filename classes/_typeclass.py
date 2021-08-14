@@ -72,13 +72,14 @@ otherwise the default implementation will be called instead.
 We also support protocols. It has the same limitation as ``Generic`` types.
 It is also dispatched after all regular instances are checked.
 
-To work with protocols, one needs to pass ``is_protocol`` flag to instance:
+To work with protocols, one needs
+to pass ``protocol`` named argument to instance:
 
 .. code:: python
 
     >>> from typing import Sequence
 
-    >>> @example.instance(Sequence, is_protocol=True)
+    >>> @example.instance(protocol=Sequence)
     ... def _sequence_example(instance: Sequence) -> str:
     ...     return ','.join(str(item) for item in instance)
 
@@ -99,7 +100,7 @@ We also support user-defined protocols:
     >>> class CustomProtocol(Protocol):
     ...     field: str
 
-    >>> @example.instance(CustomProtocol, is_protocol=True)
+    >>> @example.instance(protocol=CustomProtocol)
     ... def _custom_protocol_example(instance: CustomProtocol) -> str:
     ...     return instance.field
 
@@ -131,6 +132,7 @@ from weakref import WeakKeyDictionary
 from typing_extensions import TypeGuard, final
 
 from classes._registry import (
+    DefaultValue,
     TypeRegistry,
     choose_registry,
     default_implementation,
@@ -313,7 +315,7 @@ class _TypeClass(  # noqa: WPS214
 
         # Registry:
         '_delegates',
-        '_instances',
+        '_exact_types',
         '_protocols',
 
         # Cache:
@@ -362,7 +364,7 @@ class _TypeClass(  # noqa: WPS214
 
         # Registries:
         self._delegates: TypeRegistry = {}
-        self._instances: TypeRegistry = {}
+        self._exact_types: TypeRegistry = {}
         self._protocols: TypeRegistry = {}
 
         # Cache parts:
@@ -382,8 +384,9 @@ class _TypeClass(  # noqa: WPS214
 
         The resolution order is the following:
 
-        1. Exact types that are passed as ``.instance`` arguments
-        2. Protocols that are passed with ``is_protocol=True``
+        1. Delegates passed with ``delegate=``
+        2. Exact types that are passed as ``.instance`` arguments
+        3. Protocols that are passed with ``protocol=``
 
         We don't guarantee the order of types inside groups.
         Use correct types, do not rely on our order.
@@ -480,7 +483,7 @@ class _TypeClass(  # noqa: WPS214
 
           >>> from typing import Sized
 
-          >>> @example.instance(Sized, is_protocol=True)
+          >>> @example.instance(protocol=Sized)
           ... def _example_sized(instance: Sized) -> str:
           ...     return 'Size is {0}'.format(len(instance))
 
@@ -523,18 +526,16 @@ class _TypeClass(  # noqa: WPS214
 
     def instance(
         self,
-        type_argument: Optional[_NewInstanceType],
+        exact_type: Optional[_NewInstanceType] = DefaultValue,  # type: ignore
         *,
-        # TODO: at one point I would like to remove `is_protocol`
-        # and make this function decide whether this type is protocol or not.
-        is_protocol: bool = False,
-        delegate: Optional[type] = None,
+        protocol: type = DefaultValue,
+        delegate: type = DefaultValue,
     ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
         """
         We use this method to store implementation for each specific type.
 
         Args:
-            is_protocol: required when passing protocols.
+            protocol: required when passing protocols.
             delegate: required when using delegate types, for example,
             when working with concrete generics like ``List[str]``.
 
@@ -543,7 +544,8 @@ class _TypeClass(  # noqa: WPS214
 
         .. note::
 
-            ``is_protocol`` and ``delegate`` are mutually exclusive.
+            ``exact_type``, ``protocol``, and ``delegate``
+            are mutually exclusive. Only one argument can be passed.
 
         We don't use ``@overload`` decorator here
         (which makes our ``mypy`` plugin even more complex)
@@ -558,7 +560,14 @@ class _TypeClass(  # noqa: WPS214
         # Then, we have a regular `type_argument`. It is used for most types.
         # Lastly, we have `type(None)` to handle cases
         # when we want to register `None` as a type / singleton value.
-        typ = delegate or type_argument or type(None)
+        registry, typ = choose_registry(
+            exact_type=exact_type,
+            protocol=protocol,
+            delegate=delegate,
+            exact_types=self._exact_types,
+            protocols=self._protocols,
+            delegates=self._delegates,
+        )
 
         # That's how we check for generics,
         # generics that look like `List[int]` or `set[T]` will fail this check,
@@ -567,19 +576,9 @@ class _TypeClass(  # noqa: WPS214
         isinstance(object(), typ)
 
         def decorator(implementation):
-            container = choose_registry(
-                typ=typ,
-                is_protocol=is_protocol,
-                delegate=delegate,
-                delegates=self._delegates,
-                instances=self._instances,
-                protocols=self._protocols,
-            )
-            container[typ] = implementation
-
+            registry[typ] = implementation
             self._dispatch_cache.clear()
             return implementation
-
         return decorator
 
     def _dispatch(self, instance, instance_type: type) -> Optional[Callable]:
@@ -591,7 +590,7 @@ class _TypeClass(  # noqa: WPS214
         2. By matching protocols
         3. By its ``mro``
         """
-        implementation = self._instances.get(instance_type, None)
+        implementation = self._exact_types.get(instance_type, None)
         if implementation is not None:
             return implementation
 
@@ -599,7 +598,7 @@ class _TypeClass(  # noqa: WPS214
             if isinstance(instance, protocol):
                 return callback
 
-        return _find_impl(instance_type, self._instances)
+        return _find_impl(instance_type, self._exact_types)
 
     def _dispatch_delegate(self, instance) -> Optional[Callable]:
         for delegate, callback in self._delegates.items():

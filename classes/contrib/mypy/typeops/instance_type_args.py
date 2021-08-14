@@ -61,7 +61,7 @@ def mutate_typeclass_instance_def(
 
     That's where we fill their values.
     Why? Because we need all types from ``some.instance()`` call.
-    Including ``is_protocol`` for later checks.
+    Including all passed arguments as a tuple for later checks.
     """
     tuple_type = TupleType(
         # We now store passed arg types in a single tuple:

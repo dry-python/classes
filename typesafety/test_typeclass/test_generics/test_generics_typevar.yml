@@ -96,8 +96,7 @@
     def _some_ex(instance: X) -> X:
         ...
   out: |
-    main:10: error: Instance "X`-1" does not match original type "builtins.int*"
-    main:10: error: Instance "X`-1" does not match runtime type "builtins.int*"
+    main:10: error: Instance "X`-1" does not match inferred type "builtins.int*"
 
 
 - case: typeclass_generic_definition_bound

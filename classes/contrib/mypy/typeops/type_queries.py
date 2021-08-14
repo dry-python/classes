@@ -2,13 +2,14 @@ from typing import Callable, Iterable
 
 from mypy.plugin import MethodContext
 from mypy.type_visitor import TypeQuery
-from mypy.types import AnyType, Instance
+from mypy.types import AnyType, Instance, TupleType
 from mypy.types import Type as MypyType
 from mypy.types import TypeVarType, UnboundType, get_proper_type
 
 
 def has_concrete_type(
-    instance_type: MypyType,
+    type_: MypyType,
+    is_delegate: bool,
     ctx: MethodContext,
     *,
     forbid_explicit_any: bool,
@@ -21,6 +22,9 @@ def has_concrete_type(
     ``List[X]`` is generic, ``List[int]`` is concrete.
     ``List[Union[int, str]]`` is also concrete.
     ``Dict[str, X]`` is also concrete.
+
+    ``Tuple[X, ...]`` is generic.
+    While ``Tuple[X, X]`` and ``Tuple[int, ...]`` are concrete.
 
     So, this helps to write code like this:
 
@@ -37,19 +41,30 @@ def has_concrete_type(
       def _some_list(instance: List[int]): ...
 
     """
-    instance_type = get_proper_type(instance_type)
-    if isinstance(instance_type, Instance):
+    def factory(typ) -> bool:
+        return not is_delegate
+
+    type_ = get_proper_type(type_)
+    # TODO: support `Literal`?
+    if isinstance(type_, TupleType):
+        # This allows to have types like:
+        #
+        #   @some.instance(delegate=Coords)
+        #   def _some_coords(instance: Tuple[int, int]) -> str:
+        #       ...
+        return not is_delegate
+    if isinstance(type_, Instance):
         return any(
             type_arg.accept(_HasNoConcreteTypes(
-                lambda _: True,
+                factory,
                 forbid_explicit_any=forbid_explicit_any,
             ))
-            for type_arg in instance_type.args
+            for type_arg in type_.args
         )
     return False
 
 
-def has_unbound_type(runtime_type: MypyType, ctx: MethodContext) -> bool:
+def has_unbound_type(type_: MypyType, ctx: MethodContext) -> bool:
     """
     Queries if your instance has any unbound types.
 
@@ -72,11 +87,11 @@ def has_unbound_type(runtime_type: MypyType, ctx: MethodContext) -> bool:
       def _some_list(instance: List[X]): ...
 
     """
-    runtime_type = get_proper_type(runtime_type)
-    if isinstance(runtime_type, Instance):
+    type_ = get_proper_type(type_)
+    if isinstance(type_, Instance):
         return any(
             type_arg.accept(_HasUnboundTypes(lambda _: False))
-            for type_arg in runtime_type.args
+            for type_arg in type_.args
         )
     return False
 

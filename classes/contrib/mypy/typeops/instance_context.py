@@ -1,19 +1,29 @@
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional
 
 from mypy.plugin import MethodContext
-from mypy.sametypes import is_same_type
-from mypy.types import (
-    CallableType,
-    FunctionLike,
-    Instance,
-    LiteralType,
-    TupleType,
-)
+from mypy.types import CallableType, TupleType
 from mypy.types import Type as MypyType
-from mypy.types import UninhabitedType
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import inference
+
+
+@final
+class _InferredArgs(NamedTuple):
+    """Represents our argument inference result."""
+
+    exact_type: Optional[MypyType]
+    protocol: Optional[MypyType]
+    delegate: Optional[MypyType]
+
+    @classmethod
+    def build(cls, passed_args: TupleType) -> '_InferredArgs':
+        exact_type, protocol, delegate = passed_args.items
+        return _InferredArgs(
+            _infer_type_arg(exact_type),
+            _infer_type_arg(protocol),
+            _infer_type_arg(delegate),
+        )
 
 
 @final
@@ -28,16 +38,15 @@ class InstanceContext(NamedTuple):
     # Signatures:
     typeclass_signature: CallableType
     instance_signature: CallableType
-    infered_signature: CallableType
+    inferred_signature: CallableType
 
-    # Instance / runtime types:
+    # Instance and inferred types:
     instance_type: MypyType
-    runtime_type: MypyType
+    inferred_type: MypyType
 
-    # Passed arguments:
+    # Arguments:
     passed_args: TupleType
-    is_protocol: Optional[bool]
-    delegate: Optional[MypyType]
+    inferred_args: _InferredArgs
 
     # Meta:
     fullname: str
@@ -64,121 +73,33 @@ class InstanceContext(NamedTuple):
         Builds instance context.
 
         It also infers several missing parts from the present data.
-        Like real ``instance_type`` and arg types.
+        Like real instance signature and "ideal" inferred type.
         """
-        runtime_type = inference.infer_runtime_type_from_context(
-            fallback=passed_args.items[0],
+        inferred_type = inference.infer_instance_type_from_context(
+            passed_args=passed_args,
             fullname=fullname,
             ctx=ctx,
         )
-
-        infered_signature = inference.try_to_apply_generics(
+        inferred_signature = inference.try_to_apply_generics(
             signature=typeclass_signature,
-            runtime_type=runtime_type,
-            ctx=ctx,
-        )
-
-        is_protocol, delegate = _ArgumentInference(passed_args)()
-        instance_type = _infer_instance_type(
             instance_type=instance_signature.arg_types[0],
-            runtime_type=runtime_type,
-            delegate=delegate,
+            ctx=ctx,
         )
 
         return InstanceContext(
             typeclass_signature=typeclass_signature,
             instance_signature=instance_signature,
-            infered_signature=infered_signature,
-            instance_type=instance_type,
-            runtime_type=runtime_type,
+            inferred_signature=inferred_signature,
+            instance_type=instance_signature.arg_types[0],
+            inferred_type=inferred_type,
             passed_args=passed_args,
-            is_protocol=is_protocol,
-            delegate=delegate,
+            inferred_args=_InferredArgs.build(passed_args),
             associated_type=associated_type,
             fullname=fullname,
             ctx=ctx,
         )
 
 
-@final
-class _ArgumentInference(object):
-    __slots__ = ('_passed_args',)
-
-    def __init__(self, passed_args: TupleType) -> None:
-        self._passed_args = passed_args
-
-    def __call__(self) -> Tuple[Optional[bool], Optional[MypyType]]:
-        _, is_protocol, delegate = self._passed_args.items
-        return (
-            self._infer_protocol_arg(is_protocol),
-            self._infer_delegate_arg(delegate),
-        )
-
-    def _infer_protocol_arg(
-        self,
-        is_protocol: MypyType,
-    ) -> Optional[bool]:
-        if isinstance(is_protocol, UninhabitedType):
-            return False
-
-        is_protocol_bool = (
-            isinstance(is_protocol, Instance) and
-            isinstance(is_protocol.last_known_value, LiteralType) and
-            isinstance(is_protocol.last_known_value.value, bool)
-        )
-        if is_protocol_bool:
-            return is_protocol.last_known_value.value  # type: ignore
-        return None
-
-    def _infer_delegate_arg(
-        self,
-        delegate: MypyType,
-    ) -> Optional[MypyType]:
-        if isinstance(delegate, FunctionLike) and delegate.is_type_obj():
-            return delegate.items()[-1].ret_type
-        return None
-
-
-def _infer_instance_type(
-    instance_type: MypyType,
-    runtime_type: MypyType,
-    delegate: Optional[MypyType],
-) -> MypyType:
-    """
-    Infers real instance type.
-
-    We have three options here.
-    First one, ``delegate`` is not set at all:
-
-    .. code:: python
-
-        @some.instance(list)
-        def _some_list(instance: list) -> int:
-            ...
-
-    Then, inferred instance type is just ``list``.
-
-    Second, we have a delegate of its own:
-
-    .. code:: python
-
-        @some.instance(list, delegate=SomeDelegate)
-        def _some_list(instance: list) -> int:
-            ...
-
-    Then, inferred instance type is ``list`` as well.
-
-    Lastly, we can have this case,
-    when ``delegate`` type is used for instance annotation:
-
-    .. code:: python
-
-        @some.instance(list, delegate=SomeDelegate)
-        def _some_list(instance: SomeDelegate) -> int:
-            ...
-
-    In this case, we will use runtime type ``list`` for instance type.
-    """
-    if delegate is not None and is_same_type(instance_type, delegate):
-        return runtime_type
-    return instance_type
+def _infer_type_arg(type_arg: MypyType) -> Optional[MypyType]:
+    inferred = inference.type_obj(type_arg)
+    return inferred if type_arg is not inferred else None

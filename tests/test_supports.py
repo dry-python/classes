@@ -27,7 +27,7 @@ def my_len(instance) -> int:
     """Returns a length of an object."""
 
 
-@my_len.instance(Sized, is_protocol=True)
+@my_len.instance(protocol=Sized)
 def _my_len_sized(instance: Sized) -> int:
     return 0
 
@@ -37,7 +37,7 @@ def _my_len_list(instance: list) -> int:
     return 1
 
 
-@my_len.instance(List[str], delegate=_ListOfStr)
+@my_len.instance(delegate=_ListOfStr)
 def _my_len_list_str(instance: List[str]) -> int:
     return 2
 

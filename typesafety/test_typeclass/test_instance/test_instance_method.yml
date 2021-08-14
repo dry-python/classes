@@ -53,7 +53,7 @@
     b(2)
   out: |
      main:12: error: Found different typeclass ".instance" calls, use only "main.b"
-     main:12: error: Instance "Union[builtins.str, builtins.int]" does not match runtime type "builtins.int*"
+     main:12: error: Instance "Union[builtins.str, builtins.int]" does not match inferred type "builtins.int*"
      main:17: error: Argument 1 to "a" has incompatible type "str"; expected <nothing>
      main:18: error: Argument 1 to "b" has incompatible type "int"; expected <nothing>
 
@@ -92,7 +92,7 @@
     def _a_int_str(instance: int) -> str:
         ...
   out: |
-    main:7: error: Instance "builtins.int" does not match runtime type "Union[builtins.str*, builtins.int*]"
+    main:7: error: Instance "builtins.int" does not match inferred type "Union[builtins.str*, builtins.int*]"
 
 
 - case: typeclass_instances_union3
@@ -109,7 +109,7 @@
     def _a_int_str(instance: str) -> str:
         ...
   out: |
-    main:7: error: Instance "builtins.str" does not match runtime type "Union[builtins.str*, builtins.int*]"
+    main:7: error: Instance "builtins.str" does not match inferred type "Union[builtins.str*, builtins.int*]"
 
 
 - case: typeclass_instances_union4
@@ -127,7 +127,7 @@
     def _a_int_str(instance: Union[str, int, None]) -> str:
         ...
   out: |
-    main:8: error: Instance "Union[builtins.str, builtins.int, None]" does not match runtime type "Union[builtins.str*, builtins.int*]"
+    main:8: error: Instance "Union[builtins.str, builtins.int, None]" does not match inferred type "Union[builtins.str*, builtins.int*]"
 
 
 - case: typeclass_instance_mixed_order
@@ -147,8 +147,8 @@
     def _some_int(instance: str) -> str:
         ...
   out: |
-    main:7: error: Instance "builtins.str" does not match runtime type "builtins.int*"
-    main:11: error: Instance "builtins.str" does not match runtime type "builtins.int*"
+    main:7: error: Instance "builtins.str" does not match inferred type "builtins.int*"
+    main:11: error: Instance "builtins.str" does not match inferred type "builtins.int*"
 
 
 - case: typeclass_instance_any1
@@ -168,7 +168,7 @@
     def _a_int(instance: Any) -> str:
         ...
   out: |
-    main:8: error: Instance "Any" does not match runtime type "builtins.int*"
+    main:8: error: Instance "Any" does not match inferred type "builtins.int*"
 
 
 - case: typeclass_instance_any2
@@ -189,7 +189,7 @@
         ...
   out: |
     main:8: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "object"; expected "None"
-    main:8: error: Instance "Any" does not match runtime type "builtins.object"
+    main:8: error: Instance "Any" does not match inferred type "builtins.object"
 
 
 - case: typeclass_instance_wrong_param

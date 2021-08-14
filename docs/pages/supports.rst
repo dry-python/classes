@@ -119,7 +119,7 @@ Now, let's define a typeclass:
   ... def sum_all(instance) -> int:
   ...     ...
 
-  >>> @sum_all.instance(List[int], delegate=ListOfInt)
+  >>> @sum_all.instance(delegate=ListOfInt)
   ... def _sum_all_list_int(
   ...     # It can be either `List[int]` or `ListOfInt`
   ...     instance: List[int],
