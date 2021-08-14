@@ -165,7 +165,8 @@ But, we treat ``ListOfInt`` as ``Supports[SumAll]``.
 So, you would need to narrow ``List[int]`` to ``ListOfInt`` to make it work.
 
 Why? Because we insert ``Supports[SumAll]`` as a super-type of ``List``,
-there's no way currently to make ``List[int]`` supported and ``List[str]`` not supported.
+there's no way currently to make ``List[int]`` supported 
+and ``List[str]`` not supported.
 That's why we've decided to only make ``ListOfInt`` work.
 
 General cases
