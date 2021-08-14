@@ -51,7 +51,7 @@
     def _to_json_int(instance: str) -> int:
         ...
   out: |
-    main:10: error: Instance "builtins.str" does not match runtime type "builtins.int*"
+    main:10: error: Instance "builtins.str" does not match inferred type "builtins.int*"
     main:10: error: Instance callback is incompatible "def (instance: builtins.str) -> builtins.int"; expected "def (instance: builtins.str, verbose: builtins.bool =) -> builtins.str"
 
 

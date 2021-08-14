@@ -106,7 +106,7 @@
     z: Supports[Some[int]] = 1
   out: |
     main:17: error: Found different typeclass ".instance" calls, use only "main.some"
-    main:17: error: Instance "Union[builtins.list[X`-1], builtins.set[X`-1]]" does not match runtime type "builtins.set[_T`1]"
+    main:17: error: Instance "Union[builtins.list[X`-1], builtins.set[X`-1]]" does not match inferred type "builtins.set[_T`1]"
     main:22: error: Incompatible types in assignment (expression has type "List[int]", variable has type "Supports[Some[int]]")
     main:23: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")
     main:24: error: Incompatible types in assignment (expression has type "int", variable has type "Supports[Some[int]]")

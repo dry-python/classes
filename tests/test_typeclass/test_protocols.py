@@ -8,7 +8,7 @@ def protocols(instance, other: str) -> str:
     """Example typeclass for protocols."""
 
 
-@protocols.instance(Sized, is_protocol=True)
+@protocols.instance(protocol=Sized)
 def _sized_protocols(instance: Sized, other: str) -> str:
     return str(len(instance)) + other
 

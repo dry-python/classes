@@ -271,7 +271,7 @@
     def _some_tuple(instance: Tuple[X, X]) -> X:
         ...
   out: |
-    main:10: error: Expected variadic tuple "Tuple[X`-1, ...]", got "Tuple[X`-1, X`-1]"
+    main:10: error: Instance "Tuple[X`-1, X`-1]" has concrete generic type, it is not supported during runtime
 
 
 - case: typeclass_regression259_mutated_signature

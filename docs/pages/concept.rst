@@ -81,14 +81,14 @@ Protocols
 ---------
 
 We also support ``Protocol`` items to be registered,
-the only difference is that they do require ``is_protocol=True``
+the only difference is that they do require ``protocol=`` named argument
 to be specified on ``.instance()`` call:
 
 .. code:: python
 
   >>> from typing import Sequence
 
-  >>> @to_json.instance(Sequence, is_protocol=True)
+  >>> @to_json.instance(protocol=Sequence)
   ... def _to_json_sequence(instance: Sequence) -> str:
   ...     return '[{0}]'.format(', '.join(to_json(i) for i in instance))
 
@@ -153,7 +153,7 @@ And now we can use it with ``classes``:
   ... def sum_all(instance) -> int:
   ...     ...
 
-  >>> @sum_all.instance(List[int], delegate=ListOfInt)
+  >>> @sum_all.instance(delegate=ListOfInt)
   ... def _sum_all_list_int(instance: List[int]) -> int:
   ...     return sum(instance)
 
@@ -237,7 +237,7 @@ Now, we can define our typeclass with ``phantom`` type support:
   ... def sum_all(instance) -> int:
   ...     ...
 
-  >>> @sum_all.instance(List[int], delegate=ListOfInt)
+  >>> @sum_all.instance(delegate=ListOfInt)
   ... def _sum_all_list_int(instance: List[int]) -> int:
   ...     return sum(instance)
 

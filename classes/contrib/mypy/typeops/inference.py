@@ -4,9 +4,15 @@ from typing import List, Optional
 from mypy.nodes import Decorator, Expression
 from mypy.plugin import MethodContext
 from mypy.typeops import make_simplified_union
-from mypy.types import CallableType, FunctionLike, Instance, LiteralType
+from mypy.types import (
+    CallableType,
+    FunctionLike,
+    Instance,
+    LiteralType,
+    TupleType,
+)
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType
+from mypy.types import TypeVarType, UninhabitedType
 from typing_extensions import Final
 
 _TYPECLASS_DEF_FULLNAMES: Final = frozenset((
@@ -16,11 +22,11 @@ _TYPECLASS_DEF_FULLNAMES: Final = frozenset((
 
 def try_to_apply_generics(
     signature: CallableType,
-    runtime_type: MypyType,
+    instance_type: MypyType,
     ctx: MethodContext,
 ) -> CallableType:
     """
-    Conditionally applies runtime type on typeclass'es signature.
+    Conditionally applies instance type on typeclass'es signature.
 
     What we are looking for here?
     We are interested in typeclass where instance is a type variable.
@@ -31,13 +37,13 @@ def try_to_apply_generics(
       def copy(instance: X) -> X:
           ...
 
-    In this case, we would apply runtime type on top of this signature
+    In this case, we would apply instance type on top of this signature
     to get the real one for this instance.
     """
     if not isinstance(signature.arg_types[0], TypeVarType):
         return signature
 
-    type_args: List[Optional[MypyType]] = [runtime_type]
+    type_args: List[Optional[MypyType]] = [instance_type]
     if len(signature.variables) > 1:
         # `None` here means that a type variable won't be replaced
         type_args.extend(None for _ in range(len(signature.variables) - 1))
@@ -67,10 +73,32 @@ def all_same_instance_calls(
     return True
 
 
-def infer_runtime_type_from_context(
-    fallback: MypyType,
-    ctx: MethodContext,
+def type_obj(type_: MypyType) -> MypyType:
+    """Returns type object from a function like."""
+    if isinstance(type_, FunctionLike) and type_.is_type_obj():
+        # What happens here?
+        # Let's say you define a function like this:
+        #
+        # @some.instance(Sized)
+        # (instance: Sized, b: int) -> str: ...
+        #
+        # So, you will receive callable type
+        # `def () -> Sized` as `runtime_type` in this case.
+        # We need to convert it back to regular `Instance`.
+        #
+        # It can also be `Overloaded` type,
+        # but they are safe to return the same `type_object`,
+        # however we still use `ret_type`,
+        # because it is practically the same thing,
+        # but with proper type arguments.
+        return type_.items()[0].ret_type
+    return type_
+
+
+def infer_instance_type_from_context(
+    passed_args: TupleType,
     fullname: str,
+    ctx: MethodContext,
 ) -> MypyType:
     """
     Infers instance type from several ``@some.instance()`` decorators.
@@ -96,6 +124,8 @@ def infer_runtime_type_from_context(
 
     In this case we need to fetch all typeclass decorators and infer
     the resulting type manually.
+
+    The same works for ``protocol=`` and ``delegate=`` types.
     """
     if isinstance(ctx.context, Decorator) and len(ctx.context.decorators) > 1:
         # Why do we only care for this case?
@@ -110,11 +140,13 @@ def infer_runtime_type_from_context(
                 ctx,
             )
             if instance_type is not None:
-                instance_types.append(_post_process_type(instance_type))
+                instance_types.append(type_obj(instance_type))
 
         # Inferred resulting type:
         return make_simplified_union(instance_types)
-    return _post_process_type(fallback)
+
+    fallback = _first_real_passed_arg(passed_args)
+    return type_obj(fallback) if fallback is not None else UninhabitedType()
 
 
 def _get_typeclass_instance_type(
@@ -136,26 +168,15 @@ def _get_typeclass_instance_type(
             inst.args[3].value == fullname
         )
         if is_same_typeclass:
-            return expr_type.args[0].items[0]
+            # We need the first, existing, non-NoReturn argument:
+            return _first_real_passed_arg(expr_type.args[0])
     return None
 
 
-def _post_process_type(type_: MypyType) -> MypyType:
-    if isinstance(type_, FunctionLike) and type_.is_type_obj():
-        # What happens here?
-        # Let's say you define a function like this:
-        #
-        # @some.instance(Sized)
-        # (instance: Sized, b: int) -> str: ...
-        #
-        # So, you will receive callable type
-        # `def () -> Sized` as `runtime_type` in this case.
-        # We need to convert it back to regular `Instance`.
-        #
-        # It can also be `Overloaded` type,
-        # but they are safe to return the same `type_object`,
-        # however we still use `ret_type`,
-        # because it is practically the same thing,
-        # but with proper type arguments.
-        return type_.items()[0].ret_type
-    return type_
+def _first_real_passed_arg(passed_args: TupleType) -> Optional[MypyType]:
+    usable_args = (
+        type_arg
+        for type_arg in passed_args.items
+        if not isinstance(type_arg, UninhabitedType)
+    )
+    return next(usable_args, None)

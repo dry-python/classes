@@ -30,12 +30,12 @@ def check_type(
     """
     return all([
         _check_typeclass_signature(
-            instance_context.infered_signature,
+            instance_context.inferred_signature,
             instance_context.instance_signature,
             instance_context.ctx,
         ),
         _check_instance_type(
-            instance_context.infered_signature,
+            instance_context.inferred_signature,
             instance_context.instance_signature,
             instance_context.ctx,
         ),

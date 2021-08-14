@@ -127,5 +127,5 @@
     def _some_c(instance: B) -> str:
         ...
   out: |
-    main:16: error: Instance "main.B" does not match runtime type "main.A"
-    main:24: error: Instance "main.B" does not match runtime type "main.C"
+    main:16: error: Instance "main.B" does not match inferred type "main.A"
+    main:24: error: Instance "main.B" does not match inferred type "main.C"

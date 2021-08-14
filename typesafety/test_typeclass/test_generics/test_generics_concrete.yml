@@ -4,14 +4,14 @@
     from typing import List
     from classes import typeclass
 
-    class SomeDelegate(object):
+    class SomeDelegate(List[int]):
         ...
 
     @typeclass
     def some(instance) -> int:
         ...
 
-    @some.instance(List[int], delegate=SomeDelegate)
+    @some.instance(delegate=SomeDelegate)
     def _some_list_int(instance: List[int]) -> int:
         ...
 
@@ -33,36 +33,22 @@
     def some(instance) -> int:
         ...
 
-    @some.instance(List[int], delegate=SomeDelegate)
+    @some.instance(delegate=SomeDelegate)
     def _some_list_int(instance: SomeDelegate) -> int:
         ...
 
+    a: SomeDelegate
+    some(a)
     some([1, 2, 3])
     some([])
-    some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"
-
-
-- case: typeclass_delegate_not_subtype_wrong
-  disable_cache: false
-  main: |
-    from typing import List
-    from classes import typeclass
-
-    class SomeDelegate(object):
-        ...
-
-    @typeclass
-    def some(instance) -> int:
-        ...
-
-    @some.instance(List[int], delegate=SomeDelegate)
-    def _some_list_int(instance: SomeDelegate) -> int:
-        ...
+    some(['a'])
   out: |
-    main:11: error: Delegate types used for instance annotation "main.SomeDelegate" must be a direct subtype of runtime type "builtins.list[builtins.int*]"
+    main:17: error: Argument 1 to "some" has incompatible type "List[int]"; expected "SomeDelegate"
+    main:18: error: Argument 1 to "some" has incompatible type "List[<nothing>]"; expected "SomeDelegate"
+    main:19: error: Argument 1 to "some" has incompatible type "List[str]"; expected "SomeDelegate"
 
 
-- case: typeclass_delegate_not_subtype_correct
+- case: typeclass_delegate_not_subtype_correct1
   disable_cache: false
   main: |
     from typing import List
@@ -75,9 +61,30 @@
     def some(instance) -> int:
         ...
 
-    @some.instance(List[int], delegate=SomeDelegate)
+    @some.instance(delegate=SomeDelegate)
     def _some_list_int(instance: List[int]) -> int:
         ...
+  out: |
+    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"
+
+
+- case: typeclass_delegate_not_subtype_correct2
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    class SomeDelegate(object):
+        ...
+
+    @typeclass
+    def some(instance) -> int:
+        ...
+
+    @some.instance(delegate=SomeDelegate)
+    def _some_int(instance: int) -> int:
+        ...
+  out: |
+    main:10: error: Instance "builtins.int" does not match inferred type "main.SomeDelegate"
 
 
 - case: typeclass_concrete_generic_supports_delegate
@@ -104,7 +111,7 @@
     def sum_all(instance) -> int:
         ...
 
-    @sum_all.instance(List[int], delegate=ListOfInt)
+    @sum_all.instance(delegate=ListOfInt)
     def _sum_all_list_int(instance: ListOfInt) -> int:
         return sum(instance)
 
@@ -146,7 +153,7 @@
     def sum_all(instance) -> int:
         ...
 
-    @sum_all.instance(List[int], delegate=ListOfInt)
+    @sum_all.instance(delegate=ListOfInt)
     def _sum_all_list_int(instance: List[int]) -> int:
         return sum(instance)
 
@@ -177,28 +184,10 @@
     def some(instance) -> int:
         ...
 
-    @some.instance(List[int], delegate=SomeDelegate, is_protocol=True)
+    @some.instance(List[int], delegate=SomeDelegate, protocol=str)
     def _some_list_int(instance: List[int]) -> int:
         ...
   out: |
-    main:11: error: Both "is_protocol" and "delegate" arguments passed, they are exclusive
-    main:11: error: Regular types must be passed with "is_protocol=False"
-
-
-- case: typeclass_delegate_with_regular_type
-  disable_cache: false
-  main: |
-    from classes import typeclass
-
-    class SomeDelegate(object):
-        ...
-
-    @typeclass
-    def some(instance) -> int:
-        ...
-
-    @some.instance(int, delegate=SomeDelegate)
-    def _some_int(instance: int) -> int:
-        ...
-
-    some(1)
+    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "builtins.list[builtins.int*]"
+    main:11: error: Only a single argument can be applied to `.instance`
+    main:11: error: Regular type "builtins.str*" passed as a protocol

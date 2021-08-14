@@ -17,7 +17,7 @@ from typing_extensions import final
 from classes.contrib.mypy.typeops import (
     call_signatures,
     fallback,
-    instance_args,
+    instance_type_args,
     mro,
     type_loader,
 )
@@ -78,7 +78,7 @@ class TypeClassReturnType(object):
             assert isinstance(defn, CallableType)
             assert defn.definition
 
-            instance_args.mutate_typeclass_def(
+            instance_type_args.mutate_typeclass_def(
                 typeclass=ctx.default_return_type,
                 definition_fullname=defn.definition.fullname,
                 ctx=ctx,
@@ -125,7 +125,7 @@ class TypeClassDefReturnType(object):
         assert isinstance(ctx.default_return_type, Instance)
         assert isinstance(ctx.context, Decorator)
 
-        instance_args.mutate_typeclass_def(
+        instance_type_args.mutate_typeclass_def(
             typeclass=ctx.default_return_type,
             definition_fullname=ctx.context.func.fullname,
             ctx=ctx,
@@ -135,6 +135,7 @@ class TypeClassDefReturnType(object):
             typeclass=ctx.default_return_type,
             ctx=ctx,
         )
+
         if isinstance(ctx.default_return_type.args[2], Instance):
             validate_associated_type.check_type(
                 associated_type=ctx.default_return_type.args[2],
@@ -161,7 +162,7 @@ def instance_return_type(ctx: MethodContext) -> MypyType:
         else:
             passed_types.append(UninhabitedType())
 
-    instance_args.mutate_typeclass_instance_def(
+    instance_type_args.mutate_typeclass_instance_def(
         ctx.default_return_type,
         ctx=ctx,
         typeclass=ctx.type,
@@ -237,12 +238,18 @@ class InstanceDefReturnType(object):
         return typeclass, typeclass_ref.args[3].value
 
     def _run_validation(self, instance_context: InstanceContext) -> bool:
+        # When delegate is passed, we use it instead of instance type.
+        # Why? Because `delegate` can repre
+        instance_or_delegate = (
+            instance_context.inferred_args.delegate
+            if instance_context.inferred_args.delegate is not None
+            else instance_context.instance_type
+        )
         # We need to add `Supports` metadata before typechecking,
         # because it will affect type hierarchies.
         metadata = mro.MetadataInjector(
             associated_type=instance_context.associated_type,
-            instance_type=instance_context.instance_type,
-            delegate=instance_context.delegate,
+            instance_type=instance_or_delegate,
             ctx=instance_context.ctx,
         )
         metadata.add_supports_metadata()
@@ -262,7 +269,7 @@ class InstanceDefReturnType(object):
         ctx: MethodContext,
     ) -> None:
         typeclass.args = (
-            instance_args.add_unique(new_type, typeclass.args[0]),
+            instance_type_args.add_unique(new_type, typeclass.args[0]),
             *typeclass.args[1:],
         )
 
