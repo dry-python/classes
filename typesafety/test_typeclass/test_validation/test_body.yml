@@ -30,6 +30,16 @@
      main:3: error: Typeclass definitions must not have bodies
 
 
+- case: typeclass_with_pass_body
+  disable_cache: false
+  main: |
+    from classes import typeclass
+
+    @typeclass
+    def sum_all(instance) -> int:
+        pass
+
+
 - case: typeclass_with_body_and_associated_type
   disable_cache: false
   main: |
