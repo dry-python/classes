@@ -1,5 +1,4 @@
 import sys
-from typing import Any
 
 import pytest
 from typing_extensions import TypedDict
@@ -13,17 +12,17 @@ else:
         name: str
         registered: bool
 
-    _TypedDictMeta: Any = type(TypedDict)  # type: ignore
-
-    class _UserDictMeta(_TypedDictMeta):
-        def __instancecheck__(self, arg: object) -> bool:
+    class _UserDictMeta(type):
+        def __instancecheck__(cls, arg: object) -> bool:
             return (
                 isinstance(arg, dict) and
                 isinstance(arg.get('name'), str) and
                 isinstance(arg.get('registered'), bool)
             )
 
-    class UserDict(_User, metaclass=_UserDictMeta):
+    _Meta = type('_Meta', (_UserDictMeta, type(TypedDict)), {})
+
+    class UserDict(_User, metaclass=_Meta):
         """We use this class to represent a typed dict with instance check."""
 
     @typeclass
