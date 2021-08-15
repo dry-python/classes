@@ -13,7 +13,7 @@ else:
         name: str
         registered: bool
 
-    _TypedDictMeta: Any = type(TypedDict)
+    _TypedDictMeta: Any = type(TypedDict)  # type: ignore
 
     class _UserDictMeta(_TypedDictMeta):
         def __instancecheck__(self, arg: object) -> bool:
