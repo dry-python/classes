@@ -133,6 +133,10 @@ Here's the collection of them.
 TypedDicts
 ~~~~~~~~~~
 
+.. warning::
+  This example only works for Python 3.7 and 3.8
+  `Original bug report <https://bugs.python.org/issue44919>`_.
+
 At first, we need to define a typed dictionary itself:
 
 .. code:: python
@@ -150,25 +154,16 @@ a ``TypeError`` on ``isinstance(obj, User)``.
 
 .. code:: python
 
-  >>> import sys
+  class _UserDictMeta(type(TypedDict)):
+      def __instancecheck__(cls, arg: object) -> bool:
+          return (
+              isinstance(arg, dict) and
+              isinstance(arg.get('name'), str) and
+              isinstance(arg.get('registered'), bool)
+         )
 
-  >>> class _UserDictMeta(type):
-  ...     def __instancecheck__(cls, arg: object) -> bool:
-  ...        return (
-  ...             isinstance(arg, dict) and
-  ...             isinstance(arg.get('name'), str) and
-  ...             isinstance(arg.get('registered'), bool)
-  ...         )
-
-  >>> # Without this we would have a metaclass conflict on older versions:
-  >>> if sys.version_info[:2] < (3, 9):
-  ...     _UserMeta = type('UserMeta', (_UserDictMeta, type(TypedDict)), {})
-  ... else:
-  ...     from typing import _TypedDictMeta
-  ...     _UserMeta = type('UserMeta', (_UserDictMeta, _TypedDictMeta), {})
-
-  >>> class UserDict(_User, metaclass=_UserMeta):
-  ...     ...
+  class UserDict(_User, metaclass=_UserDictMeta):
+      ...
 
 And finally we can use it!
 Take a note that we always use the resulting ``UserDict`` type,
@@ -176,13 +171,13 @@ not the base ``_User``.
 
 .. code:: python
 
-  >>> @typeclass
-  ... def get_name(instance) -> str:
-  ...     ...
+  @typeclass
+  def get_name(instance) -> str:
+      ...
 
-  >>> @get_name.instance(delegate=UserDict)
-  ... def _get_name_user_dict(instance: UserDict) -> str:
-  ...     return instance['name']
+  @get_name.instance(delegate=UserDict)
+  def _get_name_user_dict(instance: UserDict) -> str:
+      return instance['name']
 
-  >>> user: UserDict = {'name': 'sobolevn', 'registered': True}
-  >>> assert get_name(user) == 'sobolevn'
+  user: UserDict = {'name': 'sobolevn', 'registered': True}
+  assert get_name(user) == 'sobolevn'
