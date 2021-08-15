@@ -188,6 +188,6 @@
     def _some_list_int(instance: List[int]) -> int:
         ...
   out: |
-    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "builtins.list[builtins.int*]"
+    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"
     main:11: error: Only a single argument can be applied to `.instance`
     main:11: error: Regular type "builtins.str*" passed as a protocol
