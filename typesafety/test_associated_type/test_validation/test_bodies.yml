@@ -37,6 +37,6 @@
     class MyType(AssociatedType):
         pass
 
-    @typeclass
+    @typeclass(MyType)
     def sum_all(instance) -> int:
         pass

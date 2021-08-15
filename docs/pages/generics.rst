@@ -122,39 +122,61 @@ Let's get back to ``get_item`` example and use a generic ``Supports`` type:
   reveal_type(get_item(strings, 0))  # Revealed type is "builtins.str*"
 
 
-Limitations
------------
+Complex concrete generics
+-------------------------
 
-We are limited in generics support.
-We support them, but without concrete type parameters.
+There are several advanced techniques
+in using concrete generic types when working with ``delegate`` types.
 
-- We support: ``X``, ``list``, ``List``, ``Dict``,
-  ``Mapping``, ``Iterable``, ``MyCustomGeneric``
-- We also support: ``Iterable[Any]``, ``List[X]``, ``Dict[X, Y]``, etc
-- We don't support ``List[int]``, ``Dict[str, str]``, etc
+Here's the collection of them.
 
-Why? Because we cannot tell the difference
-between ``List[int]`` and ``List[str]`` in runtime.
+TypedDicts
+~~~~~~~~~~
 
-Python just does not have this information.
-It requires types to be inferred by some other tool.
-And that's currently not supported.
-
-So, this would not work:
+At first, we need to define a typed dictionary itself:
 
 .. code:: python
 
-  >>> from typing import List
+  >>> from typing_extensions import TypedDict
   >>> from classes import typeclass
 
-  >>> @typeclass
-  ... def generic_typeclass(instance) -> str:
-  ...     """We use this example to demonstrate the typing limitation."""
+  >>> class _User(TypedDict):
+  ...     name: str
+  ...     registered: bool
 
-  >>> @generic_typeclass.instance(List[int])
-  ... def _generic_typeclass_list_int(instance: List[int]):
-  ...   ...
-  ...
-  Traceback (most recent call last):
-  ...
-  TypeError: ...
+Then, we need a special class with ``__instancecheck__`` defined.
+Because original ``TypedDict`` just raises
+a ``TypeError`` on ``isinstance(obj, User)``.
+
+.. code:: python
+
+  >>> class _UserDictMeta(type):
+  ...     def __instancecheck__(cls, arg: object) -> bool:
+  ...        return (
+  ...             isinstance(arg, dict) and
+  ...             isinstance(arg.get('name'), str) and
+  ...             isinstance(arg.get('registered'), bool)
+  ...         )
+
+  >>> # Without this line we would have a metaclass conflict:
+  >>> _UserMeta = type('UserMeta', (_UserDictMeta, type(TypedDict)), {})
+
+  >>> class UserDict(_User, metaclass=_UserMeta):
+  ...     ...
+
+And finally we can use it!
+Take a note that we always use the resulting ``UserDict`` type,
+not the base ``_User``.
+
+.. code:: python
+
+  >>> @typeclass
+  ... def get_name(instance) -> str:
+  ...     ...
+
+  >>> @get_name.instance(delegate=UserDict)
+  ... def _get_name_user_dict(instance: UserDict) -> str:
+  ...     return instance['name']
+
+  >>> user: UserDict = {'name': 'sobolevn', 'registered': True}
+  >>> assert get_name(user) == 'sobolevn'

@@ -6,6 +6,7 @@ from mypy.sametypes import is_same_type
 from mypy.subtypes import is_subtype
 from mypy.types import Instance
 from mypy.types import Type as MypyType
+from mypy.types import TypedDictType
 from typing_extensions import Final
 
 from classes.contrib.mypy.typeops import type_queries
@@ -108,13 +109,18 @@ def _check_matching_types(
         # Without this check, we would have
         # to always use `ListOfStr` and not `List[str]`.
         # This is annoying for the user.
-        instance_check = is_subtype(delegate, instance_type)
+        instance_check = (
+            is_subtype(instance_type, delegate)
+            # When `instance` is a `TypedDict`, we need to rotate the compare:
+            if isinstance(instance_type, TypedDictType)
+            else is_subtype(delegate, instance_type)
+        )
 
     if not instance_check:
         ctx.api.fail(
             _INSTANCE_INFERRED_MISMATCH_MSG.format(
                 instance_type,
-                inferred_type,
+                inferred_type if delegate is None else delegate,
             ),
             ctx.context,
         )
