@@ -150,6 +150,8 @@ a ``TypeError`` on ``isinstance(obj, User)``.
 
 .. code:: python
 
+  >>> import sys
+
   >>> class _UserDictMeta(type):
   ...     def __instancecheck__(cls, arg: object) -> bool:
   ...        return (
@@ -158,8 +160,11 @@ a ``TypeError`` on ``isinstance(obj, User)``.
   ...             isinstance(arg.get('registered'), bool)
   ...         )
 
-  >>> # Without this line we would have a metaclass conflict:
-  >>> _UserMeta = type('UserMeta', (_UserDictMeta, type(TypedDict)), {})
+  >>> # Without this we would have a metaclass conflict on older versions:
+  >>> if sys.version_info[:2] < (3, 9):
+  ...     _UserMeta = type('UserMeta', (_UserDictMeta, type(TypedDict)), {})
+  ... else:
+  ...     _UserMeta = _UserDictMeta
 
   >>> class UserDict(_User, metaclass=_UserMeta):
   ...     ...
