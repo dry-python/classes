@@ -1,6 +1,13 @@
 from typing import Union
 
-from mypy.nodes import ARG_POS, EllipsisExpr, ExpressionStmt, FuncDef, StrExpr, PassStmt
+from mypy.nodes import (
+    ARG_POS,
+    EllipsisExpr,
+    ExpressionStmt,
+    FuncDef,
+    PassStmt,
+    StrExpr,
+)
 from mypy.plugin import FunctionContext, MethodContext
 from mypy.types import CallableType, Instance
 from typing_extensions import Final
