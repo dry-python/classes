@@ -1,6 +1,6 @@
 from typing import Union
 
-from mypy.nodes import ARG_POS, EllipsisExpr, ExpressionStmt, FuncDef, StrExpr
+from mypy.nodes import ARG_POS, EllipsisExpr, ExpressionStmt, FuncDef, StrExpr, PassStmt
 from mypy.plugin import FunctionContext, MethodContext
 from mypy.types import CallableType, Instance
 from typing_extensions import Final
@@ -58,8 +58,10 @@ def _check_body(
     if body:
         is_useless_body = (
             len(body) == 1 and
-            isinstance(body[0], ExpressionStmt) and
-            isinstance(body[0].expr, (EllipsisExpr, StrExpr))
+            isinstance(body[0], PassStmt) or (
+                isinstance(body[0], ExpressionStmt) and
+                isinstance(body[0].expr, (EllipsisExpr, StrExpr))
+            )
         )
         if is_useless_body:
             # We allow a single ellipsis in function a body.

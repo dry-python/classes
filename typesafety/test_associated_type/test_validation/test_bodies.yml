@@ -27,3 +27,16 @@
         ...
   out: |
     main:6: error: Associated types must not have bodies
+
+
+- case: associated_type_with_pass
+  disable_cache: false
+  main: |
+    from classes import AssociatedType, typeclass
+
+    class MyType(AssociatedType):
+        pass
+
+    @typeclass
+    def sum_all(instance) -> int:
+        pass
