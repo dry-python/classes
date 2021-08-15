@@ -164,7 +164,8 @@ a ``TypeError`` on ``isinstance(obj, User)``.
   >>> if sys.version_info[:2] < (3, 9):
   ...     _UserMeta = type('UserMeta', (_UserDictMeta, type(TypedDict)), {})
   ... else:
-  ...     _UserMeta = _UserDictMeta
+  ...     from typing import _TypedDictMeta
+  ...     _UserMeta = type('UserMeta', (_UserDictMeta, _TypedDictMeta), {})
 
   >>> class UserDict(_User, metaclass=_UserMeta):
   ...     ...
