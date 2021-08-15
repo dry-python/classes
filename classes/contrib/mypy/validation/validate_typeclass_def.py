@@ -65,10 +65,10 @@ def _check_body(
     if body:
         is_useless_body = (
             len(body) == 1 and
-            isinstance(body[0], PassStmt) or (
+            (isinstance(body[0], PassStmt) or (
                 isinstance(body[0], ExpressionStmt) and
                 isinstance(body[0].expr, (EllipsisExpr, StrExpr))
-            )
+            ))
         )
         if is_useless_body:
             # We allow a single ellipsis in function a body.
