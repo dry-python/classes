@@ -6,7 +6,7 @@ from typing_extensions import TypedDict
 
 from classes import typeclass
 
-if sys.version_info[:2] >= (3, 9):
+if sys.version_info[:2] >= (3, 9):  # noqa: C901
     pytestmark = pytest.mark.skip('Only python3.7 and python3.8 are supported')
 else:
     class _User(TypedDict):
