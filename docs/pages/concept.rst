@@ -114,7 +114,10 @@ that some ``list`` is ``List[int]`` or ``List[str]``:
 ``__instancecheck__`` magic method
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We need some custom type inference mechanism:
+We need some custom type inference mechanism.
+For this purpose we use
+`__instancecheck__ <https://docs.python.org/3/reference/datamodel.html#class.__instancecheck>`_
+magic method:
 
 .. code:: python
 
