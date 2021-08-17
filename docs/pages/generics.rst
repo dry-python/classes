@@ -181,3 +181,41 @@ not the base ``_User``.
 
   user: UserDict = {'name': 'sobolevn', 'registered': True}
   assert get_name(user) == 'sobolevn'
+
+Tuples of concrete shapes
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The logic is the same with concrete ``Tuple`` items:
+
+.. code:: python
+
+  >>> from typing import Tuple
+  >>> from classes import typeclass
+
+  >>> class UserTupleMeta(type):
+  ...     def __instancecheck__(cls, arg: object) -> bool:
+  ...         try:
+  ...             return (
+  ...                 isinstance(arg, tuple) and
+  ...                 isinstance(arg[0], str) and
+  ...                 isinstance(arg[1], bool)
+  ...             )
+  ...         except IndexError:
+  ...             return False
+
+  >>> class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):
+  ...     ...
+
+  >>> @typeclass
+  ... def get_name(instance) -> str:
+  ...     ...
+
+  >>> @get_name.instance(delegate=UserTuple)
+  ... def _get_name_user_dict(instance: Tuple[str, bool]) -> str:
+  ...     return instance[0]
+
+  >>> assert get_name(('sobolevn', True)) == 'sobolevn'
+  >>> get_name((1, 2))
+  Traceback (most recent call last):
+    ...
+  NotImplementedError: Missing matched typeclass instance for type: tuple

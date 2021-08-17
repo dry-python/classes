@@ -191,3 +191,86 @@
     main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"
     main:11: error: Only a single argument can be applied to `.instance`
     main:11: error: Regular type "builtins.str*" passed as a protocol
+
+
+- case: typeclass_concrete_generic_delegate_and_tuple1
+  disable_cache: false
+  main: |
+    from typing import Tuple
+    from classes import typeclass
+
+    class UserTupleMeta(type):
+        def __instancecheck__(cls, arg: object) -> bool:
+            try:
+                return (
+                    isinstance(arg, tuple) and
+                    isinstance(arg[0], str) and
+                    isinstance(arg[1], bool)
+                )
+            except IndexError:
+                return False
+
+    class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):
+        ...
+
+    @typeclass
+    def get_name(instance) -> str:
+        ...
+
+    @get_name.instance(delegate=UserTuple)
+    def _get_name_user_dict(instance: Tuple[str, bool]) -> str:
+        return instance[0]
+
+
+    get_name(('a', True))  # ok
+
+    get_name(())
+    get_name(('a', 'b', 'c'))
+    get_name(('a', 1))
+  out: |
+    main:29: error: Argument 1 to "get_name" has incompatible type "Tuple[]"; expected "Tuple[str, bool]"
+    main:30: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str, str]"; expected "Tuple[str, bool]"
+    main:31: error: Argument 1 to "get_name" has incompatible type "Tuple[str, int]"; expected "Tuple[str, bool]"
+
+
+- case: typeclass_concrete_generic_delegate_and_tuple2
+  disable_cache: false
+  main: |
+    from typing import Tuple
+    from classes import typeclass
+
+    class UserTupleMeta(type):
+        def __instancecheck__(cls, arg: object) -> bool:
+            try:
+                return (
+                    isinstance(arg, tuple) and
+                    isinstance(arg[0], str) and
+                    isinstance(arg[1], bool)
+                )
+            except IndexError:
+                return False
+
+    class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):
+        ...
+
+    @typeclass
+    def get_name(instance) -> str:
+        ...
+
+    @get_name.instance(delegate=UserTuple)
+    def _get_name_user_dict(instance: UserTuple) -> str:
+        return instance[0]
+
+
+    a = UserTuple(('a', True))
+    get_name(a)
+
+    get_name(())
+    get_name(('a', 'b'))
+    get_name(('a', True))
+    get_name(('a', 'b', 'c'))
+  out: |
+    main:30: error: Argument 1 to "get_name" has incompatible type "Tuple[]"; expected "UserTuple"
+    main:31: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str]"; expected "UserTuple"
+    main:32: error: Argument 1 to "get_name" has incompatible type "Tuple[str, bool]"; expected "UserTuple"
+    main:33: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str, str]"; expected "UserTuple"
