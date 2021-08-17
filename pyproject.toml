@@ -9,7 +9,7 @@ style = "https://raw.githubusercontent.com/wemake-services/wemake-python-stylegu
 
 [tool.poetry]
 name = "classes"
-version = "0.3.0"
+version = "0.4.0"
 description = "Smart, pythonic, ad-hoc, typed polymorphism for Python"
 license = "BSD-2-Clause"
 
