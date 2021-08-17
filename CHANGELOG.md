@@ -7,6 +7,8 @@ We follow Semantic Versions since the `0.1.0` release.
 
 ### Features
 
+- **Breaking**: removes `is_protocol` boolean argument from `.instance`,
+  now use `protocol=YourProtocol` instead
 - Adds support for concrete generic types like `List[str]` and `Set[int]` #24
 - Adds support for types that have `__instancecheck__` defined
   via `delegate` argument #248
