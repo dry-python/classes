@@ -197,12 +197,12 @@ There's a better way, you need to define a "phantom" type
   >>> from phantom.predicates import boolean, collection, generic, numeric
 
   >>> class ListOfInt(
-  ...    List[int],
-  ...    Phantom,
-  ...    predicate=boolean.both(
-  ...       collection.count(numeric.greater(0)),
-  ...       collection.every(generic.of_type(int)),
-  ...    ),
+  ...     List[int],
+  ...     Phantom,
+  ...     predicate=boolean.both(
+  ...         collection.count(numeric.greater(0)),
+  ...         collection.every(generic.of_type(int)),
+  ...     ),
   ... ):
   ...     ...
 
