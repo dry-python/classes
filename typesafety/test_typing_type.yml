@@ -1,0 +1,26 @@
+- case: typing_type_correct
+  disable_cache: true
+  main: |
+    from typing import Type
+    from classes import typeclass
+
+    class _MyClass(object):
+        ...
+
+    class _MyClassType(Type[_MyClass]):
+        ...
+
+
+    @typeclass
+    def class_type(typ) -> Type:
+        ...
+
+    @class_type.instance(delegate=_MyClassType)
+    def _my_class_type(typ: Type[_MyClass]) -> Type:
+        return typ
+
+    class_type(_MyClass)
+    class_type(int)
+  out: |
+    main:7: error: Invalid base class "Type"
+    main:20: error: Argument 1 to "class_type" has incompatible type "Type[int]"; expected "Type[_MyClass]"
