@@ -197,7 +197,7 @@ There's a better way, you need to define a "phantom" type
   >>> from phantom.predicates import boolean, collection, generic, numeric
 
   >>> class ListOfInt(
-  ...     List[int],
+  ...     Sequence[int],
   ...     Phantom,
   ...     predicate=boolean.both(
   ...         collection.count(numeric.greater(0)),
@@ -215,7 +215,10 @@ Short, easy, and readable:
   that all non-empty lists with ``int`` elements
   will be treated as ``ListOfInt``
 - In runtime ``ListOfInt`` does not exist, because it is phantom!
-  In reality it is just ``List[int]``
+  In reality it is just ``Sequence[int]``.
+  Notice that newer versions of ``phantom-types`` do not accept the mutable
+  ``List`` type constructor for this purpose because you can add items of other
+  types to the list after the validation is done, which makes it unsafe.
 
 Now, we can define our typeclass with ``phantom`` type support:
 
@@ -225,7 +228,7 @@ Now, we can define our typeclass with ``phantom`` type support:
   >>> from phantom.predicates import boolean, collection, generic, numeric
 
   >>> class ListOfInt(
-  ...    List[int],
+  ...    Sequence[int],
   ...    Phantom,
   ...    predicate=boolean.both(
   ...       collection.count(numeric.greater(0)),
@@ -241,13 +244,13 @@ Now, we can define our typeclass with ``phantom`` type support:
   ...     ...
 
   >>> @sum_all.instance(delegate=ListOfInt)
-  ... def _sum_all_list_int(instance: List[int]) -> int:
+  ... def _sum_all_list_int(instance: Sequence[int]) -> int:
   ...     return sum(instance)
 
   >>> assert sum_all([1, 2, 3]) == 6
 
 That's why we need a ``delegate=`` argument here:
-we don't really work with ``List[int]``,
+we don't really work with ``Sequence[int]``,
 we delegate all the runtime type checking to ``ListOfInt`` phantom type.
 
 Performance considerations
