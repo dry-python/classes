@@ -15,5 +15,5 @@ jobs:
       with:
         python-version: '3.11-dev'
     - name: Install xmllint
-      run: sudo apt-get install -y libxml2 libxslt
+      run: sudo apt-get install -y libxslt-dev libxml2-dev
     - run: pip install lxml
