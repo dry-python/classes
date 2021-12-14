@@ -188,8 +188,8 @@
     def _a_any(instance: Any) -> str:
         ...
   out: |
-    main:8: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "object"; expected "None"
     main:8: error: Instance "Any" does not match inferred type "builtins.object"
+    main:8: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "object"; expected "None"
 
 
 - case: typeclass_instance_wrong_param

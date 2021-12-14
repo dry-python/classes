@@ -51,8 +51,8 @@
     def _to_json_int(instance: str) -> int:
         ...
   out: |
-    main:10: error: Instance "builtins.str" does not match inferred type "builtins.int*"
     main:10: error: Instance callback is incompatible "def (instance: builtins.str) -> builtins.int"; expected "def (instance: builtins.str, verbose: builtins.bool =) -> builtins.str"
+    main:10: error: Instance "builtins.str" does not match inferred type "builtins.int*"
 
 
 - case: typeclass_definied_by_literal
@@ -63,9 +63,9 @@
     typeclass(1)
   out: |
     main:3: error: No overload variant of "typeclass" matches argument type "int"
+    main:3: note: Possible overload variants:
     main:3: note:     def [_AssociatedType] typeclass(definition: Type[_AssociatedType]) -> _TypeClassDef[_AssociatedType]
     main:3: note:     def [_SignatureType, _InstanceType, _AssociatedType, _Fullname <: str] typeclass(signature: _SignatureType) -> _TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]
-    main:3: note: Possible overload variants:
 
 
 - case: typeclass_non_global_declaration

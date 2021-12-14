@@ -135,7 +135,7 @@ And it easy to extend this typeclass with your own classes as well:
 >>> @to_json.instance(dt.datetime)
 ... def _to_json_datetime(instance: dt.datetime) -> str:
 ...     return instance.isoformat()
-...
+
 >>> to_json(dt.datetime(2019, 10, 31, 12, 28, 00))
 '2019-10-31T12:28:00'
 

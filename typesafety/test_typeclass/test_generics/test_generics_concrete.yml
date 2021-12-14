@@ -189,8 +189,8 @@
         ...
   out: |
     main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"
-    main:11: error: Only a single argument can be applied to `.instance`
     main:11: error: Regular type "builtins.str*" passed as a protocol
+    main:11: error: Only a single argument can be applied to `.instance`
 
 
 - case: typeclass_concrete_generic_delegate_and_tuple1
