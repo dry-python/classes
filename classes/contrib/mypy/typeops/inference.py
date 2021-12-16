@@ -91,7 +91,7 @@ def type_obj(type_: MypyType) -> MypyType:
         # however we still use `ret_type`,
         # because it is practically the same thing,
         # but with proper type arguments.
-        return type_.items()[0].ret_type
+        return type_.items[0].ret_type
     return type_
 
 

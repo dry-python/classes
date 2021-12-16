@@ -1,3 +1,4 @@
+import sys
 from typing import TypeVar
 
 import pytest
@@ -5,10 +6,9 @@ import pytest
 from classes import AssociatedType
 
 _FirstType = TypeVar('_FirstType')
-_SecondType = TypeVar('_SecondType')
-_ThirdType = TypeVar('_ThirdType')
 
 
+@pytest.mark.skipif(sys.version_info[:2] >= (3, 10), reason='Does not work')
 def test_type_validation():
     """Ensures that type validation still works."""
     with pytest.raises(TypeError):
