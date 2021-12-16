@@ -95,9 +95,10 @@ We also support user-defined protocols:
 
 .. code:: python
 
-    >>> from typing_extensions import Protocol
+    >>> from typing_extensions import Protocol, runtime_checkable
 
-    >>> class CustomProtocol(Protocol):
+    >>> @runtime_checkable
+    ... class CustomProtocol(Protocol):
     ...     field: str
 
     >>> @example.instance(protocol=CustomProtocol)
