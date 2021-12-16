@@ -6,7 +6,7 @@ from mypy.subtypes import is_subtype
 from mypy.typeops import get_type_vars, make_simplified_union
 from mypy.types import CallableType, Instance, ProperType
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarDef, TypeVarId, TypeVarType, union_items
+from mypy.types import TypeVarType, union_items
 from typing_extensions import Final, final
 
 from classes.contrib.mypy.typeops import type_loader
@@ -96,19 +96,6 @@ class SmartCallSignature(object):
             list(filter(None, [self._instance_type, supports_type])),
         )
         return self._signature
-
-
-def _find_callable_variable(
-    var_id: TypeVarId,
-    signature: CallableType,
-) -> TypeVarDef:
-    var_def = next(
-        var_def
-        for var_def in signature.variables
-        if var_def.id == var_id
-    )
-    assert isinstance(var_def, TypeVarDef)
-    return var_def
 
 
 def _load_supports_type(

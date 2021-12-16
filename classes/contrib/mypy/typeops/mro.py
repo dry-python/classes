@@ -199,10 +199,9 @@ def _load_supports_type(
     # Because `mypy` requires `type_var.id` to match,
     # otherwise, they would be treated as different variables.
     # That's why we copy the typevar definition from instance itself.
-    supports_spec = associated_type.copy_modified(args=[
-        TypeVarType(var_def)
-        for var_def in instance_type.type.defn.type_vars
-    ])
+    supports_spec = associated_type.copy_modified(
+        args=instance_type.type.defn.type_vars,
+    )
 
     return type_loader.load_supports_type(
         supports_spec,
