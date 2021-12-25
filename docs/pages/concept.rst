@@ -123,24 +123,23 @@ magic method:
 
   >>> from typing import List
 
-  >>> class _ListOfIntMeta(type):
+  >>> class _SequenceOfIntMeta(type):
   ...     def __instancecheck__(self, arg) -> bool:
   ...         return (
-  ...             isinstance(arg, list) and
   ...             bool(arg) and  # we need to have at least one `int` element
   ...             all(isinstance(item, int) for item in arg)
   ...         )
 
-  >>> class ListOfInt(List[int], metaclass=_ListOfIntMeta):
+  >>> class SequenceOfInt(List[int], metaclass=_SequenceOfIntMeta):
   ...     ...
 
 Now we can be sure that our ``List[int]`` can be checked in runtime:
 
 .. code:: python
 
-  >>> assert isinstance([1, 2, 3], ListOfInt) is True
-  >>> assert isinstance([1, 'a'], ListOfInt) is False
-  >>> assert isinstance([], ListOfInt) is False  # empty
+  >>> assert isinstance([1, 2, 3], SequenceOfInt) is True
+  >>> assert isinstance([1, 'a'], SequenceOfInt) is False
+  >>> assert isinstance([], SequenceOfInt) is False  # empty
 
 ``delegate`` argument
 ~~~~~~~~~~~~~~~~~~~~~
@@ -150,14 +149,14 @@ And now we can use it with ``classes``:
 .. code:: python
 
   >>> from classes import typeclass
-  >>> from typing import List
+  >>> from typing import Sequence
 
   >>> @typeclass
   ... def sum_all(instance) -> int:
   ...     ...
 
-  >>> @sum_all.instance(delegate=ListOfInt)
-  ... def _sum_all_list_int(instance: List[int]) -> int:
+  >>> @sum_all.instance(delegate=SequenceOfInt)
+  ... def _sum_all_list_int(instance: Sequence[int]) -> int:
   ...     return sum(instance)
 
   >>> your_list = [1, 2, 3]
@@ -186,7 +185,7 @@ This allows to sync both runtime and ``mypy`` behavior:
 Phantom types
 ~~~~~~~~~~~~~
 
-Notice, that ``ListOfInt`` is very verbose, it even has an explicit metaclass!
+Notice, that ``SequenceOfInt`` is very verbose, it even has an explicit metaclass!
 
 There's a better way, you need to define a "phantom" type
 (it is called "phantom" because it does not exist in runtime):
@@ -196,7 +195,7 @@ There's a better way, you need to define a "phantom" type
   >>> from phantom import Phantom
   >>> from phantom.predicates import boolean, collection, generic, numeric
 
-  >>> class ListOfInt(
+  >>> class SequenceOfInt(
   ...     Sequence[int],
   ...     Phantom,
   ...     predicate=boolean.both(
@@ -206,19 +205,22 @@ There's a better way, you need to define a "phantom" type
   ... ):
   ...     ...
 
-  >>> assert isinstance([1, 2, 3], ListOfInt)
+  >>> assert isinstance([1, 2, 3], SequenceOfInt)
   >>> assert type([1, 2, 3]) is list
 
 Short, easy, and readable:
 
 - By defining ``predicate`` we ensure
   that all non-empty lists with ``int`` elements
-  will be treated as ``ListOfInt``
-- In runtime ``ListOfInt`` does not exist, because it is phantom!
+  will be treated as ``SequenceOfInt``
+- In runtime ``SequenceOfInt`` does not exist, because it is phantom!
   In reality it is just ``Sequence[int]``.
+
+.. note::
   Notice that newer versions of ``phantom-types`` do not accept the mutable
   ``List`` type constructor for this purpose because you can add items of other
   types to the list after the validation is done, which makes it unsafe.
+  Use immutable types like ``Sequence``.
 
 Now, we can define our typeclass with ``phantom`` type support:
 
@@ -227,7 +229,7 @@ Now, we can define our typeclass with ``phantom`` type support:
   >>> from phantom import Phantom
   >>> from phantom.predicates import boolean, collection, generic, numeric
 
-  >>> class ListOfInt(
+  >>> class SequenceOfInt(
   ...    Sequence[int],
   ...    Phantom,
   ...    predicate=boolean.both(
@@ -243,7 +245,7 @@ Now, we can define our typeclass with ``phantom`` type support:
   ... def sum_all(instance) -> int:
   ...     ...
 
-  >>> @sum_all.instance(delegate=ListOfInt)
+  >>> @sum_all.instance(delegate=SequenceOfInt)
   ... def _sum_all_list_int(instance: Sequence[int]) -> int:
   ...     return sum(instance)
 
@@ -251,7 +253,7 @@ Now, we can define our typeclass with ``phantom`` type support:
 
 That's why we need a ``delegate=`` argument here:
 we don't really work with ``Sequence[int]``,
-we delegate all the runtime type checking to ``ListOfInt`` phantom type.
+we delegate all the runtime type checking to ``SequenceOfInt`` phantom type.
 
 Performance considerations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
