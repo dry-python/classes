@@ -125,10 +125,14 @@ magic method:
 
   >>> class _SequenceOfIntMeta(type):
   ...     def __instancecheck__(self, arg) -> bool:
-  ...         return (
-  ...             bool(arg) and  # we need to have at least one `int` element
-  ...             all(isinstance(item, int) for item in arg)
-  ...         )
+  ...         try:
+  ...             return (
+  ...                 # We need to have at least one `int` element
+  ...                 bool(arg) and
+  ...                 all(isinstance(item, int) for item in arg)
+  ...             )
+  ...         except TypeError:
+  ...             return False
 
   >>> class SequenceOfInt(List[int], metaclass=_SequenceOfIntMeta):
   ...     ...
@@ -185,7 +189,8 @@ This allows to sync both runtime and ``mypy`` behavior:
 Phantom types
 ~~~~~~~~~~~~~
 
-Notice, that ``SequenceOfInt`` is very verbose, it even has an explicit metaclass!
+Notice, that ``SequenceOfInt`` is very verbose,
+it even has an explicit metaclass!
 
 There's a better way, you need to define a "phantom" type
 (it is called "phantom" because it does not exist in runtime):
