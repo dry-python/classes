@@ -98,15 +98,15 @@ to be specified on ``.instance()`` call:
 Delegates
 ---------
 
-Let's say that you want to handle types like ``List[int]`` with ``classes``.
+Let's say that you want to handle types like ``Sequence[int]`` with ``classes``.
 The simple approach won't work, because Python cannot tell
-that some ``list`` is ``List[int]`` or ``List[str]``:
+that some object is ``Sequence[int]`` or ``Sequence[str]``:
 
 .. code:: python
 
-  >>> from typing import List
+  >>> from typing import Sequence
 
-  >>> isinstance([1, 2, 3], List[int])
+  >>> isinstance([1, 2, 3], Sequence[int])
   Traceback (most recent call last):
     ...
   TypeError: Subscripted generics cannot be used with class and instance checks
