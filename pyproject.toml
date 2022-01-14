@@ -52,7 +52,7 @@ mypy = "^0.931"
 
 wemake-python-styleguide = "^0.16"
 flake8-pytest-style = "^1.6"
-nitpick = "^0.29"
+nitpick = "^0.30"
 
 safety = "^1.10"
 
