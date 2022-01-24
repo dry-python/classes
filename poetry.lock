@@ -736,6 +736,20 @@ lint = ["pylint"]
 doc = ["sphinx", "sphinx-rtd-theme", "sphobjinv"]
 
 [[package]]
+name = "numerary"
+version = "0.3.0"
+description = "Python hacks for type-checking numbers"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+typing-extensions = {version = ">=3.10", markers = "python_version < \"3.9\""}
+
+[package.extras]
+dev = ["beartype (>=0.8,!=0.9.0)", "numpy", "pre-commit", "setuptools-scm", "sympy (>=1.9)", "tox"]
+
+[[package]]
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
@@ -768,20 +782,21 @@ flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 name = "phantom-types"
-version = "0.14.0"
+version = "0.15.0"
 description = "Phantom types for Python"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
+numerary = ">=0.3.0"
 typeguard = ">=2.10"
 typing-extensions = ">=3.10.0.2"
 
 [package.extras]
-phonenumbers = ["phonenumbers (>=8.12.11)"]
-pydantic = ["pydantic (>=1.8.1)"]
-test = ["mypy", "pytest", "pytest-mypy-plugins", "coverage"]
+phonenumbers = ["phonenumbers (>=8.12.41)"]
+pydantic = ["pydantic (>=1.9.0)"]
+test = ["mypy (>=0.930)", "pytest", "pytest-mypy-plugins (>=1.9.3)", "coverage"]
 
 [[package]]
 name = "pluggy"
@@ -1347,7 +1362,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "634f43cdd11b82a91addbfa87de862f0ad7049d240c3fd0321cb791394aada83"
+content-hash = "55f36b363c5818446cf9772f6e0ceb393476dbf6dcd9005cb5672bd40882bb8d"
 
 [metadata.files]
 alabaster = [
@@ -1730,6 +1745,9 @@ nitpick = [
     {file = "nitpick-0.31.0-py3-none-any.whl", hash = "sha256:b5f30fcae3d6f99a7527f4b2e9d13b167d5c1e0f98a92812f5c64a44485cdbc5"},
     {file = "nitpick-0.31.0.tar.gz", hash = "sha256:9107b92dea55e8f8fca81d96ce133e3ac80035493259d8e6fb0ba409a23ebe55"},
 ]
+numerary = [
+    {file = "numerary-0.3.0-py3-none-any.whl", hash = "sha256:0516174ff377bc7114ad383e1355a178410b4f8422ae55dc1d95c5ef23b6a03b"},
+]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
@@ -1743,8 +1761,8 @@ pep8-naming = [
     {file = "pep8_naming-0.12.1-py2.py3-none-any.whl", hash = "sha256:4a8daeaeb33cfcde779309fc0c9c0a68a3bbe2ad8a8308b763c5068f86eb9f37"},
 ]
 phantom-types = [
-    {file = "phantom-types-0.14.0.tar.gz", hash = "sha256:49f69a3c73ade781d10e8203743930abe6b7ac92a0d4daf5e69af4879c628f14"},
-    {file = "phantom_types-0.14.0-py3-none-any.whl", hash = "sha256:d5b5cc70b8bd1ff91d1e5f7f2be7d0c5f6cd904c2dcc466e31b10e6340fdd52b"},
+    {file = "phantom-types-0.15.0.tar.gz", hash = "sha256:47e030a42571025d0a20610c0c7e04d96f4f146669bc5a9a0f251624adbdf488"},
+    {file = "phantom_types-0.15.0-py3-none-any.whl", hash = "sha256:998f93502cd449cddfd6672fd1afdb7c5eab5140f6bbbffa10a2163633ab6b2d"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
