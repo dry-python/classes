@@ -782,7 +782,7 @@ flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 name = "phantom-types"
-version = "0.15.0"
+version = "0.15.1"
 description = "Phantom types for Python"
 category = "dev"
 optional = false
@@ -1758,8 +1758,8 @@ pep8-naming = [
     {file = "pep8_naming-0.12.1-py2.py3-none-any.whl", hash = "sha256:4a8daeaeb33cfcde779309fc0c9c0a68a3bbe2ad8a8308b763c5068f86eb9f37"},
 ]
 phantom-types = [
-    {file = "phantom-types-0.15.0.tar.gz", hash = "sha256:47e030a42571025d0a20610c0c7e04d96f4f146669bc5a9a0f251624adbdf488"},
-    {file = "phantom_types-0.15.0-py3-none-any.whl", hash = "sha256:998f93502cd449cddfd6672fd1afdb7c5eab5140f6bbbffa10a2163633ab6b2d"},
+    {file = "phantom-types-0.15.1.tar.gz", hash = "sha256:38847849b9ecbea857464d5d8bb46b2accb383b616d90fe404ced20385b694c9"},
+    {file = "phantom_types-0.15.1-py3-none-any.whl", hash = "sha256:991d22dc50fa6e35a84da40948d4dcd5f78b59b3209daeea829843791ed0159c"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
