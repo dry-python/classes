@@ -49,6 +49,6 @@ jobs:
         poetry run pytest typesafety -p no:cov -o addopts="" --mypy-ini-file=setup.cfg
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2.1.0
+      uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
