@@ -3,6 +3,13 @@
 We follow Semantic Versions since the `0.1.0` release.
 
 
+## Version 0.4.1
+
+### Bugfixes
+
+- Fixes `typing_extensions` version resolution
+
+
 ## Version 0.4.0
 
 ### Features
