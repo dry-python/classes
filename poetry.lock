@@ -83,6 +83,21 @@ toml = ["toml"]
 yaml = ["pyyaml"]
 
 [[package]]
+name = "beartype"
+version = "0.10.4"
+description = "Unbearably fast runtime type checking in pure Python."
+category = "dev"
+optional = false
+python-versions = ">=3.6.0"
+
+[package.extras]
+all = ["typing-extensions (>=3.10.0.0)"]
+dev = ["coverage (>=5.5)", "sphinx", "pytest (>=4.0.0)", "tox (>=3.20.1)", "sphinx (>=4.1.0)", "mypy (>=0.800)", "typing-extensions", "numpy"]
+doc-rtd = ["sphinx (==4.1.0)", "sphinx-rtd-theme (==0.5.1)"]
+test-tox = ["sphinx", "pytest (>=4.0.0)", "mypy (>=0.800)", "typing-extensions", "numpy"]
+test-tox-coverage = ["coverage (>=5.5)"]
+
+[[package]]
 name = "cattrs"
 version = "1.10.0"
 description = "Composable complex class support for attrs and dataclasses."
@@ -780,6 +795,20 @@ typing-extensions = {version = ">=3.10", markers = "python_version < \"3.9\""}
 dev = ["beartype (>=0.8,!=0.9.0)", "numpy", "pre-commit", "setuptools-scm", "sympy (>=1.9)", "tox"]
 
 [[package]]
+name = "numerary"
+version = "0.4.2"
+description = "Python hacks for type-checking numbers"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+beartype = ">=0.10.4,<1.0.0"
+
+[package.extras]
+dev = ["numpy", "pre-commit", "setuptools-scm", "sympy (>=1.9)", "tox"]
+
+[[package]]
 name = "orderedmultidict"
 version = "1.0.1"
 description = "Ordered Multivalue Dictionary"
@@ -823,14 +852,17 @@ flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 name = "phantom-types"
-version = "0.16.0"
+version = "0.17.1"
 description = "Phantom types for Python"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-numerary = ">=0.3.0"
+numerary = [
+    {version = ">=0.3.0,<0.4", markers = "python_version < \"3.8\""},
+    {version = ">=0.4.0", markers = "python_version >= \"3.8\""},
+]
 typeguard = ">=2.10"
 typing-extensions = ">=3.10.0.2"
 
@@ -1455,7 +1487,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "f4b7a57d2b9dadc59c97c2f8e22a9c831e1321c1eb3aa2b31c71e6d9f556cabd"
+content-hash = "230e3a30a89b3e6b1606c1cf0686bd5587ca2f95341a20bdf1cbc28d16f28b1c"
 
 [metadata.files]
 alabaster = [
@@ -1490,6 +1522,10 @@ babel = [
 bandit = [
     {file = "bandit-1.7.4-py3-none-any.whl", hash = "sha256:412d3f259dab4077d0e7f0c11f50f650cc7d10db905d98f6520a95a18049658a"},
     {file = "bandit-1.7.4.tar.gz", hash = "sha256:2d63a8c573417bae338962d4b9b06fbc6080f74ecd955a092849e1e65c717bd2"},
+]
+beartype = [
+    {file = "beartype-0.10.4-py3-none-any.whl", hash = "sha256:1a65453bc25b39979bf5ad65fe5e73350551282956456d828fb5783468649e3e"},
+    {file = "beartype-0.10.4.tar.gz", hash = "sha256:24ec69f6a7f4e6e97af403d08de270def3248518060327095d23b1c4df64bf2a"},
 ]
 cattrs = [
     {file = "cattrs-1.10.0-py3-none-any.whl", hash = "sha256:35dd9063244263e63bd0bd24ea61e3015b00272cead084b2c40d788b0f857c46"},
@@ -1818,6 +1854,7 @@ nitpick = [
 ]
 numerary = [
     {file = "numerary-0.3.0-py3-none-any.whl", hash = "sha256:0516174ff377bc7114ad383e1355a178410b4f8422ae55dc1d95c5ef23b6a03b"},
+    {file = "numerary-0.4.2-py3-none-any.whl", hash = "sha256:97f21459fa722fb2c27410f85c377143adc43cd94123c9c77c82d04e73ffe935"},
 ]
 orderedmultidict = [
     {file = "orderedmultidict-1.0.1-py2.py3-none-any.whl", hash = "sha256:43c839a17ee3cdd62234c47deca1a8508a3f2ca1d0678a3bf791c87cf84adbf3"},
@@ -1836,8 +1873,8 @@ pep8-naming = [
     {file = "pep8_naming-0.12.1-py2.py3-none-any.whl", hash = "sha256:4a8daeaeb33cfcde779309fc0c9c0a68a3bbe2ad8a8308b763c5068f86eb9f37"},
 ]
 phantom-types = [
-    {file = "phantom-types-0.16.0.tar.gz", hash = "sha256:7cb18255fd8ede3c358f4731b757df4ee19cceee07895d31516c345830e75da2"},
-    {file = "phantom_types-0.16.0-py3-none-any.whl", hash = "sha256:dd8f77ddae5956a0d10db2780a3f8964cec8e54f19664b3ec9960e1527bf1f59"},
+    {file = "phantom-types-0.17.1.tar.gz", hash = "sha256:05bcc7dc5b424113609a5a762884f46f025768bd68ba37a8d66b87d639790880"},
+    {file = "phantom_types-0.17.1-py3-none-any.whl", hash = "sha256:fce93c4026cd756d1d188347b76ac912f07759847e2fee01fee13cef2f8fd77c"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
