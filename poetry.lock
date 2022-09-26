@@ -845,7 +845,7 @@ flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 name = "phantom-types"
-version = "0.18.0"
+version = "1.0.0"
 description = "Phantom types for Python"
 category = "dev"
 optional = false
@@ -853,13 +853,15 @@ python-versions = ">=3.7"
 
 [package.dependencies]
 numerary = [
-    {version = ">=0.3.0,<0.4", markers = "python_version < \"3.8\""},
     {version = ">=0.4.0", markers = "python_version >= \"3.8\""},
+    {version = ">=0.3.0,<0.4", markers = "python_version < \"3.8\""},
 ]
 typeguard = ">=2.10"
 typing-extensions = ">=4.3.0"
 
 [package.extras]
+all = ["phantom-types[dateutil]", "phantom-types[phonenumbers]", "phantom-types[pydantic]"]
+dateutil = ["python-dateutil (>=2.8.2)"]
 phonenumbers = ["phonenumbers (>=8.12.41)"]
 pydantic = ["pydantic (>=1.9.0)"]
 test = ["coverage", "mypy (>=0.930)", "pytest", "pytest-mypy-plugins (>=1.9.3)"]
@@ -1493,7 +1495,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "457c49c5c697135cf9c7f60dcf64279392b1f9707650318aa4bda7e9a2e5e32b"
+content-hash = "c0169d72e74f026622071ad1ec54c956bfa8d98f464a41b5240ee3e73e17fa90"
 
 [metadata.files]
 alabaster = [
@@ -1884,8 +1886,8 @@ pep8-naming = [
     {file = "pep8_naming-0.12.1-py2.py3-none-any.whl", hash = "sha256:4a8daeaeb33cfcde779309fc0c9c0a68a3bbe2ad8a8308b763c5068f86eb9f37"},
 ]
 phantom-types = [
-    {file = "phantom-types-0.18.0.tar.gz", hash = "sha256:34c8ee906bd604acd68c6f3fd992e8198bf2bb9503aa7f597bb7cc23350ac531"},
-    {file = "phantom_types-0.18.0-py3-none-any.whl", hash = "sha256:0d400437afb7336a5807577e8aaaa343aaa1e5b5912083d21375210a4541fda5"},
+    {file = "phantom-types-1.0.0.tar.gz", hash = "sha256:c08424050a63584d11f018291092a5aee5b6c4f43952b27eea6b82fc15b81f82"},
+    {file = "phantom_types-1.0.0-py3-none-any.whl", hash = "sha256:080d7e5d9e01d799dd8b160ffad4d36549788b872e10ca3902c3cc518cab5c15"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
