@@ -10,9 +10,11 @@ build:
       - asdf plugin add poetry
       - asdf install poetry latest
       - asdf global poetry latest
-      - poetry config virtualenvs.create false
-    post_install:
-      - poetry install
+      - poetry export --with dev --format=requirements.txt --output=requirements.txt
+
+python:
+  install:
+    - requirements: requirements.txt
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
