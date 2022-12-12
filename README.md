@@ -142,7 +142,7 @@ And it easy to extend this typeclass with your own classes as well:
 ```
 
 That's how simple, safe, and powerful typeclasses are!
-Make sure to [check out our full docs](https://github.com/dry-python/classes) to learn more.
+Make sure to [check out our full docs](https://classes.readthedocs.io) to learn more.
 
 
 ## More!
