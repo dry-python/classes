@@ -800,7 +800,7 @@ dev = ["beartype (>=0.8,!=0.9.0)", "numpy", "pre-commit", "setuptools-scm", "sym
 
 [[package]]
 name = "numerary"
-version = "0.4.2"
+version = "0.4.3"
 description = "Python hacks for type-checking numbers"
 category = "dev"
 optional = false
@@ -810,7 +810,7 @@ python-versions = ">=3.8"
 beartype = ">=0.10.4,<1.0.0"
 
 [package.extras]
-dev = ["numpy", "pre-commit", "setuptools-scm", "sympy (>=1.9)", "tox"]
+dev = ["numpy (>=1.23.2,<1.24.0)", "pre-commit", "sympy (>=1.10.1,<1.11.0)", "tox", "versioningit (>=2.0,<3.0)"]
 
 [[package]]
 name = "orderedmultidict"
@@ -855,7 +855,7 @@ flake8 = ">=3.9.1"
 
 [[package]]
 name = "phantom-types"
-version = "1.0.0"
+version = "1.1.0"
 description = "Phantom types for Python"
 category = "dev"
 optional = false
@@ -864,7 +864,7 @@ python-versions = ">=3.7"
 [package.dependencies]
 numerary = [
     {version = ">=0.3.0,<0.4", markers = "python_version < \"3.8\""},
-    {version = ">=0.4.0", markers = "python_version >= \"3.8\""},
+    {version = ">=0.4.3", markers = "python_version >= \"3.8\""},
 ]
 typeguard = ">=2.10"
 typing-extensions = ">=4.3.0"
@@ -874,7 +874,7 @@ all = ["phantom-types[dateutil]", "phantom-types[phonenumbers]", "phantom-types[
 dateutil = ["python-dateutil (>=2.8.2)"]
 phonenumbers = ["phonenumbers (>=8.12.41)"]
 pydantic = ["pydantic (>=1.9.0)"]
-test = ["coverage", "mypy (>=0.930)", "pytest", "pytest-mypy-plugins (>=1.9.3)"]
+test = ["coverage", "mypy (>=0.991)", "pytest", "pytest-mypy-plugins (>=1.9.3)"]
 
 [[package]]
 name = "pluggy"
@@ -1505,7 +1505,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "f196640c19ac60c3183bfd7022c3f845ce482e5102051855458ee31bcfc8faef"
+content-hash = "0b0c45387b1b647a36f6b4b790de5b96619db11a3c7851fbd85cd014d8d287c3"
 
 [metadata.files]
 alabaster = [
@@ -1881,7 +1881,7 @@ nitpick = [
 ]
 numerary = [
     {file = "numerary-0.3.0-py3-none-any.whl", hash = "sha256:0516174ff377bc7114ad383e1355a178410b4f8422ae55dc1d95c5ef23b6a03b"},
-    {file = "numerary-0.4.2-py3-none-any.whl", hash = "sha256:97f21459fa722fb2c27410f85c377143adc43cd94123c9c77c82d04e73ffe935"},
+    {file = "numerary-0.4.3-py3-none-any.whl", hash = "sha256:12bfca1b4a738fda9dee6b4e13ac0d4939a4e85319c504671594a70d130b2036"},
 ]
 orderedmultidict = [
     {file = "orderedmultidict-1.0.1-py2.py3-none-any.whl", hash = "sha256:43c839a17ee3cdd62234c47deca1a8508a3f2ca1d0678a3bf791c87cf84adbf3"},
@@ -1900,8 +1900,8 @@ pep8-naming = [
     {file = "pep8_naming-0.13.2-py3-none-any.whl", hash = "sha256:59e29e55c478db69cffbe14ab24b5bd2cd615c0413edf790d47d3fb7ba9a4e23"},
 ]
 phantom-types = [
-    {file = "phantom-types-1.0.0.tar.gz", hash = "sha256:c08424050a63584d11f018291092a5aee5b6c4f43952b27eea6b82fc15b81f82"},
-    {file = "phantom_types-1.0.0-py3-none-any.whl", hash = "sha256:080d7e5d9e01d799dd8b160ffad4d36549788b872e10ca3902c3cc518cab5c15"},
+    {file = "phantom-types-1.1.0.tar.gz", hash = "sha256:5225e759e4672c8a8fd617fe8389d150091b9a993a504fea8b4d125edb32f8b4"},
+    {file = "phantom_types-1.1.0-py3-none-any.whl", hash = "sha256:d4955cec17e6b37dcffa4b70901cb92641b3b4ba4868731c7f76ecbc1c240b2a"},
 ]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
