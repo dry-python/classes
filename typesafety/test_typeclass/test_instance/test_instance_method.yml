@@ -26,8 +26,8 @@
     a(1)
     b('b')
   out: |
-    main:23: error: Argument 1 to "a" has incompatible type "int"; expected "str"
-    main:24: error: Argument 1 to "b" has incompatible type "str"; expected "int"
+    main:23: error: Argument 1 to "a" has incompatible type "int"; expected "str"  [arg-type]
+    main:24: error: Argument 1 to "b" has incompatible type "str"; expected "int"  [arg-type]
 
 
 - case: typeclass_two_typeclasses_one_instance
@@ -52,10 +52,10 @@
     a('a')
     b(2)
   out: |
-     main:12: error: Found different typeclass ".instance" calls, use only "main.b"
-     main:12: error: Instance "Union[builtins.str, builtins.int]" does not match inferred type "builtins.int*"
-     main:17: error: Argument 1 to "a" has incompatible type "str"; expected <nothing>
-     main:18: error: Argument 1 to "b" has incompatible type "int"; expected <nothing>
+     main:12: error: Found different typeclass ".instance" calls, use only "main.b"  [misc]
+     main:12: error: Instance "Union[builtins.str, builtins.int]" does not match inferred type "builtins.int"  [misc]
+     main:17: error: Argument 1 to "a" has incompatible type "str"; expected <nothing>  [arg-type]
+     main:18: error: Argument 1 to "b" has incompatible type "int"; expected <nothing>  [arg-type]
 
 
 - case: typeclass_instances_union1
@@ -75,7 +75,7 @@
 
     a(1)
     a('a')
-    a(None) # E: Argument 1 to "a" has incompatible type "None"; expected "Union[str, int]"
+    a(None) # E: Argument 1 to "a" has incompatible type "None"; expected "Union[str, int]"  [arg-type]
 
 
 - case: typeclass_instances_union2
@@ -92,7 +92,7 @@
     def _a_int_str(instance: int) -> str:
         ...
   out: |
-    main:7: error: Instance "builtins.int" does not match inferred type "Union[builtins.str*, builtins.int*]"
+    main:7: error: Instance "builtins.int" does not match inferred type "Union[builtins.str, builtins.int]"  [misc]
 
 
 - case: typeclass_instances_union3
@@ -109,7 +109,7 @@
     def _a_int_str(instance: str) -> str:
         ...
   out: |
-    main:7: error: Instance "builtins.str" does not match inferred type "Union[builtins.str*, builtins.int*]"
+    main:7: error: Instance "builtins.str" does not match inferred type "Union[builtins.str, builtins.int]"  [misc]
 
 
 - case: typeclass_instances_union4
@@ -127,7 +127,7 @@
     def _a_int_str(instance: Union[str, int, None]) -> str:
         ...
   out: |
-    main:8: error: Instance "Union[builtins.str, builtins.int, None]" does not match inferred type "Union[builtins.str*, builtins.int*]"
+    main:8: error: Instance "Union[builtins.str, builtins.int, None]" does not match inferred type "Union[builtins.str, builtins.int]"  [misc]
 
 
 - case: typeclass_instance_mixed_order
@@ -147,8 +147,8 @@
     def _some_int(instance: str) -> str:
         ...
   out: |
-    main:7: error: Instance "builtins.str" does not match inferred type "builtins.int*"
-    main:11: error: Instance "builtins.str" does not match inferred type "builtins.int*"
+    main:7: error: Instance "builtins.str" does not match inferred type "builtins.int"  [misc]
+    main:11: error: Instance "builtins.str" does not match inferred type "builtins.int"  [misc]
 
 
 - case: typeclass_instance_any1
@@ -168,7 +168,7 @@
     def _a_int(instance: Any) -> str:
         ...
   out: |
-    main:8: error: Instance "Any" does not match inferred type "builtins.int*"
+    main:8: error: Instance "Any" does not match inferred type "builtins.int"  [misc]
 
 
 - case: typeclass_instance_any2
@@ -188,8 +188,8 @@
     def _a_any(instance: Any) -> str:
         ...
   out: |
-    main:8: error: Instance "Any" does not match inferred type "builtins.object"
-    main:8: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "object"; expected "None"
+    main:8: error: Instance "Any" does not match inferred type "builtins.object"  [misc]
+    main:8: error: Argument 1 to "instance" of "_TypeClass" has incompatible type "object"; expected "None"  [arg-type]
 
 
 - case: typeclass_instance_wrong_param
@@ -201,7 +201,7 @@
     def a(instance) -> str:
         ...
 
-    a.instance(1)  # E: Argument 1 to "instance" of "_TypeClass" has incompatible type "int"; expected "None"
+    a.instance(1)  # E: Argument 1 to "instance" of "_TypeClass" has incompatible type "int"; expected "None"  [arg-type]
 
 
 - case: typeclass_instance_callback_def
@@ -218,7 +218,7 @@
     some.instance(str)(_some_str)
 
     some('a', 1)
-    some(None, 1)  # E: Argument 1 to "some" has incompatible type "None"; expected "str"
+    some(None, 1)  # E: Argument 1 to "some" has incompatible type "None"; expected "str"  [arg-type]
 
 
 - case: typeclass_instance_named_alias
@@ -230,7 +230,7 @@
     def some(instance, b: int) -> int:
         ...
 
-    alias = some.instance(str)  # E: Need type annotation for "alias"
+    alias = some.instance(str)  # E: Need type annotation for "alias"  [var-annotated]
 
 
 - case: typeclass_none_instance

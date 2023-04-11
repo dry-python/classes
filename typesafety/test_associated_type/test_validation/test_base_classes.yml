@@ -10,7 +10,7 @@
     def to_json(instance, verbose: bool = False) -> str:
         ...
   out: |
-    main:6: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"
+    main:6: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"  [misc]
 
 
 - case: typeclass_definied_by_multiple_parents
@@ -28,4 +28,4 @@
     def to_json(instance, verbose: bool = False) -> str:
         ...
   out: |
-    main:9: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"
+    main:9: error: Single direct subclass of "classes._typeclass.AssociatedType" required; got "main.ToJson"  [misc]

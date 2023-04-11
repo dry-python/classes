@@ -14,7 +14,7 @@
 
     protocols('abc', 'xyz')
     protocols([1, 2, 3], 'xyz')
-    protocols(None, 'xyz')  # E: Argument 1 to "protocols" has incompatible type "None"; expected "Sized"
+    protocols(None, 'xyz')  # E: Argument 1 to "protocols" has incompatible type "None"; expected "Sized"  [arg-type]
 
 
 - case: typeclass_protocol_wrong_usage0
@@ -31,7 +31,7 @@
     def _sized_protocols(instance: Sized, other: str) -> str:
         ...
   out: |
-    main:8: error: Protocol type "typing.Sized" is passed as a regular type
+    main:8: error: Protocol type "typing.Sized" is passed as a regular type  [misc]
 
 
 - case: typeclass_protocol_wrong_usage1
@@ -48,4 +48,4 @@
     def _sized_protocols(instance: int, other: str) -> str:
         ...
   out: |
-    main:8: error: Regular type "builtins.int*" passed as a protocol
+    main:8: error: Regular type "builtins.int" passed as a protocol  [misc]

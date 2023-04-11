@@ -23,7 +23,7 @@ def load_supports_type(
         [arg_type],
     )
     assert supports_spec
-    supports_spec.type._promote = None  # noqa: WPS437
+    supports_spec.type._promote = []  # noqa: WPS437
     return supports_spec
 
 

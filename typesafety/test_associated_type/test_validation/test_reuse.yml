@@ -14,4 +14,4 @@
     def from_json(instance) -> str:
         ...
   out: |
-    main:10: error: AssociatedType "main.ToJson" must not be reused, originally associated with "main.from_json"
+    main:10: error: AssociatedType "main.ToJson" must not be reused, originally associated with "main.from_json"  [misc]
