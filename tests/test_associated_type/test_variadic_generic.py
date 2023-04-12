@@ -31,6 +31,6 @@ def test_subtype_is_variadic():
     class Example(AssociatedType[_FirstType]):
         """Correct type."""
 
-    assert Example[int]
-    assert Example[int, int]  # type: ignore
-    assert Example[int, int, str]  # type: ignore
+    assert Example[int]  # type: ignore[truthy-function]
+    assert Example[int, int]  # type: ignore[misc]
+    assert Example[int, int, str]  # type: ignore[misc]

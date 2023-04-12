@@ -38,7 +38,8 @@ jobs:
     - name: Run tests
       run: |
         poetry run flake8 .
-        poetry run mypy classes ./tests/**/*.py
+        # TODO: Remove `no-warn-unused-ignores` flag once we drop support for Python 3.7 and 3.8
+        poetry run mypy --no-warn-unused-ignores classes ./tests/**/*.py
         poetry run codespell classes tests docs typesafety README.md CONTRIBUTING.md CHANGELOG.md
         poetry run pytest classes tests docs/pages README.md
         poetry run doc8 -q docs

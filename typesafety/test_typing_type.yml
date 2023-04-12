@@ -22,5 +22,5 @@
     class_type(_MyClass)
     class_type(int)
   out: |
-    main:7: error: Invalid base class "Type"
-    main:20: error: Argument 1 to "class_type" has incompatible type "Type[int]"; expected "Type[_MyClass]"
+    main:7: error: Invalid base class "Type"  [misc]
+    main:20: error: Argument 1 to "class_type" has incompatible type "Type[int]"; expected "Type[_MyClass]"  [arg-type]

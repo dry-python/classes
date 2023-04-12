@@ -2,6 +2,11 @@
 
 We follow Semantic Versions since the `0.1.0` release.
 
+## Version 0.5.0 WIP
+
+### Features
+
+- Now requires `mypy>=1.2`
 
 ## Version 0.4.1
 

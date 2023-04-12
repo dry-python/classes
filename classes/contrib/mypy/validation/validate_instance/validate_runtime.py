@@ -2,8 +2,7 @@ from typing import Optional
 
 from mypy.erasetype import erase_type
 from mypy.plugin import MethodContext
-from mypy.sametypes import is_same_type
-from mypy.subtypes import is_subtype
+from mypy.subtypes import is_same_type, is_subtype
 from mypy.types import Instance
 from mypy.types import Type as MypyType
 from mypy.types import TypedDictType

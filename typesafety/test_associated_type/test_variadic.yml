@@ -21,5 +21,5 @@
     One[int, str]
     Two[int]
   out: |
-    main:18: error: Type application has too many types (1 expected)
-    main:19: error: Type application has too few types (2 expected)
+    main:18: error: Type application has too many types (1 expected)  [misc]
+    main:19: error: Type application has too few types (2 expected)  [misc]

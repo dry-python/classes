@@ -22,7 +22,7 @@ else:
 
     _Meta = type('_Meta', (_UserDictMeta, type(TypedDict)), {})
 
-    class UserDict(_User, metaclass=_Meta):
+    class UserDict(_User, metaclass=_Meta):  # type: ignore[misc]
         """We use this class to represent a typed dict with instance check."""
 
     @typeclass

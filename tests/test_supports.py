@@ -14,7 +14,7 @@ class _ListOfStrMeta(type):
         )
 
 
-class _ListOfStr(List[str], metaclass=_ListOfStrMeta):
+class _ListOfStr(List[str], metaclass=_ListOfStrMeta):  # type: ignore[misc]
     """We use this for testing concrete type calls."""
 
 

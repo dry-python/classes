@@ -6,10 +6,10 @@ from mypy.subtypes import is_subtype
 from mypy.typeops import get_type_vars, make_simplified_union
 from mypy.types import CallableType, Instance, ProperType
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, union_items
+from mypy.types import TypeVarType
 from typing_extensions import Final, final
 
-from classes.contrib.mypy.typeops import type_loader
+from classes.contrib.mypy.typeops import type_loader, union
 
 _INCOMPATIBLE_TYPEVAR_MSG: Final = (
     'Argument 1 to {0} has incompatible type "{1}"; expected "{2}"'
@@ -61,7 +61,7 @@ class SmartCallSignature(object):
         first_arg: TypeVarType,
         passed_type: MypyType,
     ) -> CallableType:
-        instance_types = union_items(self._instance_type)
+        instance_types = union.union_items(self._instance_type)
         if isinstance(self._associated_type, Instance):
             instance_types.append(_load_supports_type(
                 first_arg,

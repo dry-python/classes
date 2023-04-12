@@ -14,4 +14,4 @@
     def compare(instance: List[X]) -> X:
         ...
   out: |
-    main:10: error: Generic type "main.Compare" with "0" type arguments does not match generic instance declaration "builtins.list[X`-1]" with "1" type arguments
+    main:10: error: Generic type "main.Compare" with "0" type arguments does not match generic instance declaration "builtins.list[X`-1]" with "1" type arguments  [misc]
