@@ -32,8 +32,13 @@ Smart, pythonic, ad-hoc, typed polymorphism for Python.
 pip install classes
 ```
 
-You also need to [configure](https://classes.readthedocs.io/en/latest/pages/container.html#type-safety)
+You may also need to [configure](https://classes.readthedocs.io/en/latest/pages/container.html#type-safety)
 `mypy` correctly and install our plugin:
+
+```bash
+pip install classes[compatible-mypy]
+```
+and
 
 ```ini
 # In setup.cfg or mypy.ini:
