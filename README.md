@@ -124,7 +124,7 @@ Typeclass is represented as a regular function, so you can use it like one:
 
 ```
 
-And it easy to extend this typeclass with your own classes as well:
+And it is easy to extend this typeclass with your own classes as well:
 
 ```python
 # Pretending to import the existing library from somewhere:
