@@ -28,7 +28,7 @@
     def _some_int(instance: int, arg: C) -> str:
         ...
   out: |
-    main:24: error: Instance callback is incompatible "def (instance: builtins.int, arg: main.C) -> builtins.str"; expected "def (instance: builtins.int, arg: main.B) -> builtins.str"
+    main:24: error: Instance callback is incompatible "def (instance: builtins.int, arg: main.C) -> builtins.str"; expected "def (instance: builtins.int, arg: main.B) -> builtins.str"  [misc]
 
 
 - case: typeclass_instance_ret_type_variance
@@ -61,7 +61,7 @@
     def _some_int(instance: int) -> C:
         ...
   out: |
-    main:16: error: Instance callback is incompatible "def (instance: builtins.str) -> main.A"; expected "def (instance: builtins.str) -> main.B"
+    main:16: error: Instance callback is incompatible "def (instance: builtins.str) -> main.A"; expected "def (instance: builtins.str) -> main.B"  [misc]
 
 
 - case: typeclass_instance_self_variance
@@ -94,7 +94,7 @@
     def _some_c(instance: C):
         ...
   out: |
-    main:16: error: Instance "main.A" does not match original type "main.B"
+    main:16: error: Instance "main.A" does not match original type "main.B"  [misc]
 
 
 - case: typeclass_instance_runtime_variance
@@ -127,5 +127,5 @@
     def _some_c(instance: B) -> str:
         ...
   out: |
-    main:16: error: Instance "main.B" does not match inferred type "main.A"
-    main:24: error: Instance "main.B" does not match inferred type "main.C"
+    main:16: error: Instance "main.B" does not match inferred type "main.A"  [misc]
+    main:24: error: Instance "main.B" does not match inferred type "main.C"  [misc]

@@ -20,8 +20,8 @@
 
     x: Supports[Some[int]] = [1, 2, 3]
     y = {1, 2, 3}
-    reveal_type(some(x))  # N: Revealed type is "builtins.int*"
-    reveal_type(some(y))  # N: Revealed type is "builtins.int*"
+    reveal_type(some(x))  # N: Revealed type is "builtins.int"
+    reveal_type(some(y))  # N: Revealed type is "builtins.int"
 
 
 - case: supports_generic_correct2
@@ -47,8 +47,8 @@
 
     x: Supports[Some[int, str]] = {1: 'a'}
 
-    reveal_type(some(x, 1, 'a'))  # N: Revealed type is "builtins.str*"
-    reveal_type(some({'a': 1}, 'a', 1))  # N: Revealed type is "builtins.int*"
+    reveal_type(some(x, 1, 'a'))  # N: Revealed type is "builtins.str"
+    reveal_type(some({'a': 1}, 'a', 1))  # N: Revealed type is "builtins.int"
 
 
 - case: supports_generic_wrong1
@@ -73,8 +73,8 @@
     x: Supports[Some[int]] = {1, 2, 3}
     some({1, 2, 3})
   out: |
-    main:17: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")
-    main:18: error: Argument 1 to "some" has incompatible type "Set[int]"; expected "Supports[Some[<nothing>]]"
+    main:17: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")  [assignment]
+    main:18: error: Argument 1 to "some" has incompatible type "Set[int]"; expected "Supports[Some[<nothing>]]"  [arg-type]
 
 
 - case: supports_generic_wrong2
@@ -105,11 +105,11 @@
     y: Supports[Some[int]] = {1, 2, 3}
     z: Supports[Some[int]] = 1
   out: |
-    main:17: error: Found different typeclass ".instance" calls, use only "main.some"
-    main:17: error: Instance "Union[builtins.list[X`-1], builtins.set[X`-1]]" does not match inferred type "builtins.set[_T`1]"
-    main:22: error: Incompatible types in assignment (expression has type "List[int]", variable has type "Supports[Some[int]]")
-    main:23: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")
-    main:24: error: Incompatible types in assignment (expression has type "int", variable has type "Supports[Some[int]]")
+    main:17: error: Found different typeclass ".instance" calls, use only "main.some"  [misc]
+    main:17: error: Instance "Union[builtins.list[X`-1], builtins.set[X`-1]]" does not match inferred type "builtins.set[_T`1]"  [misc]
+    main:22: error: Incompatible types in assignment (expression has type "List[int]", variable has type "Supports[Some[int]]")  [assignment]
+    main:23: error: Incompatible types in assignment (expression has type "Set[int]", variable has type "Supports[Some[int]]")  [assignment]
+    main:24: error: Incompatible types in assignment (expression has type "int", variable has type "Supports[Some[int]]")  [assignment]
 
 
 - case: supports_multiple_one_generic_one_regular
@@ -177,5 +177,5 @@
         ...
 
     a: Supports[Some[str], Other[int]]
-    reveal_type(some(a))  # N: Revealed type is "builtins.str*"
-    reveal_type(other(a))  # N: Revealed type is "builtins.int*"
+    reveal_type(some(a))  # N: Revealed type is "builtins.str"
+    reveal_type(other(a))  # N: Revealed type is "builtins.int"
