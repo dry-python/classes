@@ -174,7 +174,7 @@ This registry is using ``isinstance`` function
 to find handler that fits the defined predicate.
 It has the highest priority among other dispatch methods.
 
-This allows to sync both runtime and ``mypy`` behavior:
+This allows us to sync both runtime and ``mypy`` behavior:
 
 .. code:: python
 
