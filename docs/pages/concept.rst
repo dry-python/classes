@@ -361,7 +361,7 @@ Overriding and extending existing instances
 
 Sometimes we really need to override how things work.
 With objects and classes this can be problematic,
-because we would need to definie a new subclass
+because we would need to define a new subclass
 and chances are that it won't be used in some situations.
 
 With ``@typeclass`` overriding something is as easy.
