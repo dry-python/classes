@@ -27,7 +27,7 @@ To use typeclasses you should understand these steps:
        F2                         --> F3["Calling"]
 
 Let's walk through this process step by step.
-The first on is "Typeclass definition", where we create a new typeclass:
+The first one is "Typeclass definition", where we create a new typeclass:
 
 .. code:: python
 
@@ -174,7 +174,7 @@ This registry is using ``isinstance`` function
 to find handler that fits the defined predicate.
 It has the highest priority among other dispatch methods.
 
-This allows to sync both runtime and ``mypy`` behavior:
+This allows us to sync both runtime and ``mypy`` behavior:
 
 .. code:: python
 
@@ -361,7 +361,7 @@ Overriding and extending existing instances
 
 Sometimes we really need to override how things work.
 With objects and classes this can be problematic,
-because we would need to definie a new subclass
+because we would need to define a new subclass
 and chances are that it won't be used in some situations.
 
 With ``@typeclass`` overriding something is as easy.
