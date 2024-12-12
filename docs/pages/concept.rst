@@ -27,7 +27,7 @@ To use typeclasses you should understand these steps:
        F2                         --> F3["Calling"]
 
 Let's walk through this process step by step.
-The first on is "Typeclass definition", where we create a new typeclass:
+The first one is "Typeclass definition", where we create a new typeclass:
 
 .. code:: python
 
