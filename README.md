@@ -51,7 +51,7 @@ Make sure you know how to get started, [check out our docs](https://classes.read
 
 ## Example
 
-Imagine, that you want to bound implementation to some particular type.
+Imagine, that you want to bind implementation to some particular type.
 Like, strings behave like this, numbers behave like that, and so on.
 
 The good realworld example is `djangorestframework`.
