@@ -51,11 +51,11 @@ Make sure you know how to get started, [check out our docs](https://classes.read
 
 ## Example
 
-Imagine, that you want to bound implementation to some particular type.
+Imagine, that you want to bind implementation to some particular type.
 Like, strings behave like this, numbers behave like that, and so on.
 
 The good realworld example is `djangorestframework`.
-It is build around the idea that different
+It is built around the idea that different
 data types should be converted differently to and from `json` format.
 
 What is the "traditional" (or outdated if you will!) approach?
@@ -110,7 +110,7 @@ How would new API look like with this concept?
 
 ```
 
-See how easy it is to works with types and implementation?
+See how easy it is to work with types and implementation?
 
 Typeclass is represented as a regular function, so you can use it like one:
 
