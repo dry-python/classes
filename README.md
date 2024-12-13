@@ -55,7 +55,7 @@ Imagine, that you want to bind implementation to some particular type.
 Like, strings behave like this, numbers behave like that, and so on.
 
 The good realworld example is `djangorestframework`.
-It is build around the idea that different
+It is built around the idea that different
 data types should be converted differently to and from `json` format.
 
 What is the "traditional" (or outdated if you will!) approach?
