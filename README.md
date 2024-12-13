@@ -110,7 +110,7 @@ How would new API look like with this concept?
 
 ```
 
-See how easy it is to works with types and implementation?
+See how easy it is to work with types and implementation?
 
 Typeclass is represented as a regular function, so you can use it like one:
 
