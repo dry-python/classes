@@ -2,6 +2,10 @@
 
 We follow Semantic Versions since the `0.1.0` release.
 
+## Version 0.5.0 (ONGOING)
+
+- Drop `python3.7`, `python3.8` and `python3.9` support #496
+
 
 ## Version 0.4.1
 
