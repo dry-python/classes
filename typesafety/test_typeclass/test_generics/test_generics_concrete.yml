@@ -17,7 +17,7 @@
 
     some([1, 2, 3])
     some([])
-    some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"
+    some(['a'])  # E: List item 0 has incompatible type "str"; expected "int"  [list-item]
 
 
 - case: typeclass_concrete_generic_annotated_as_delegate
@@ -43,9 +43,9 @@
     some([])
     some(['a'])
   out: |
-    main:17: error: Argument 1 to "some" has incompatible type "List[int]"; expected "SomeDelegate"
-    main:18: error: Argument 1 to "some" has incompatible type "List[<nothing>]"; expected "SomeDelegate"
-    main:19: error: Argument 1 to "some" has incompatible type "List[str]"; expected "SomeDelegate"
+    main:17: error: Argument 1 to "some" has incompatible type "List[int]"; expected "SomeDelegate"  [arg-type]
+    main:18: error: Argument 1 to "some" has incompatible type "List[<nothing>]"; expected "SomeDelegate"  [arg-type]
+    main:19: error: Argument 1 to "some" has incompatible type "List[str]"; expected "SomeDelegate"  [arg-type]
 
 
 - case: typeclass_delegate_not_subtype_correct1
@@ -65,7 +65,7 @@
     def _some_list_int(instance: List[int]) -> int:
         ...
   out: |
-    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"
+    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"  [misc]
 
 
 - case: typeclass_delegate_not_subtype_correct2
@@ -84,7 +84,7 @@
     def _some_int(instance: int) -> int:
         ...
   out: |
-    main:10: error: Instance "builtins.int" does not match inferred type "main.SomeDelegate"
+    main:10: error: Instance "builtins.int" does not match inferred type "main.SomeDelegate"  [misc]
 
 
 - case: typeclass_concrete_generic_supports_delegate
@@ -101,7 +101,7 @@
                 all(isinstance(list_item, int) for list_item in arg)
             )
 
-    class ListOfInt(List[int], metaclass=ListOfIntMeta):
+    class ListOfInt(List[int], metaclass=ListOfIntMeta):  # type: ignore[misc]
         ...
 
     class A(AssociatedType):
@@ -125,8 +125,8 @@
     test(b)
     test(c)
   out: |
-    main:33: error: Argument 1 to "test" has incompatible type "List[int]"; expected "Supports[A]"
-    main:34: error: Argument 1 to "test" has incompatible type "List[str]"; expected "Supports[A]"
+    main:33: error: Argument 1 to "test" has incompatible type "List[int]"; expected "Supports[A]"  [arg-type]
+    main:34: error: Argument 1 to "test" has incompatible type "List[str]"; expected "Supports[A]"  [arg-type]
 
 
 - case: typeclass_concrete_generic_supports_instance
@@ -143,7 +143,7 @@
                 all(isinstance(list_item, int) for list_item in arg)
             )
 
-    class ListOfInt(List[int], metaclass=ListOfIntMeta):
+    class ListOfInt(List[int], metaclass=ListOfIntMeta):  # type: ignore[misc]
         ...
 
     class A(AssociatedType):
@@ -167,8 +167,8 @@
     test(b)
     test(c)
   out: |
-    main:33: error: Argument 1 to "test" has incompatible type "List[int]"; expected "Supports[A]"
-    main:34: error: Argument 1 to "test" has incompatible type "List[str]"; expected "Supports[A]"
+    main:33: error: Argument 1 to "test" has incompatible type "List[int]"; expected "Supports[A]"  [arg-type]
+    main:34: error: Argument 1 to "test" has incompatible type "List[str]"; expected "Supports[A]"  [arg-type]
 
 
 - case: typeclass_concrete_generic_delegate_and_protocol
@@ -188,9 +188,9 @@
     def _some_list_int(instance: List[int]) -> int:
         ...
   out: |
-    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"
-    main:11: error: Regular type "builtins.str*" passed as a protocol
-    main:11: error: Only a single argument can be applied to `.instance`
+    main:11: error: Instance "builtins.list[builtins.int]" does not match inferred type "main.SomeDelegate"  [misc]
+    main:11: error: Regular type "builtins.str" passed as a protocol  [misc]
+    main:11: error: Only a single argument can be applied to `.instance`  [misc]
 
 
 - case: typeclass_concrete_generic_delegate_and_tuple1
@@ -210,7 +210,7 @@
             except IndexError:
                 return False
 
-    class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):
+    class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):  # type: ignore[misc]
         ...
 
     @typeclass
@@ -228,9 +228,9 @@
     get_name(('a', 'b', 'c'))
     get_name(('a', 1))
   out: |
-    main:29: error: Argument 1 to "get_name" has incompatible type "Tuple[]"; expected "Tuple[str, bool]"
-    main:30: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str, str]"; expected "Tuple[str, bool]"
-    main:31: error: Argument 1 to "get_name" has incompatible type "Tuple[str, int]"; expected "Tuple[str, bool]"
+    main:29: error: Argument 1 to "get_name" has incompatible type "Tuple[]"; expected "Tuple[str, bool]"  [arg-type]
+    main:30: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str, str]"; expected "Tuple[str, bool]"  [arg-type]
+    main:31: error: Argument 1 to "get_name" has incompatible type "Tuple[str, int]"; expected "Tuple[str, bool]"  [arg-type]
 
 
 - case: typeclass_concrete_generic_delegate_and_tuple2
@@ -250,7 +250,7 @@
             except IndexError:
                 return False
 
-    class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):
+    class UserTuple(Tuple[str, bool], metaclass=UserTupleMeta):  # type: ignore[misc]
         ...
 
     @typeclass
@@ -270,7 +270,7 @@
     get_name(('a', True))
     get_name(('a', 'b', 'c'))
   out: |
-    main:30: error: Argument 1 to "get_name" has incompatible type "Tuple[]"; expected "UserTuple"
-    main:31: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str]"; expected "UserTuple"
-    main:32: error: Argument 1 to "get_name" has incompatible type "Tuple[str, bool]"; expected "UserTuple"
-    main:33: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str, str]"; expected "UserTuple"
+    main:30: error: Argument 1 to "get_name" has incompatible type "Tuple[]"; expected "UserTuple"  [arg-type]
+    main:31: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str]"; expected "UserTuple"  [arg-type]
+    main:32: error: Argument 1 to "get_name" has incompatible type "Tuple[str, bool]"; expected "UserTuple"  [arg-type]
+    main:33: error: Argument 1 to "get_name" has incompatible type "Tuple[str, str, str]"; expected "UserTuple"  [arg-type]

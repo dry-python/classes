@@ -1,5 +1,6 @@
 - case: typeclass_typed_dict1
   disable_cache: false
+  skip: sys.version_info[:2] > (3, 8)
   main: |
     from classes import typeclass, AssociatedType, Supports
     from typing_extensions import TypedDict
@@ -18,7 +19,7 @@
 
     UserMeta = type('UserMeta', (UserDictMeta, type(TypedDict)), {})
 
-    class UserDict(User, metaclass=UserMeta):
+    class UserDict(User, metaclass=UserMeta):  # type: ignore[misc]
         ...
 
     class GetName(AssociatedType):
@@ -44,13 +45,14 @@
     callback(c)
     callback({})
   out: |
-    main:40: error: Argument 1 to "callback" has incompatible type "User"; expected "Supports[GetName]"
-    main:41: error: Argument 1 to "callback" has incompatible type "Dict[str, object]"; expected "Supports[GetName]"
-    main:42: error: Argument 1 to "callback" has incompatible type "Dict[<nothing>, <nothing>]"; expected "Supports[GetName]"
+    main:40: error: Argument 1 to "callback" has incompatible type "User"; expected "Supports[GetName]"  [arg-type]
+    main:41: error: Argument 1 to "callback" has incompatible type "Dict[str, object]"; expected "Supports[GetName]"  [arg-type]
+    main:42: error: Argument 1 to "callback" has incompatible type "Dict[<nothing>, <nothing>]"; expected "Supports[GetName]"  [arg-type]
 
 
 - case: typeclass_typed_dict2
   disable_cache: false
+  skip: sys.version_info[:2] > (3, 8)
   main: |
     from classes import typeclass
     from typing_extensions import TypedDict
@@ -69,7 +71,7 @@
 
     UserMeta = type('UserMeta', (UserDictMeta, type(TypedDict)), {})
 
-    class UserDict(User, metaclass=UserMeta):
+    class UserDict(User, metaclass=UserMeta):  # type: ignore[misc]
         ...
 
     @typeclass
@@ -85,6 +87,7 @@
 
 - case: typeclass_typed_dict3
   disable_cache: false
+  skip: sys.version_info[:2] > (3, 8)
   main: |
     from classes import typeclass
     from typing_extensions import TypedDict
@@ -107,7 +110,7 @@
 
     UserMeta = type('UserMeta', (UserDictMeta, type(TypedDict)), {})
 
-    class UserDict(User, metaclass=UserMeta):
+    class UserDict(User, metaclass=UserMeta):  # type: ignore [misc]
         ...
 
     @typeclass

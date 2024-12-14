@@ -19,8 +19,8 @@
         reveal_type(item)
         to_json(item)  # ok
   out: |
-    main:13: error: Argument 1 to "to_json" has incompatible type "Union[int, str]"; expected "int"
-    main:16: note: Revealed type is "builtins.int*"
+    main:13: error: Argument 1 to "to_json" has incompatible type "Union[int, str]"; expected "int"  [arg-type]
+    main:16: note: Revealed type is "builtins.int"
 
 
 - case: typeclass_object_supports_typeguard
@@ -51,7 +51,7 @@
         reveal_type(item)
         to_json(item)  # ok
   out: |
-    main:20: error: Argument 1 to "to_json" has incompatible type "Union[int, str]"; expected "Supports[ToJson]"
+    main:20: error: Argument 1 to "to_json" has incompatible type "Union[int, str]"; expected "Supports[ToJson]"  [arg-type]
     main:23: note: Revealed type is "Union[builtins.dict[Any, Any], builtins.int]"
 
 
@@ -82,7 +82,7 @@
         reveal_type(item)
         copy(item)  # ok
   out: |
-    main:19: error: Argument 1 to "copy" has incompatible type "Union[builtins.int, builtins.str]"; expected "Union[builtins.dict[Any, Any], builtins.int]"
+    main:19: error: Argument 1 to "copy" has incompatible type "Union[builtins.int, builtins.str]"; expected "Union[builtins.dict[Any, Any], builtins.int]"  [misc]
     main:22: note: Revealed type is "Union[builtins.dict[Any, Any], builtins.int]"
 
 
@@ -116,5 +116,5 @@
         reveal_type(item)
         copy(item)  # ok
   out: |
-    main:22: error: Argument 1 to "copy" has incompatible type "Union[builtins.int, builtins.str]"; expected "classes._typeclass.Supports[main.Copy]"
+    main:22: error: Argument 1 to "copy" has incompatible type "Union[builtins.int, builtins.str]"; expected "classes._typeclass.Supports[main.Copy]"  [misc]
     main:25: note: Revealed type is "Union[builtins.dict[Any, Any], builtins.int]"

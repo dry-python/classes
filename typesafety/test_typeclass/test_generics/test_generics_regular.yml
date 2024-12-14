@@ -7,15 +7,15 @@
     X = TypeVar('X')
 
     @typeclass
-    def some(instance, b: int) -> X:
+    def some(instance, b: int) -> X:  # type: ignore[type-var]
         ...
 
     @some.instance(list)
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
 
-    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str*"
-    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int*"
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str"
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int"
 
 
 - case: typeclass_generic_definition_restriction_correct
@@ -38,11 +38,11 @@
     def _some_tuple(instance: Tuple[X, ...], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
 
-    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str*"
-    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int*"
+    reveal_type(some(['a', 'b'], 0))  # N: Revealed type is "builtins.str"
+    reveal_type(some([1, 2, 3], 0))  # N: Revealed type is "builtins.int"
 
-    reveal_type(some((1, 2, 3), 0))  # N: Revealed type is "builtins.int*"
-    reveal_type(some((1, 2), 0))  # N: Revealed type is "builtins.int*"
+    reveal_type(some((1, 2, 3), 0))  # N: Revealed type is "builtins.int"
+    reveal_type(some((1, 2), 0))  # N: Revealed type is "builtins.int"
 
 
 - case: typeclass_generic_definition_restriction_wrong
@@ -64,7 +64,7 @@
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
   out: |
-    main:13: error: Instance "builtins.list[X`-1]" does not match original type "main.Some[X`-1]"
+    main:13: error: Instance "builtins.list[X`-1]" does not match original type "main.Some[X`-1]"  [misc]
 
 
 - case: typeclass_generic_definition_any1
@@ -106,7 +106,7 @@
     def _some_ex(instance: list, b: int) -> int:
         ...
   out: |
-    main:10: error: Instance "builtins.list[Any]" has concrete generic type, it is not supported during runtime
+    main:10: error: Instance "builtins.list[Any]" has concrete generic type, it is not supported during runtime  [misc]
 
 
 - case: typeclass_generic_definition_unbound
@@ -125,7 +125,11 @@
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
   out: |
-    main:10: error: Runtime type "builtins.list[X?]" has unbound type, use implicit any
+    main:7: error: A function returning TypeVar should receive at least one argument containing the same TypeVar  [type-var]
+    main:10: error: Runtime type "builtins.list[X?]" has unbound type, use implicit any  [misc]
+    main:10: error: Type variable "main.X" is unbound  [valid-type]
+    main:10: note: (Hint: Use "Generic[X]" or "Protocol[X]" base class to bind "X" inside a class)
+    main:10: note: (Hint: Use "X" in function signature to bind "X" inside a function)
 
 
 - case: typeclass_generic_definition_concrete1
@@ -144,8 +148,10 @@
     def _some_ex(instance: List[int], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
   out: |
-    main:10: error: Instance "builtins.list[builtins.int]" has concrete generic type, it is not supported during runtime
-    main:12: error: Incompatible return value type (got "int", expected "X")
+    main:7: error: A function returning TypeVar should receive at least one argument containing the same TypeVar  [type-var]
+    main:10: error: Instance "builtins.list[builtins.int]" has concrete generic type, it is not supported during runtime  [misc]
+    main:11: error: A function returning TypeVar should receive at least one argument containing the same TypeVar  [type-var]
+    main:12: error: Incompatible return value type (got "int", expected "X")  [return-value]
 
 
 - case: typeclass_generic_definition_concrete2
@@ -164,7 +170,8 @@
     def _some_ex(instance: List[X], b: int) -> X:
         return instance[b]  # We need this line to test inner inference
   out: |
-    main:10: error: Instance "builtins.list[builtins.int*]" has concrete generic type, it is not supported during runtime
+    main:7: error: A function returning TypeVar should receive at least one argument containing the same TypeVar  [type-var]
+    main:10: error: Instance "builtins.list[builtins.int]" has concrete generic type, it is not supported during runtime  [misc]
 
 
 - case: typeclass_generic_call_union1
@@ -191,7 +198,7 @@
 
     reveal_type(copy(a))
   out: |
-    main:20: note: Revealed type is "builtins.str*"
+    main:20: note: Revealed type is "builtins.str"
 
 
 - case: typeclass_generic_call_union2
@@ -221,7 +228,7 @@
 
     reveal_type(copy(a))
   out: |
-    main:23: note: Revealed type is "builtins.str*"
+    main:23: note: Revealed type is "builtins.str"
 
 
 - case: typeclass_generic_call_union3
@@ -251,7 +258,7 @@
 
     reveal_type(copy(a))
   out: |
-    main:9: error: Generic type "main.Copy" with "0" type arguments does not match generic instance declaration "typing.Iterable[X`-1]" with "1" type arguments
+    main:9: error: Generic type "main.Copy" with "0" type arguments does not match generic instance declaration "typing.Iterable[X`-1]" with "1" type arguments  [misc]
     main:23: note: Revealed type is "<nothing>"
 
 
@@ -271,7 +278,7 @@
     def _some_tuple(instance: Tuple[X, X]) -> X:
         ...
   out: |
-    main:10: error: Instance "Tuple[X`-1, X`-1]" has concrete generic type, it is not supported during runtime
+    main:10: error: Instance "Tuple[X`-1, X`-1]" has concrete generic type, it is not supported during runtime  [misc]
 
 
 - case: typeclass_regression259_mutated_signature

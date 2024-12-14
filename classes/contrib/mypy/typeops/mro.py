@@ -4,10 +4,10 @@ from mypy.plugin import MethodContext
 from mypy.subtypes import is_equivalent
 from mypy.types import Instance
 from mypy.types import Type as MypyType
-from mypy.types import UnionType, union_items
+from mypy.types import UnionType
 from typing_extensions import final
 
-from classes.contrib.mypy.typeops import type_loader
+from classes.contrib.mypy.typeops import type_loader, union
 
 
 @final
@@ -78,7 +78,7 @@ class MetadataInjector(object):
         """
         self._associated_type = associated_type
         self._ctx = ctx
-        self._instance_types = union_items(instance_type)
+        self._instance_types = union.union_items(instance_type)
 
         # Why do we store added types in a mutable global state?
         # Because, these types are hard to replicate without the proper context.
@@ -181,7 +181,7 @@ class MetadataInjector(object):
         base = instance_type.type.bases[index]
         union_types = [
             type_arg
-            for type_arg in union_items(base.args[0])
+            for type_arg in union.union_items(base.args[0])
             if type_arg not in supports_type.args
         ]
         instance_type.type.bases[index] = supports_type.copy_modified(

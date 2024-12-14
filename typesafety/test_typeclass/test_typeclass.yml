@@ -32,7 +32,7 @@
     to_json('a')
     to_json(None)
   out: |
-    main:20: error: Argument 1 to "to_json" has incompatible type "None"; expected "Supports[ToJson]"
+    main:20: error: Argument 1 to "to_json" has incompatible type "None"; expected "Supports[ToJson]"  [arg-type]
 
 
 - case: typeclass_class_wrong_sig
@@ -51,8 +51,8 @@
     def _to_json_int(instance: str) -> int:
         ...
   out: |
-    main:10: error: Instance callback is incompatible "def (instance: builtins.str) -> builtins.int"; expected "def (instance: builtins.str, verbose: builtins.bool =) -> builtins.str"
-    main:10: error: Instance "builtins.str" does not match inferred type "builtins.int*"
+    main:10: error: Instance callback is incompatible "def (instance: builtins.str) -> builtins.int"; expected "def (instance: builtins.str, verbose: builtins.bool =) -> builtins.str"  [misc]
+    main:10: error: Instance "builtins.str" does not match inferred type "builtins.int"  [misc]
 
 
 - case: typeclass_definied_by_literal
@@ -62,7 +62,7 @@
 
     typeclass(1)
   out: |
-    main:3: error: No overload variant of "typeclass" matches argument type "int"
+    main:3: error: No overload variant of "typeclass" matches argument type "int"  [call-overload]
     main:3: note: Possible overload variants:
     main:3: note:     def [_AssociatedType] typeclass(definition: Type[_AssociatedType]) -> _TypeClassDef[_AssociatedType]
     main:3: note:     def [_SignatureType, _InstanceType, _AssociatedType, _Fullname <: str] typeclass(signature: _SignatureType) -> _TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]
@@ -84,5 +84,5 @@
 
         reveal_type(_a_int)
   out: |
-    main:8: error: Typeclass cannot be loaded, it must be a global declaration
+    main:8: error: Typeclass cannot be loaded, it must be a global declaration  [misc]
     main:12: note: Revealed type is "Any"
