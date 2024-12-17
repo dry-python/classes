@@ -109,7 +109,7 @@ Now, let's build a class that match this protocol and test it:
 
 .. code:: python
 
-    >>> class WithField(object):
+    >>> class WithField:
     ...    field: str = 'with field'
 
     >>> assert example(WithField()) == 'with field'
@@ -256,7 +256,7 @@ class Supports(Generic[_AssociatedTypeDef]):
 
       >>> from classes import typeclass, Supports
 
-      >>> class ToJson(object):
+      >>> class ToJson:
       ...     ...
 
       >>> @typeclass(ToJson)

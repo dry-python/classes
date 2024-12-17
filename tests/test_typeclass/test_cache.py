@@ -8,7 +8,7 @@ def my_typeclass(instance) -> int:
     """Example typeclass."""
 
 
-class _MyABC(object, metaclass=ABCMeta):
+class _MyABC(metaclass=ABCMeta):
     @abstractmethod
     def get_number(self) -> int:
         """Example abstract method."""
@@ -20,7 +20,7 @@ class _MyConcrete(_MyABC):
         return 1
 
 
-class _MyRegistered(object):
+class _MyRegistered:
     def get_number(self) -> int:
         """Would be registered in ``_MyABC`` later."""
         return 2
