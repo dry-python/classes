@@ -6,10 +6,11 @@ from mypy.subtypes import is_subtype
 from mypy.typeops import get_type_vars, make_simplified_union
 from mypy.types import CallableType, Instance, ProperType
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, union_items
+from mypy.types import TypeVarType
 from typing_extensions import Final, final
 
 from classes.contrib.mypy.typeops import type_loader
+from classes.contrib.mypy.typeops.union_items import union_items
 
 _INCOMPATIBLE_TYPEVAR_MSG: Final = (
     'Argument 1 to {0} has incompatible type "{1}"; expected "{2}"'

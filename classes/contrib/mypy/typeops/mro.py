@@ -4,10 +4,11 @@ from mypy.plugin import MethodContext
 from mypy.subtypes import is_equivalent
 from mypy.types import Instance
 from mypy.types import Type as MypyType
-from mypy.types import UnionType, union_items
+from mypy.types import UnionType
 from typing_extensions import final
 
 from classes.contrib.mypy.typeops import type_loader
+from classes.contrib.mypy.typeops.union_items import union_items
 
 
 @final
