@@ -615,8 +615,6 @@ class _TypeClass(  # noqa: WPS214
 
 
 if TYPE_CHECKING:
-    from typing_extensions import Protocol
-
     class _TypeClassDef(Protocol[_AssociatedType]):
         """
         Callable protocol to help us with typeclass definition.
