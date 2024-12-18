@@ -119,7 +119,6 @@ See our `official docs <https://classes.readthedocs.io>`_ to learn more!
 from functools import _find_impl  # type: ignore  # noqa: WPS450
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
-    Any,
     Callable,
     Dict,
     Generic,
@@ -301,7 +300,10 @@ class Supports(Generic[_AssociatedTypeDef]):
 
 
 class Callback(Protocol):
-    def __call__(self, instance, *args, **kwargs) -> _ReturnType: ...
+    """Complex function annotation, with variadic params."""
+
+    def __call__(self, instance, *args, **kwargs) -> _ReturnType:
+        """Complex function annotation, with variadic params."""
 
 
 @final  # noqa: WPS214
