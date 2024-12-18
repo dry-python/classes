@@ -119,10 +119,12 @@ See our `official docs <https://classes.readthedocs.io>`_ to learn more!
 from functools import _find_impl  # type: ignore  # noqa: WPS450
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     Generic,
     Optional,
+    Protocol,
     Type,
     TypeVar,
     Union,
@@ -298,6 +300,10 @@ class Supports(Generic[_AssociatedTypeDef]):
     __slots__ = ()
 
 
+class Callback(Protocol):
+    def __call__(self, instance, *args, **kwargs) -> _ReturnType: ...
+
+
 @final  # noqa: WPS214
 class _TypeClass(  # noqa: WPS214
     Generic[_InstanceType, _SignatureType, _AssociatedType, _Fullname],
@@ -323,7 +329,7 @@ class _TypeClass(  # noqa: WPS214
         '_dispatch_cache',
     )
 
-    _dispatch_cache: Dict[type, Callable]
+    _dispatch_cache: Dict[type, Callback]
     _cache_token: Optional[object]
 
     def __init__(
@@ -601,7 +607,7 @@ class _TypeClass(  # noqa: WPS214
 
         return _find_impl(instance_type, self._exact_types)
 
-    def _dispatch_delegate(self, instance) -> Optional[Callable]:
+    def _dispatch_delegate(self, instance) -> Optional[Callback]:
         for delegate, callback in self._delegates.items():
             if isinstance(instance, delegate):
                 return callback
