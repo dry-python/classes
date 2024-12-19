@@ -299,13 +299,6 @@ class Supports(Generic[_AssociatedTypeDef]):
     __slots__ = ()
 
 
-class Callback(Protocol):
-    """Complex function annotation, with variadic params."""
-
-    def __call__(self, instance, *args, **kwargs) -> _ReturnType:
-        """Complex function annotation, with variadic params."""
-
-
 @final  # noqa: WPS214
 class _TypeClass(  # noqa: WPS214
     Generic[_InstanceType, _SignatureType, _AssociatedType, _Fullname],
@@ -331,7 +324,7 @@ class _TypeClass(  # noqa: WPS214
         '_dispatch_cache',
     )
 
-    _dispatch_cache: Dict[type, Callback]
+    _dispatch_cache: Dict[type, Callable]
     _cache_token: Optional[object]
 
     def __init__(
@@ -609,7 +602,7 @@ class _TypeClass(  # noqa: WPS214
 
         return _find_impl(instance_type, self._exact_types)
 
-    def _dispatch_delegate(self, instance) -> Optional[Callback]:
+    def _dispatch_delegate(self, instance) -> Optional[Callable]:
         for delegate, callback in self._delegates.items():
             if isinstance(instance, delegate):
                 return callback
