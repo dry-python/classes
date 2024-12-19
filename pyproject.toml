@@ -48,7 +48,7 @@ python = "^3.10"
 typing_extensions = ">=3.10,<5.0"
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.13"
+mypy = "^0.942"
 
 wemake-python-styleguide = "^0.19"
 flake8-pytest-style = "^2.0"
@@ -59,7 +59,7 @@ safety = "^3.2"
 pytest = "^8.3"
 pytest-cov = "^6.0"
 pytest-randomly = "^3.16"
-pytest-mypy-plugins = "^3.1"
+pytest-mypy-plugins = "^1.9"
 
 sphinx = "^8.1"
 sphinx-autodoc-typehints = "^2.5"
