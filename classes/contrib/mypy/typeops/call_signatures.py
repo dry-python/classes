@@ -17,7 +17,7 @@ _INCOMPATIBLE_TYPEVAR_MSG: Final = (
 
 
 @final
-class SmartCallSignature(object):
+class SmartCallSignature:
     """
     Infers the ``__call__`` signature of a typeclass.
 

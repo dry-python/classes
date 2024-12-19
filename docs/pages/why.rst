@@ -58,7 +58,7 @@ super type to make ``len`` method available to your type:
 
   >>> import abc
 
-  >>> class HasLength(object):
+  >>> class HasLength:
   ...     @abc.abstractmethod
   ...     def len(self) -> int:
   ...         """You have to implement this method to get the length."""
@@ -96,7 +96,7 @@ For example, imagine you have a typical domain ``Person`` class:
 
   >>> from typing import Sequence
 
-  >>> class Person(object):
+  >>> class Person:
   ...     def become_friends(self, friend: 'Person') -> None:
   ...          ...
   ...
@@ -111,7 +111,7 @@ And our library requires this extra API:
 
 .. code:: diff
 
-  --- class Person(object):
+  --- class Person:
   +++ class Person(JSONSerializable):
 
   +++ def to_json(self) -> str:

@@ -310,7 +310,7 @@ In other words, it can fallback to more common types:
   ... def example(instance) -> str:
   ...     ...
 
-  >>> class A(object):
+  >>> class A:
   ...     ...
 
   >>> class B(A):
@@ -505,7 +505,7 @@ to have only subtypes of some specific types during typechecking
 
   >>> from classes import typeclass
 
-  >>> class A(object):
+  >>> class A:
   ...     ...
 
   >>> class B(A):

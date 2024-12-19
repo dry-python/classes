@@ -109,7 +109,7 @@ Now, let's build a class that match this protocol and test it:
 
 .. code:: python
 
-    >>> class WithField(object):
+    >>> class WithField:
     ...    field: str = 'with field'
 
     >>> assert example(WithField()) == 'with field'
@@ -123,6 +123,7 @@ from typing import (  # noqa: WPS235
     Dict,
     Generic,
     Optional,
+    Protocol,
     Type,
     TypeVar,
     Union,
@@ -256,7 +257,7 @@ class Supports(Generic[_AssociatedTypeDef]):
 
       >>> from classes import typeclass, Supports
 
-      >>> class ToJson(object):
+      >>> class ToJson:
       ...     ...
 
       >>> @typeclass(ToJson)
@@ -609,8 +610,6 @@ class _TypeClass(  # noqa: WPS214
 
 
 if TYPE_CHECKING:
-    from typing_extensions import Protocol
-
     class _TypeClassDef(Protocol[_AssociatedType]):
         """
         Callable protocol to help us with typeclass definition.

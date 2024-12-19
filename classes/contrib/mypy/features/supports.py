@@ -12,7 +12,7 @@ from classes.contrib.mypy.validation import validate_supports
 
 
 @final
-class VariadicGeneric(object):
+class VariadicGeneric:
     """
     Variadic generic support for ``Supports`` type.
 
