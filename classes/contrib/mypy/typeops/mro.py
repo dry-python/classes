@@ -11,7 +11,7 @@ from classes.contrib.mypy.typeops import type_loader
 
 
 @final
-class MetadataInjector(object):
+class MetadataInjector:
     """
     Injects fake ``Supports[TypeClass]`` parent classes into ``mro``.
 

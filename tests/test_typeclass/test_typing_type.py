@@ -5,7 +5,7 @@ import pytest
 from classes import typeclass
 
 
-class _MyClass(object):
+class _MyClass:
     """We use this class to test `Type[MyClass]`."""
 
 

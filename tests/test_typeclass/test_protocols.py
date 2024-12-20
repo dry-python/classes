@@ -18,7 +18,7 @@ def _str_type(instance: str, other: str) -> str:
     return instance + other
 
 
-class _CustomSized(object):
+class _CustomSized:
     def __len__(self) -> int:
         return 2
 

@@ -3,10 +3,6 @@ requires = ["poetry-core>=1.9.0"]
 build-backend = "poetry.core.masonry.api"
 
 
-[tool.nitpick]
-style = "https://raw.githubusercontent.com/wemake-services/wemake-python-styleguide/0.19.2/styles/nitpick-style-wemake.toml"
-
-
 [tool.poetry]
 name = "classes"
 version = "0.4.1"
@@ -44,30 +40,30 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.10"
 typing_extensions = ">=3.10,<5.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 mypy = "^0.942"
 
-wemake-python-styleguide = "^0.17"
-flake8-pytest-style = "^1.6"
-nitpick = "^0.32"
+wemake-python-styleguide = "^0.19"
+flake8-pytest-style = "^2.0"
+nitpick = "^0.35"
 
-safety = "^2.3"
+safety = "^3.2"
 
-pytest = "^7.2"
-pytest-cov = "^4.0"
-pytest-randomly = "^3.12"
+pytest = "^8.3"
+pytest-cov = "^6.0"
+pytest-randomly = "^3.16"
 pytest-mypy-plugins = "^1.9"
 
-sphinx = "^5.2"
-sphinx-autodoc-typehints = "^1.20"
-sphinxcontrib-mermaid = "^0.7"
+sphinx = "^8.1"
+sphinx-autodoc-typehints = "^2.5"
+sphinxcontrib-mermaid = "^1.0"
 sphinx-typlog-theme = "^0.8"
-doc8 = "^1.0"
+doc8 = "^1.1"
 m2r2 = "^0.3"
-tomlkit = "^0.11"
-codespell = "^2.2"
+tomlkit = "^0.13"
+codespell = "^2.3"
 
-phantom-types = "^1.0"
+phantom-types = "^3.0"

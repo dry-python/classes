@@ -30,7 +30,7 @@ from classes.contrib.mypy.validation import (
 
 
 @final
-class TypeClassReturnType(object):
+class TypeClassReturnType:
     """
     Adjust argument types when we define typeclasses via ``typeclass`` function.
 
@@ -105,7 +105,7 @@ class TypeClassReturnType(object):
 
 
 @final
-class TypeClassDefReturnType(object):
+class TypeClassDefReturnType:
     """
     Callback for cases like ``@typeclass(SomeType)``.
 
@@ -172,7 +172,7 @@ def instance_return_type(ctx: MethodContext) -> MypyType:
 
 
 @final
-class InstanceDefReturnType(object):
+class InstanceDefReturnType:
     """
     Class to check how instance definition is created.
 
