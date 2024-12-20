@@ -3,10 +3,6 @@ requires = ["poetry-core>=1.9.0"]
 build-backend = "poetry.core.masonry.api"
 
 
-[tool.nitpick]
-style = "https://raw.githubusercontent.com/wemake-services/wemake-python-styleguide/0.19.2/styles/nitpick-style-wemake.toml"
-
-
 [tool.poetry]
 name = "classes"
 version = "0.4.1"
