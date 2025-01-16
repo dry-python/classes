@@ -39,5 +39,5 @@
 
     accepts_typeclass(example)
   out: |
-    main:16: error: Argument 1 to "accepts_typeclass" has incompatible type "_TypeClass[float, Callable[[Any, bool], bool], <nothing>, Literal['main.example']]"; expected "Callable[[str, bool], bool]"
-    main:16: note: "_TypeClass[float, Callable[[Any, bool], bool], <nothing>, Literal['main.example']].__call__" has type "Callable[[Arg(Union[float, Supports[<nothing>]], 'instance'), VarArg(Any), KwArg(Any)], _ReturnType]"
+    main:16: error: Argument 1 to "accepts_typeclass" has incompatible type "_TypeClass[Union[int, float], Callable[[Any, bool], bool], <nothing>, Literal['main.example']]"; expected "Callable[[str, bool], bool]"  [arg-type]
+    main:16: note: "_TypeClass[Union[int, float], Callable[[Any, bool], bool], <nothing>, Literal['main.example']].__call__" has type "Callable[[Arg(Union[int, float, Supports[<nothing>]], 'instance'), VarArg(Any), KwArg(Any)], _ReturnType]"

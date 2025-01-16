@@ -63,7 +63,7 @@
     some(B())  # ok
     some(C())  # ok
   out: |
-    main:20: error: Argument 1 to "some" has incompatible type "A"; expected "B"
+    main:20: error: Argument 1 to "some" has incompatible type "A"; expected "B"  [arg-type]
 
 
 - case: typeclass_call_generic_instance_variance
@@ -98,7 +98,7 @@
     some(b)  # ok
     some(c)  # ok
   out: |
-    main:26: error: Argument 1 to "some" has incompatible type "A[int]"; expected "B[<nothing>]"
+    main:26: error: Argument 1 to "some" has incompatible type "A[int]"; expected "B[<nothing>]"  [arg-type]
 
 
 - case: typeclass_call_variance_union1
@@ -129,7 +129,7 @@
     some(B())  # ok
     some(C())  # ok
   out: |
-    main:22: error: Argument 1 to "some" has incompatible type "A"; expected "B"
+    main:22: error: Argument 1 to "some" has incompatible type "A"; expected "B"  [arg-type]
 
 
 - case: typeclass_call_variance_union2
@@ -238,4 +238,4 @@
     def some(instance) -> int:
         ...
 
-    some()  # E: Missing positional argument "instance" in call to "__call__" of "_TypeClass"
+    some()  # E: Missing positional argument "instance" in call to "__call__" of "_TypeClass"  [call-arg]

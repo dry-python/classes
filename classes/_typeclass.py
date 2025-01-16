@@ -379,7 +379,7 @@ class _TypeClass(  # noqa: WPS214
         ],
         *args,
         **kwargs,
-    ) -> _ReturnType:
+    ) -> _ReturnType:  # type: ignore[type-var]
         """
         We use this method to actually call a typeclass.
 

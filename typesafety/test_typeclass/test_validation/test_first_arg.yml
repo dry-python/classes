@@ -28,7 +28,7 @@
     def args(instance: int = 1) -> str:
         ...
   out: |
-    main:3: error: First argument in typeclass definition must be positional
+    main:3: error: First argument in typeclass definition must be positional  [misc]
 
 
 - case: typeclass_first_arg_opt_with_associated
@@ -43,7 +43,7 @@
     def args(instance: int = 1) -> str:
         ...
   out: |
-    main:6: error: First argument in typeclass definition must be positional
+    main:6: error: First argument in typeclass definition must be positional  [misc]
 
 
 - case: typeclass_first_arg_star
@@ -55,7 +55,7 @@
     def args(*instance: str) -> str:
         ...
   out: |
-    main:3: error: First argument in typeclass definition must be positional
+    main:3: error: First argument in typeclass definition must be positional  [misc]
 
 
 - case: typeclass_first_arg_star2
@@ -67,7 +67,7 @@
     def args(**instance) -> str:
         ...
   out: |
-    main:3: error: First argument in typeclass definition must be positional
+    main:3: error: First argument in typeclass definition must be positional  [misc]
 
 
 - case: typeclass_first_kw
@@ -79,7 +79,7 @@
     def args(*instance) -> str:
         ...
   out: |
-    main:3: error: First argument in typeclass definition must be positional
+    main:3: error: First argument in typeclass definition must be positional  [misc]
 
 
 - case: typeclass_first_kw_opt
@@ -91,4 +91,4 @@
     def args(*, instance: int = 1) -> str:
         ...
   out: |
-    main:3: error: First argument in typeclass definition must be positional
+    main:3: error: First argument in typeclass definition must be positional  [misc]
