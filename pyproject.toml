@@ -63,7 +63,7 @@ pytest-mypy-plugins = "^1.9"
 
 sphinx = "^5.2"
 sphinx-autodoc-typehints = "^1.20"
-sphinxcontrib-mermaid = "^0.7"
+sphinxcontrib-mermaid = "^0.8"
 sphinx-typlog-theme = "^0.8"
 doc8 = "^1.0"
 m2r2 = "^0.3"
