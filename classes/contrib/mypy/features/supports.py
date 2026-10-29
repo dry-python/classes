@@ -1,9 +1,9 @@
+from typing import final
+
 from mypy.nodes import SymbolTableNode
 from mypy.plugin import AnalyzeTypeContext
-from mypy.types import Instance
+from mypy.types import Instance, UnionType
 from mypy.types import Type as MypyType
-from mypy.types import UnionType
-from typing_extensions import final
 
 from classes.contrib.mypy.semanal.variadic_generic import (
     analize_variadic_generic,
@@ -12,7 +12,7 @@ from classes.contrib.mypy.validation import validate_supports
 
 
 @final
-class VariadicGeneric(object):
+class VariadicGeneric:
     """
     Variadic generic support for ``Supports`` type.
 
@@ -20,7 +20,7 @@ class VariadicGeneric(object):
     all type args of ``Supports`` are subtypes of ``AssociatedType``.
     """
 
-    __slots__ = ('_associated_type_node',)
+    __slots__ = ("_associated_type_node",)
 
     def __init__(self, associated_type_node: SymbolTableNode) -> None:
         """We need ``AssociatedType`` fullname here."""

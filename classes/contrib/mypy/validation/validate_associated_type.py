@@ -1,7 +1,8 @@
+from typing import Final
+
 from mypy.plugin import MethodContext
 from mypy.typeops import get_type_vars
 from mypy.types import CallableType, Instance
-from typing_extensions import Final
 
 # Messages:
 
@@ -18,7 +19,7 @@ _GENERIC_MISSMATCH_MSG: Final = (
     'generic instance declaration "{2}" with "{3}" type arguments'
 )
 
-_REDUNDANT_BODY_MSG: Final = 'Associated types must not have bodies'
+_REDUNDANT_BODY_MSG: Final = "Associated types must not have bodies"
 
 
 def check_type(
@@ -74,13 +75,13 @@ def _check_type_reuse(
     typeclass: Instance,
     ctx: MethodContext,
 ) -> bool:
-    fullname = getattr(typeclass.args[3], 'value', None)
-    metadata = associated_type.type.metadata.setdefault('classes', {})
+    fullname = getattr(typeclass.args[3], "value", None)
+    metadata = associated_type.type.metadata.setdefault("classes", {})
 
     has_reuse = (
         fullname is not None and
-        'typeclass' in metadata and
-        metadata['typeclass'] != fullname
+        "typeclass" in metadata and
+        metadata["typeclass"] != fullname
     )
     if has_reuse:
         ctx.api.fail(
@@ -88,7 +89,7 @@ def _check_type_reuse(
             ctx.context,
         )
 
-    metadata['typeclass'] = fullname
+    metadata["typeclass"] = fullname
     return has_reuse
 
 

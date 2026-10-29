@@ -1,8 +1,9 @@
+from typing import Final
+
 from mypy.nodes import SymbolTableNode, TypeInfo
 from mypy.plugin import AnalyzeTypeContext
 from mypy.subtypes import is_subtype
 from mypy.types import Instance
-from typing_extensions import Final
 
 # Messages:
 

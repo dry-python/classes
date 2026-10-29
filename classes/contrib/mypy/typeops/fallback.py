@@ -1,15 +1,15 @@
-from typing import Any, Callable, Mapping, Type
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from mypy.plugin import MethodContext
-from mypy.types import AnyType
+from mypy.types import AnyType, TypeOfAny
 from mypy.types import Type as MypyType
-from mypy.types import TypeOfAny
 
 _MethodCallback = Callable[[Any, MethodContext], MypyType]  # type: ignore
 
 
 def error_to_any(
-    error_map: Mapping[Type[Exception], str],
+    error_map: Mapping[type[Exception], str],
 ) -> Callable[[_MethodCallback], _MethodCallback]:
     """
     Decorator for ``mypy`` callbacks to catch given errors.

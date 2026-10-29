@@ -1,9 +1,8 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple, final
 
 from mypy.plugin import MethodContext
 from mypy.types import CallableType, TupleType
 from mypy.types import Type as MypyType
-from typing_extensions import final
 
 from classes.contrib.mypy.typeops import inference
 
@@ -12,12 +11,12 @@ from classes.contrib.mypy.typeops import inference
 class _InferredArgs(NamedTuple):
     """Represents our argument inference result."""
 
-    exact_type: Optional[MypyType]
-    protocol: Optional[MypyType]
-    delegate: Optional[MypyType]
+    exact_type: MypyType | None
+    protocol: MypyType | None
+    delegate: MypyType | None
 
     @classmethod
-    def build(cls, passed_args: TupleType) -> '_InferredArgs':
+    def build(cls, passed_args: TupleType) -> "_InferredArgs":
         exact_type, protocol, delegate = passed_args.items
         return _InferredArgs(
             _infer_type_arg(exact_type),
@@ -68,7 +67,7 @@ class InstanceContext(NamedTuple):
         associated_type: MypyType,
         fullname: str,
         ctx: MethodContext,
-    ) -> 'InstanceContext':
+    ) -> "InstanceContext":
         """
         Builds instance context.
 
@@ -100,6 +99,6 @@ class InstanceContext(NamedTuple):
         )
 
 
-def _infer_type_arg(type_arg: MypyType) -> Optional[MypyType]:
+def _infer_type_arg(type_arg: MypyType) -> MypyType | None:
     inferred = inference.type_obj(type_arg)
     return inferred if type_arg is not inferred else None

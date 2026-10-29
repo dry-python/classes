@@ -1,8 +1,9 @@
 
+from typing import Final
+
 from mypy.plugin import MethodContext
 from mypy.subtypes import is_subtype
 from mypy.types import AnyType, CallableType, TypeOfAny
-from typing_extensions import Final
 
 from classes.contrib.mypy.typeops import inference
 from classes.contrib.mypy.typeops.instance_context import InstanceContext

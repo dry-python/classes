@@ -1,17 +1,16 @@
-from typing import List, Optional
+
+from typing import final
 
 from mypy.plugin import MethodContext
 from mypy.subtypes import is_equivalent
-from mypy.types import Instance
+from mypy.types import Instance, UnionType, union_items
 from mypy.types import Type as MypyType
-from mypy.types import UnionType, union_items
-from typing_extensions import final
 
 from classes.contrib.mypy.typeops import type_loader
 
 
 @final
-class MetadataInjector(object):
+class MetadataInjector:
     """
     Injects fake ``Supports[TypeClass]`` parent classes into ``mro``.
 
@@ -58,10 +57,10 @@ class MetadataInjector(object):
     """
 
     __slots__ = (
-        '_associated_type',
-        '_instance_types',
-        '_ctx',
-        '_added_types',
+        "_added_types",
+        "_associated_type",
+        "_ctx",
+        "_instance_types",
     )
 
     def __init__(
@@ -83,7 +82,7 @@ class MetadataInjector(object):
         # Why do we store added types in a mutable global state?
         # Because, these types are hard to replicate without the proper context.
         # So, we just keep them here. Based on usage, it is fine.
-        self._added_types: List[Instance] = []
+        self._added_types: list[Instance] = []
 
     def add_supports_metadata(self) -> None:
         """Injects ``Supports`` metadata into instance types' mro."""
@@ -152,7 +151,7 @@ class MetadataInjector(object):
         self,
         instance_type: Instance,
         supports_type: Instance,
-    ) -> Optional[int]:
+    ) -> int | None:
         for index, base in enumerate(instance_type.type.bases):
             if is_equivalent(base, supports_type, ignore_type_params=True):
                 return index

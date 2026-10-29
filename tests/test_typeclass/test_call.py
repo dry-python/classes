@@ -1,4 +1,4 @@
-from typing import List, Sized
+from collections.abc import Sized
 
 import pytest
 
@@ -14,7 +14,7 @@ class _ListOfStrMeta(type):
         )
 
 
-class _ListOfStr(List[str], metaclass=_ListOfStrMeta):
+class _ListOfStr(list[str], metaclass=_ListOfStrMeta):
     """We use this for testing concrete type calls."""
 
 
@@ -24,7 +24,7 @@ def my_len(instance) -> int:
 
 
 @my_len.instance(delegate=_ListOfStr)
-def _my_len_list_str(instance: List[str]) -> int:
+def _my_len_list_str(instance: list[str]) -> int:
     return 0
 
 
@@ -43,14 +43,14 @@ def _my_len_object(instance: object) -> int:
     return 3
 
 
-@pytest.mark.parametrize('clear_initial_cache', [True, False])
-@pytest.mark.parametrize('check_supports', [True, False])
-@pytest.mark.parametrize('clear_supports_cache', [True, False])
-@pytest.mark.parametrize(('data_type', 'expected'), [
-    (['a', 'b'], 0),  # concrete type
+@pytest.mark.parametrize("clear_initial_cache", [True, False])
+@pytest.mark.parametrize("check_supports", [True, False])
+@pytest.mark.parametrize("clear_supports_cache", [True, False])
+@pytest.mark.parametrize(("data_type", "expected"), [
+    (["a", "b"], 0),  # concrete type
     ([], 1),  # direct list call
     ([1, 2, 3], 1),  # direct list call
-    ('', 2),  # sized protocol
+    ("", 2),  # sized protocol
     (1, 3),  # object fallback
 ])
 def test_call_order(

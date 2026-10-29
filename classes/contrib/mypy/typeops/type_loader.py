@@ -1,16 +1,16 @@
-from typing import Union
+
+from typing import Final
 
 from mypy.plugin import MethodContext, MethodSigContext
 from mypy.types import Instance
 from mypy.types import Type as MypyType
-from typing_extensions import Final
 
-_SUPPORTS_QUALIFIED_NAME: Final = 'classes.Supports'
+_SUPPORTS_QUALIFIED_NAME: Final = "classes.Supports"
 
 
 def load_supports_type(
     arg_type: MypyType,
-    ctx: Union[MethodContext, MethodSigContext],
+    ctx: MethodContext | MethodSigContext,
 ) -> Instance:
     """
     Loads ``Supports[]`` type with proper generic type.
@@ -23,7 +23,7 @@ def load_supports_type(
         [arg_type],
     )
     assert supports_spec
-    supports_spec.type._promote = None  # noqa: WPS437
+    supports_spec.type._promote = None  # noqa: WPS437 SLF001
     return supports_spec
 
 

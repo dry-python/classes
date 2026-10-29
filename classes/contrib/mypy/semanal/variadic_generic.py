@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from mypy.plugin import AnalyzeTypeContext
 from mypy.types import Instance
@@ -9,7 +9,7 @@ _ValidateCallback = Callable[[Instance, AnalyzeTypeContext], bool]
 
 def analize_variadic_generic(
     ctx: AnalyzeTypeContext,
-    validate_callback: Optional[_ValidateCallback] = None,
+    validate_callback: _ValidateCallback | None = None,
 ) -> MypyType:
     """
     Variadic generic support.
