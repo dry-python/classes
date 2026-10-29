@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Final, TypeAlias
 
 from mypy.nodes import (
     ARG_POS,
@@ -10,19 +10,18 @@ from mypy.nodes import (
 )
 from mypy.plugin import FunctionContext, MethodContext
 from mypy.types import CallableType, Instance
-from typing_extensions import Final
 
-_Contexts = Union[MethodContext, FunctionContext]
+_Contexts: TypeAlias = MethodContext | FunctionContext
 
 # Messages:
 
 _AT_LEAST_ONE_ARG_MSG: Final = (
-    'Typeclass definition must have at least one positional argument'
+    "Typeclass definition must have at least one positional argument"
 )
 _FIRST_ARG_KIND_MSG: Final = (
-    'First argument in typeclass definition must be positional'
+    "First argument in typeclass definition must be positional"
 )
-_REDUNDANT_BODY_MSG: Final = 'Typeclass definitions must not have bodies'
+_REDUNDANT_BODY_MSG: Final = "Typeclass definitions must not have bodies"
 
 
 def check_type(

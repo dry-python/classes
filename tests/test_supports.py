@@ -1,4 +1,4 @@
-from typing import List, Sized
+from collections.abc import Sized
 
 import pytest
 
@@ -14,7 +14,7 @@ class _ListOfStrMeta(type):
         )
 
 
-class _ListOfStr(List[str], metaclass=_ListOfStrMeta):
+class _ListOfStr(list[str], metaclass=_ListOfStrMeta):
     """We use this for testing concrete type calls."""
 
 
@@ -38,17 +38,17 @@ def _my_len_list(instance: list) -> int:
 
 
 @my_len.instance(delegate=_ListOfStr)
-def _my_len_list_str(instance: List[str]) -> int:
+def _my_len_list_str(instance: list[str]) -> int:
     return 2
 
 
-@pytest.mark.parametrize(('data_type', 'expected'), [
+@pytest.mark.parametrize(("data_type", "expected"), [
     ([], True),  # direct list call
-    ('', True),  # sized protocol
+    ("", True),  # sized protocol
     (1, False),  # default impl
     (_MyList(), True),  # mro fallback
     (_ListOfStr(), True),  # mro fallback
-    (_ListOfStr(['a']), True),  # mro fallback
+    (_ListOfStr(["a"]), True),  # mro fallback
 ])
 def test_supports(data_type, expected: bool, clear_cache) -> None:
     """Ensures that ``.supports`` works correctly."""
@@ -70,4 +70,4 @@ def test_supports_twice_concrete(clear_cache) -> None:
     with clear_cache(my_len):
         for _ in range(2):
             assert not my_len._dispatch_cache  # noqa: WPS437
-            assert my_len.supports(['a', 'b']) is True
+            assert my_len.supports(["a", "b"]) is True

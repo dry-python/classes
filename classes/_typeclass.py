@@ -116,21 +116,17 @@ Now, let's build a class that match this protocol and test it:
 
 See our `official docs <https://classes.readthedocs.io>`_ to learn more!
 """
+from collections.abc import Callable
 from functools import _find_impl  # type: ignore  # noqa: WPS450
 from typing import (  # noqa: WPS235
     TYPE_CHECKING,
-    Callable,
-    Dict,
     Generic,
-    Optional,
-    Type,
+    TypeGuard,
     TypeVar,
-    Union,
+    final,
     overload,
 )
 from weakref import WeakKeyDictionary
-
-from typing_extensions import TypeGuard, final
 
 from classes._registry import (
     DefaultValue,
@@ -139,33 +135,34 @@ from classes._registry import (
     default_implementation,
 )
 
-_InstanceType = TypeVar('_InstanceType')
-_SignatureType = TypeVar('_SignatureType', bound=Callable)
-_AssociatedType = TypeVar('_AssociatedType')
-_Fullname = TypeVar('_Fullname', bound=str)  # Literal value
+_InstanceType = TypeVar("_InstanceType")
+_SignatureType = TypeVar("_SignatureType", bound=Callable)
+_AssociatedType = TypeVar("_AssociatedType")
+_Fullname = TypeVar("_Fullname", bound=str)  # Literal value
 
-_NewInstanceType = TypeVar('_NewInstanceType', bound=Type)
+_NewInstanceType = TypeVar("_NewInstanceType", bound=type)
 
-_AssociatedTypeDef = TypeVar('_AssociatedTypeDef', contravariant=True)
-_TypeClassType = TypeVar('_TypeClassType', bound='_TypeClass')
-_ReturnType = TypeVar('_ReturnType')
+_AssociatedTypeDef_contra = TypeVar(
+    "_AssociatedTypeDef_contra",
+    contravariant=True
+)
+_TypeClassType = TypeVar("_TypeClassType", bound="_TypeClass")
+_ReturnType = TypeVar("_ReturnType")
 
 
 @overload
 def typeclass(
-    definition: Type[_AssociatedType],
-) -> '_TypeClassDef[_AssociatedType]':
-    """Function to created typeclasses with associated types."""
-
+    definition: type[_AssociatedType],
+) -> "_TypeClassDef[_AssociatedType]":
+    ...
 
 @overload
 def typeclass(
     signature: _SignatureType,
     # By default almost all variables are `nothing`,
     # but we enhance them via mypy plugin later:
-) -> '_TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]':
-    """Function to define typeclasses with just functions."""
-
+) -> "_TypeClass[_InstanceType, _SignatureType, _AssociatedType, _Fullname]":
+    ...
 
 def typeclass(signature):
     """General case function to create typeclasses."""
@@ -246,7 +243,7 @@ class AssociatedType(Generic[_InstanceType]):
 
 
 @final
-class Supports(Generic[_AssociatedTypeDef]):
+class Supports(Generic[_AssociatedTypeDef_contra]):
     """
     Used to specify that some value is a part of a typeclass.
 
@@ -310,21 +307,22 @@ class _TypeClass(  # noqa: WPS214
     """
 
     __slots__ = (
-        # Str:
-        '_signature',
-        '_associated_type',
+        "_associated_type",
 
         # Registry:
-        '_delegates',
-        '_exact_types',
-        '_protocols',
+        "_delegates",
 
         # Cache:
-        '_dispatch_cache',
+        "_dispatch_cache",
+        "_exact_types",
+        "_protocols",
+
+        # Str:
+        "_signature",
     )
 
-    _dispatch_cache: Dict[type, Callable]
-    _cache_token: Optional[object]
+    _dispatch_cache: dict[type, Callable]
+    _cache_token: object | None
 
     def __init__(
         self,
@@ -373,10 +371,7 @@ class _TypeClass(  # noqa: WPS214
 
     def __call__(
         self,
-        instance: Union[  # type: ignore
-            _InstanceType,
-            Supports[_AssociatedType],
-        ],
+        instance: _InstanceType | Supports[_AssociatedType],  # type: ignore
         *args,
         **kwargs,
     ) -> _ReturnType:
@@ -447,14 +442,11 @@ class _TypeClass(  # noqa: WPS214
     def __str__(self) -> str:
         """Converts typeclass to a string."""
         associated_type = (
-            ': "{0}"'.format(self._associated_type.__qualname__)
+            f': "{self._associated_type.__qualname__}"'
             if self._associated_type
-            else ''
+            else ""
         )
-        return '<typeclass "{0}"{1}>'.format(
-            self._signature.__name__,
-            associated_type,
-        )
+        return f'<typeclass "{self._signature.__name__}"{associated_type}>'
 
     def supports(
         self,
@@ -527,11 +519,11 @@ class _TypeClass(  # noqa: WPS214
 
     def instance(
         self,
-        exact_type: Optional[_NewInstanceType] = DefaultValue,  # type: ignore
+        exact_type: _NewInstanceType | None = DefaultValue,  # type: ignore
         *,
         protocol: type = DefaultValue,
         delegate: type = DefaultValue,
-    ) -> '_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]':
+    ) -> "_TypeClassInstanceDef[_NewInstanceType, _TypeClassType]":
         """
         We use this method to store implementation for each specific type.
 
@@ -553,6 +545,7 @@ class _TypeClass(  # noqa: WPS214
         because ``@overload`` functions do not
         work well with ``ctx.api.fail`` inside the plugin.
         They start to try other overloads, which produces wrong results.
+
         """
         # This might seem like a strange line at first, let's dig into it:
         #
@@ -582,7 +575,7 @@ class _TypeClass(  # noqa: WPS214
             return implementation
         return decorator
 
-    def _dispatch(self, instance, instance_type: type) -> Optional[Callable]:
+    def _dispatch(self, instance, instance_type: type) -> Callable | None:
         """
         Dispatches a function by its type.
 
@@ -601,7 +594,7 @@ class _TypeClass(  # noqa: WPS214
 
         return _find_impl(instance_type, self._exact_types)
 
-    def _dispatch_delegate(self, instance) -> Optional[Callable]:
+    def _dispatch_delegate(self, instance) -> Callable | None:
         for delegate, callback in self._delegates.items():
             if isinstance(instance, delegate):
                 return callback

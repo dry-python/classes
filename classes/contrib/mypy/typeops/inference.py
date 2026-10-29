@@ -1,5 +1,6 @@
 
-from typing import List, Optional
+
+from typing import Final
 
 from mypy.nodes import Decorator, Expression
 from mypy.plugin import MethodContext
@@ -10,13 +11,13 @@ from mypy.types import (
     Instance,
     LiteralType,
     TupleType,
+    TypeVarType,
+    UninhabitedType,
 )
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, UninhabitedType
-from typing_extensions import Final
 
 _TYPECLASS_DEF_FULLNAMES: Final = frozenset((
-    'classes._typeclass._TypeClassInstanceDef',
+    "classes._typeclass._TypeClassInstanceDef",
 ))
 
 
@@ -43,7 +44,7 @@ def try_to_apply_generics(
     if not isinstance(signature.arg_types[0], TypeVarType):
         return signature
 
-    type_args: List[Optional[MypyType]] = [instance_type]
+    type_args: list[MypyType | None] = [instance_type]
     if len(signature.variables) > 1:
         # `None` here means that a type variable won't be replaced
         type_args.extend(None for _ in range(len(signature.variables) - 1))
@@ -153,7 +154,7 @@ def _get_typeclass_instance_type(
     expr: Expression,
     fullname: str,
     ctx: MethodContext,
-) -> Optional[MypyType]:
+) -> MypyType | None:
     expr_type = ctx.api.expr_checker.accept(expr)  # type: ignore
     is_typeclass_instance_def = (
         isinstance(expr_type, Instance) and
@@ -173,7 +174,7 @@ def _get_typeclass_instance_type(
     return None
 
 
-def _first_real_passed_arg(passed_args: TupleType) -> Optional[MypyType]:
+def _first_real_passed_arg(passed_args: TupleType) -> MypyType | None:
     usable_args = (
         type_arg
         for type_arg in passed_args.items

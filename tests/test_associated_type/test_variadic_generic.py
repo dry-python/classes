@@ -5,10 +5,10 @@ import pytest
 
 from classes import AssociatedType
 
-_FirstType = TypeVar('_FirstType')
+_FirstType = TypeVar("_FirstType")
 
 
-@pytest.mark.skipif(sys.version_info[:2] >= (3, 10), reason='Does not work')
+@pytest.mark.skipif(sys.version_info[:2] >= (3, 10), reason="Does not work")
 def test_type_validation():
     """Ensures that type validation still works."""
     with pytest.raises(TypeError):

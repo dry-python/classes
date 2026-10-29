@@ -1,13 +1,18 @@
-from typing import Optional
+
+from typing import Final, final
 
 from mypy.messages import callable_name
 from mypy.plugin import MethodSigContext
 from mypy.subtypes import is_subtype
 from mypy.typeops import get_type_vars, make_simplified_union
-from mypy.types import CallableType, Instance, ProperType
+from mypy.types import (
+    CallableType,
+    Instance,
+    ProperType,
+    TypeVarType,
+    union_items,
+)
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, union_items
-from typing_extensions import Final, final
 
 from classes.contrib.mypy.typeops import type_loader
 
@@ -17,7 +22,7 @@ _INCOMPATIBLE_TYPEVAR_MSG: Final = (
 
 
 @final
-class SmartCallSignature(object):
+class SmartCallSignature:
     """
     Infers the ``__call__`` signature of a typeclass.
 
@@ -29,10 +34,10 @@ class SmartCallSignature(object):
     """
 
     __slots__ = (
-        '_signature',
-        '_instance_type',
-        '_associated_type',
-        '_ctx',
+        "_associated_type",
+        "_ctx",
+        "_instance_type",
+        "_signature",
     )
 
     def __init__(
@@ -84,7 +89,7 @@ class SmartCallSignature(object):
         return self._signature
 
     def _infer_regular(self, first_arg: MypyType) -> CallableType:
-        supports_type: Optional[MypyType] = None
+        supports_type: MypyType | None = None
         if isinstance(self._associated_type, Instance):
             supports_type = _load_supports_type(
                 first_arg,

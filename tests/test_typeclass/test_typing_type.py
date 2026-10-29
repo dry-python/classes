@@ -1,11 +1,10 @@
-from typing import Type
 
 import pytest
 
 from classes import typeclass
 
 
-class _MyClass(object):
+class _MyClass:
     """We use this class to test `Type[MyClass]`."""
 
 
@@ -14,17 +13,17 @@ class _MyClassTypeMeta(type):
         return typ is _MyClass
 
 
-class _MyClassType(Type[_MyClass], metaclass=_MyClassTypeMeta):  # type: ignore
+class _MyClassType(type[_MyClass], metaclass=_MyClassTypeMeta):  # type: ignore
     """Delegate class."""
 
 
 @typeclass
-def class_type(typ) -> Type:
+def class_type(typ) -> type:
     """Returns the type representation."""
 
 
 @class_type.instance(delegate=_MyClassType)
-def _my_class_type(typ: Type[_MyClass]) -> Type:
+def _my_class_type(typ: type[_MyClass]) -> type:
     return typ
 
 
@@ -33,7 +32,7 @@ def test_correct_class_type():
     assert class_type(_MyClass) is _MyClass
 
 
-@pytest.mark.parametrize('typ', [
+@pytest.mark.parametrize("typ", [
     int, float, type, dict, list,
 ])
 def test_wrong_class_type(typ):

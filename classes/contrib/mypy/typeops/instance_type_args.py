@@ -1,11 +1,18 @@
-from typing import List, Union
+
+from typing import Final
 
 from mypy.plugin import FunctionContext, MethodContext
 from mypy.typeops import make_simplified_union
-from mypy.types import AnyType, Instance, LiteralType, TupleType
+from mypy.types import (
+    AnyType,
+    Instance,
+    LiteralType,
+    TupleType,
+    TypeVarType,
+    UnboundType,
+    UninhabitedType,
+)
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, UnboundType, UninhabitedType
-from typing_extensions import Final
 
 #: Types that pollute instance args.
 _TYPES_TO_FILTER_OUT: Final = (
@@ -38,7 +45,7 @@ def add_unique(
 def mutate_typeclass_def(
     typeclass: Instance,
     definition_fullname: str,
-    ctx: Union[FunctionContext, MethodContext],
+    ctx: FunctionContext | MethodContext,
 ) -> None:
     """Adds definition fullname to the typeclass type."""
     str_fallback = ctx.api.str_type()  # type: ignore
@@ -52,9 +59,9 @@ def mutate_typeclass_def(
 def mutate_typeclass_instance_def(
     instance: Instance,
     *,
-    passed_types: List[MypyType],
+    passed_types: list[MypyType],
     typeclass: Instance,
-    ctx: Union[MethodContext, FunctionContext],
+    ctx: MethodContext | FunctionContext,
 ) -> None:
     """
     Mutates ``TypeClassInstanceDef`` args.
@@ -66,7 +73,7 @@ def mutate_typeclass_instance_def(
     tuple_type = TupleType(
         # We now store passed arg types in a single tuple:
         passed_types,
-        fallback=ctx.api.named_type('builtins.tuple'),  # type: ignore
+        fallback=ctx.api.named_type("builtins.tuple"),  # type: ignore
     )
 
     instance.args = (

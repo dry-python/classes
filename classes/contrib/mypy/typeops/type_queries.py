@@ -1,18 +1,24 @@
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 from mypy.plugin import MethodContext
 from mypy.type_visitor import TypeQuery
-from mypy.types import AnyType, Instance, TupleType
+from mypy.types import (
+    AnyType,
+    Instance,
+    TupleType,
+    TypeVarType,
+    UnboundType,
+    get_proper_type,
+)
 from mypy.types import Type as MypyType
-from mypy.types import TypeVarType, UnboundType, get_proper_type
 
 
 def has_concrete_type(
     type_: MypyType,
-    is_delegate: bool,
     ctx: MethodContext,
     *,
     forbid_explicit_any: bool,
+    is_delegate: bool,
 ) -> bool:
     """
     Queries if your instance has any concrete types.

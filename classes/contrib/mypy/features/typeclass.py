@@ -1,4 +1,5 @@
-from typing import Tuple
+
+from typing import final
 
 from mypy.nodes import Decorator
 from mypy.plugin import FunctionContext, MethodContext, MethodSigContext
@@ -9,10 +10,10 @@ from mypy.types import (
     Instance,
     LiteralType,
     TupleType,
+    TypeOfAny,
+    UninhabitedType,
 )
 from mypy.types import Type as MypyType
-from mypy.types import TypeOfAny, UninhabitedType
-from typing_extensions import final
 
 from classes.contrib.mypy.typeops import (
     call_signatures,
@@ -30,7 +31,7 @@ from classes.contrib.mypy.validation import (
 
 
 @final
-class TypeClassReturnType(object):
+class TypeClassReturnType:
     """
     Adjust argument types when we define typeclasses via ``typeclass`` function.
 
@@ -41,7 +42,7 @@ class TypeClassReturnType(object):
     It also checks how typeclasses are defined.
     """
 
-    __slots__ = ('_typeclass', '_typeclass_def')
+    __slots__ = ("_typeclass", "_typeclass_def")
 
     def __init__(self, typeclass: str, typeclass_def: str) -> None:
         """We pass exact type names as the context."""
@@ -73,7 +74,7 @@ class TypeClassReturnType(object):
                 defn,
                 ctx,
             )
-        elif is_typeclass:
+        if is_typeclass:
             assert isinstance(ctx.default_return_type, Instance)
             assert isinstance(defn, CallableType)
             assert defn.definition
@@ -105,7 +106,7 @@ class TypeClassReturnType(object):
 
 
 @final
-class TypeClassDefReturnType(object):
+class TypeClassDefReturnType:
     """
     Callback for cases like ``@typeclass(SomeType)``.
 
@@ -114,7 +115,7 @@ class TypeClassDefReturnType(object):
     And returns it back.
     """
 
-    __slots__ = ('_associated_type',)
+    __slots__ = ("_associated_type",)
 
     def __init__(self, associated_type: str) -> None:
         """We need ``AssociatedType`` fullname here."""
@@ -172,7 +173,7 @@ def instance_return_type(ctx: MethodContext) -> MypyType:
 
 
 @final
-class InstanceDefReturnType(object):
+class InstanceDefReturnType:
     """
     Class to check how instance definition is created.
 
@@ -188,7 +189,7 @@ class InstanceDefReturnType(object):
 
     @fallback.error_to_any({
         # TODO: later we can use a custom exception type for this:
-        KeyError: 'Typeclass cannot be loaded, it must be a global declaration',
+        KeyError: "Typeclass cannot be loaded, it must be a global declaration",
     })
     def __call__(self, ctx: MethodContext) -> MypyType:
         """Main entry point."""
@@ -226,7 +227,7 @@ class InstanceDefReturnType(object):
         self,
         typeclass_ref: Instance,
         ctx: MethodContext,
-    ) -> Tuple[Instance, str]:
+    ) -> tuple[Instance, str]:
         assert isinstance(typeclass_ref.args[3], LiteralType)
         assert isinstance(typeclass_ref.args[3].value, str)
 

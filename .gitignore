@@ -199,3 +199,10 @@ fabric.properties
 ### Custom ###
 ex.py
 experiments/
+
+# Ruff
+.ruff_cache/
+
+
+### Custom ###
+.vscode/

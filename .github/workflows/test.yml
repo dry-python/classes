@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14', '3.15']
 
     steps:
     - uses: actions/checkout@v3
@@ -37,14 +37,11 @@ jobs:
 
     - name: Run tests
       run: |
-        poetry run flake8 .
-        poetry run mypy classes ./tests/**/*.py
-        poetry run codespell classes tests docs typesafety README.md CONTRIBUTING.md CHANGELOG.md
-        poetry run pytest classes tests docs/pages README.md
-        poetry run doc8 -q docs
-        poetry run poetry check
-        poetry run pip check
-        poetry run safety check --full-report
+        make lint
+        make type-check
+        make docs
+        make unit
+        make package
         # We do this to speed up the build:
         poetry run pytest typesafety -p no:cov -o addopts="" --mypy-ini-file=setup.cfg
 

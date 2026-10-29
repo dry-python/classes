@@ -1,13 +1,12 @@
-from typing import Optional
+
+from typing import Final
 
 from mypy.erasetype import erase_type
 from mypy.plugin import MethodContext
 from mypy.sametypes import is_same_type
 from mypy.subtypes import is_subtype
-from mypy.types import Instance
+from mypy.types import Instance, TypedDictType
 from mypy.types import Type as MypyType
-from mypy.types import TypedDictType
-from typing_extensions import Final
 
 from classes.contrib.mypy.typeops import type_queries
 from classes.contrib.mypy.typeops.instance_context import InstanceContext
@@ -33,7 +32,7 @@ _DELEGATE_STRICT_SUBTYPE_MSG: Final = (
 
 _CONCRETE_GENERIC_MSG: Final = (
     'Instance "{0}" has concrete generic type, ' +
-    'it is not supported during runtime'
+    "it is not supported during runtime"
 )
 
 _UNBOUND_TYPE_MSG: Final = (
@@ -86,7 +85,7 @@ def check_type(
 def _check_matching_types(
     inferred_type: MypyType,
     instance_type: MypyType,
-    delegate: Optional[MypyType],
+    delegate: MypyType | None,
     ctx: MethodContext,
 ) -> bool:
     if delegate is None:
@@ -95,20 +94,6 @@ def _check_matching_types(
             erase_type(inferred_type),
         )
     else:
-        # We check for delegate a bit different,
-        # because we want to support cases like:
-        #
-        #   class ListOfStr(List[str]):
-        #       ...
-        #
-        #   @some.instance(delegate=ListOfStr)
-        #   def _some_list_str(instance: List[str]) -> str:
-        #
-        #   some(['a', 'b', 'c'])  # noqa: E800
-        #
-        # Without this check, we would have
-        # to always use `ListOfStr` and not `List[str]`.
-        # This is annoying for the user.
         instance_check = (
             is_subtype(instance_type, delegate)
             # When `instance` is a `TypedDict`, we need to rotate the compare:
@@ -128,9 +113,9 @@ def _check_matching_types(
 
 
 def _check_protocol_usage(  # noqa: WPS231
-    exact_type: Optional[MypyType],
-    protocol: Optional[MypyType],
-    delegate: Optional[MypyType],
+    exact_type: MypyType | None,
+    protocol: MypyType | None,
+    delegate: MypyType | None,
     ctx: MethodContext,
 ) -> bool:
     validation_rules = (
@@ -158,7 +143,7 @@ def _check_protocol_usage(  # noqa: WPS231
 def _check_concrete_generics(
     inferred_type: MypyType,
     instance_type: MypyType,
-    delegate: Optional[MypyType],
+    delegate: MypyType | None,
     ctx: MethodContext,
 ) -> bool:
     has_concrete_type = False

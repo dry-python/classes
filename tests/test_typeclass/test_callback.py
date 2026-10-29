@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from classes import typeclass
 
@@ -22,5 +22,5 @@ def _callback(
 
 def test_callback() -> None:
     """Tests that callback works."""
-    assert _callback('a', example) == 1
-    assert _callback('abcd', example) == 4
+    assert _callback("a", example) == 1
+    assert _callback("abcd", example) == 4

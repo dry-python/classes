@@ -1,4 +1,4 @@
-from typing import Sized
+from collections.abc import Sized
 
 from classes import typeclass
 
@@ -18,17 +18,17 @@ def _str_type(instance: str, other: str) -> str:
     return instance + other
 
 
-class _CustomSized(object):
+class _CustomSized:
     def __len__(self) -> int:
         return 2
 
 
 def test_sized_protocol() -> None:
     """Ensure that sized protocol works."""
-    assert protocols(_CustomSized(), '1') == '21'
-    assert protocols([1, 2, 3], '0') == '30'
+    assert protocols(_CustomSized(), "1") == "21"
+    assert protocols([1, 2, 3], "0") == "30"
 
 
 def test_type_takes_over() -> None:
     """Ensure that int protocol works."""
-    assert protocols('a', 'b') == 'ab'
+    assert protocols("a", "b") == "ab"
